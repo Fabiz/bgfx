@@ -22,11 +22,20 @@
 	|| BX_PLATFORM_WINDOWS                              \
 	) )
 
+// BEGIN CHANGE(fso) reactivated opengl for osx
 #define BGFX_USE_GL_DYNAMIC_LIB (0 \
 	|| BX_PLATFORM_BSD             \
 	|| BX_PLATFORM_LINUX           \
+	|| BX_PLATFORM_OSX             \
 	|| BX_PLATFORM_WINDOWS         \
 	)
+//#define BGFX_USE_GL_DYNAMIC_LIB (0 \
+//	|| BX_PLATFORM_BSD             \
+//	|| BX_PLATFORM_LINUX           \
+//	|| BX_PLATFORM_WINDOWS         \
+//	)
+// END CHANGE(fso)
+
 
 // Keep a state cache of GL uniform values to avoid redundant uploads
 // on the following platforms.
@@ -61,12 +70,29 @@
 #if BGFX_CONFIG_RENDERER_OPENGL
 #	if BGFX_CONFIG_RENDERER_OPENGL >= 31
 #		include <gl/glcorearb.h>
+// BEGIN CHANGE(fso) reactivated opengl for osx
+#		if BX_PLATFORM_OSX
+#			define GL_ARB_shader_objects // OSX collsion with GLhandleARB in gltypes.h
+#		endif // BX_PLATFORM_OSX
+// END CHANGE(fso)
 #	else
 #		if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
 #			define GL_PROTOTYPES
 #			define GL_GLEXT_LEGACY
 #			include <GL/gl.h>
 #			undef GL_PROTOTYPES
+// BEGIN CHANGE(fso) reactivated opengl for osx
+#		elif BX_PLATFORM_OSX
+#			define GL_GLEXT_LEGACY
+#			define long ptrdiff_t
+#			include <OpenGL/gl.h>
+#			undef long
+#			undef GL_VERSION_1_2
+#			undef GL_VERSION_1_3
+#			undef GL_VERSION_1_4
+#			undef GL_VERSION_1_5
+#			undef GL_VERSION_2_0
+// END CHANGE(fso)
 #		elif BX_PLATFORM_WINDOWS
 #			ifndef WIN32_LEAN_AND_MEAN
 #				define WIN32_LEAN_AND_MEAN
@@ -1236,6 +1262,10 @@ typedef uint64_t GLuint64;
 #	include "glcontext_html5.h"
 #elif BGFX_USE_WGL
 #	include "glcontext_wgl.h"
+// BEGIN CHANGE(fso) reactivated opengl for osx
+#elif BX_PLATFORM_OSX
+#	include "glcontext_nsgl.h"
+// END CHANGE(fso)
 #endif // BGFX_USE_*
 
 #ifndef GL_APIENTRY
