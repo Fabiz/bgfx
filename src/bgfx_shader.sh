@@ -571,6 +571,10 @@ float bgfxShadow2DProj(sampler2DShadow _sampler, vec4 _coord)
 
 #	endif // BGFX_SHADER_LANGUAGE_HLSL > 300
 
+// BEGIN CHANGE(fso)
+#   define SAMPLEREXTERNAL(_name, _reg) SAMPLER2D(_name, _reg)
+// END CHANGE(fso)
+
 vec3 instMul(vec3 _vec, mat3 _mtx) { return mul(_mtx, _vec); }
 vec3 instMul(mat3 _mtx, vec3 _vec) { return mul(_vec, _mtx); }
 vec4 instMul(vec4 _vec, mat4 _mtx) { return mul(_mtx, _vec); }
@@ -631,6 +635,16 @@ vec4  mod(vec4  _a, vec4  _b) { return _a - _b * floor(_a / _b); }
 #	define ISAMPLER3D(_name, _reg) uniform isampler3D _name
 #	define USAMPLER3D(_name, _reg) uniform usampler3D _name
 
+// BEGIN CHANGE(fso)
+// set samplerExternalOES for opengl es 
+// remark: by comparing with 100 the profile 100_es is taken
+#    if BGFX_SHADER_LANGUAGE_GLSL == 100
+#        define SAMPLEREXTERNAL(_name, _reg) uniform samplerExternalOES _name
+#    else
+#        define SAMPLEREXTERNAL(_name, _reg) SAMPLER2D(_name, _req)
+#    endif
+// END CHANGE(fso)
+ 
 #	if BGFX_SHADER_LANGUAGE_GLSL >= 130
 #		define texture2D(_sampler, _coord)      texture(_sampler, _coord)
 #		define texture2DArray(_sampler, _coord) texture(_sampler, _coord)

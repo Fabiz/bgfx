@@ -782,6 +782,93 @@ typedef uint64_t GLuint64;
 #	define GL_COMPARE_REF_TO_TEXTURE 0x884E
 #endif // GL_COMPARE_REF_TO_TEXTURE
 
+// BEGIN CHANGE(fso) added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+#ifndef GL_SAMPLER_1D
+#    define GL_SAMPLER_1D 0x8B5D
+#endif // GL_SAMPLER_1D
+
+#ifndef GL_INT_SAMPLER_1D
+#    define GL_INT_SAMPLER_1D 0x8DC9
+#endif // GL_INT_SAMPLER_1D
+
+#ifndef GL_UNSIGNED_INT_SAMPLER_1D
+#    define GL_UNSIGNED_INT_SAMPLER_1D 0x8DD1
+#endif // GL_UNSIGNED_INT_SAMPLER_1D
+
+#ifndef GL_SAMPLER_1D_SHADOW
+#    define GL_SAMPLER_1D_SHADOW 0x8B61
+#endif // GL_SAMPLER_1D_SHADOW
+
+#ifndef GL_TEXTURE_1D
+#    define GL_TEXTURE_1D 0x0DE0
+#endif // GL_TEXTURE_1D
+
+#ifndef GL_SAMPLER_1D_ARRAY
+#    define GL_SAMPLER_1D_ARRAY 0x8DC0
+#endif // GL_SAMPLER_1D_ARRAY
+
+#ifndef GL_INT_SAMPLER_1D_ARRAY
+#    define GL_INT_SAMPLER_1D_ARRAY 0x8DCE
+#endif // GL_INT_SAMPLER_1D_ARRAY
+
+#ifndef GL_UNSIGNED_INT_SAMPLER_1D_ARRAY
+#    define GL_UNSIGNED_INT_SAMPLER_1D_ARRAY 0x8DD6
+#endif // GL_UNSIGNED_INT_SAMPLER_1D_ARRAY
+
+#ifndef GL_SAMPLER_1D_ARRAY_SHADOW
+#    define GL_SAMPLER_1D_ARRAY_SHADOW 0x8DC3
+#endif // GL_SAMPLER_1D_ARRAY_SHADOW
+
+#ifndef GL_TEXTURE_1D_ARRAY
+#    define GL_TEXTURE_1D_ARRAY 0x8C18
+#endif // GL_TEXTURE_1D_ARRAY
+
+#ifndef GL_SAMPLER_2D_MULTISAMPLE_ARRAY
+#    define GL_SAMPLER_2D_MULTISAMPLE_ARRAY 0x910B
+#endif // GL_SAMPLER_2D_MULTISAMPLE_ARRAY
+
+#ifndef GL_SAMPLER_CUBE_MAP_ARRAY
+#    define GL_SAMPLER_CUBE_MAP_ARRAY 0x900C
+#endif // GL_SAMPLER_CUBE_MAP_ARRAY
+
+#ifndef GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW
+#    define GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW 0x900D
+#endif // GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW
+
+#ifndef GL_INT_SAMPLER_CUBE_MAP_ARRAY
+#    define GL_INT_SAMPLER_CUBE_MAP_ARRAY 0x900E
+#endif // GL_INT_SAMPLER_CUBE_MAP_ARRAY
+
+#ifndef GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY
+#    define GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY 0x900F
+#endif // GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY
+
+#ifndef GL_SAMPLER_2D_RECT
+#    define GL_SAMPLER_2D_RECT 0x8B63
+#endif // GL_SAMPLER_2D_RECT
+
+#ifndef GL_INT_SAMPLER_2D_RECT
+#    define GL_INT_SAMPLER_2D_RECT 0x8DCD
+#endif // GL_INT_SAMPLER_2D_RECT
+
+#ifndef GL_UNSIGNED_INT_SAMPLER_2D_RECT
+#    define GL_UNSIGNED_INT_SAMPLER_2D_RECT 0x8DD5
+#endif // GL_UNSIGNED_INT_SAMPLER_2D_RECT
+
+#ifndef GL_SAMPLER_2D_RECT_SHADOW
+#    define GL_SAMPLER_2D_RECT_SHADOW 0x8B64
+#endif // GL_SAMPLER_2D_RECT_SHADOW
+
+#ifndef GL_TEXTURE_RECTANGLE
+#    define GL_TEXTURE_RECTANGLE 0x84F5
+#endif // GL_TEXTURE_RECTANGLE
+
+#ifndef GL_SAMPLER_CUBE_SHADOW
+#    define GL_SAMPLER_CUBE_SHADOW 0x8DC5
+#endif // GL_SAMPLER_CUBE_SHADOW
+// END CHANGE(fso)
+
+
 #ifndef GL_INT_SAMPLER_2D
 #	define GL_INT_SAMPLER_2D 0x8DCA
 #endif // GL_INT_SAMPLER_2D
@@ -837,6 +924,20 @@ typedef uint64_t GLuint64;
 #ifndef GL_SAMPLER_2D_ARRAY_SHADOW
 #	define GL_SAMPLER_2D_ARRAY_SHADOW 0x8DC4
 #endif // GL_SAMPLER_2D_ARRAY_SHADOW
+
+// BEGIN CHANGE(fso) added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+#ifndef GL_SAMPLER_EXTERNAL_OES
+#    define GL_SAMPLER_EXTERNAL_OES 0x8D66
+#endif // GL_SAMPLER_EXTERNAL_OES
+
+#ifndef GL_TEXTURE_EXTERNAL_OES
+#    define GL_TEXTURE_EXTERNAL_OES 0x8D65
+#endif // GL_TEXTURE_EXTERNAL_OES
+
+#ifndef GL_TEXTURE_BINDING_EXTERNAL_OES
+#    define GL_TEXTURE_BINDING_EXTERNAL_OES 0x8D67
+#endif // GL_TEXTURE_BINDING_EXTERNAL_OES
+// END CHANGE(fso)
 
 #ifndef GL_TEXTURE_MAX_LEVEL
 #	define GL_TEXTURE_MAX_LEVEL 0x813D
@@ -1437,7 +1538,7 @@ namespace bgfx { namespace gl
 		void overrideInternal(uintptr_t _ptr);
 		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem);
 		void setSamplerState(uint32_t _flags, const float _rgba[4]);
-		void commit(uint32_t _stage, uint32_t _flags, const float _palette[][4]);
+		void commit(uint32_t _stage, uint32_t _flags, const float _palette[][4], GLenum _target); // LINE CHANGE(fso) added by fso from
 		void resolve(uint8_t _resolve) const;
 
 		bool isCubeMap() const
@@ -1510,6 +1611,13 @@ namespace bgfx { namespace gl
 		Attachment m_attachment[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 	};
 
+	// BEGIN CHANGE(fso) added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+	struct SamplerGL {
+		GLint loc;
+		GLenum target;
+	};
+	// END CHANGE(fso)
+
 	struct ProgramGL
 	{
 		ProgramGL()
@@ -1541,7 +1649,7 @@ namespace bgfx { namespace gl
 		GLint    m_instanceData[BGFX_CONFIG_MAX_INSTANCE_DATA_COUNT+1];
 		uint16_t m_instanceOffset[BGFX_CONFIG_MAX_INSTANCE_DATA_COUNT];
 
-		GLint m_sampler[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS];
+		SamplerGL m_sampler[BGFX_CONFIG_MAX_TEXTURE_SAMPLERS]; // LINE CHANGE(fso) added by fso from https://github.com/bkaradzic/bgfx/
 		uint8_t m_numSamplers;
 
 		UniformBuffer* m_constantBuffer;

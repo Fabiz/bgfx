@@ -128,7 +128,10 @@ namespace bgfx { namespace gl
 
 		// Work around bug https://bugs.chromium.org/p/chromium/issues/detail?id=1045643 in Chrome
 		// by having alpha always enabled.
-		s_attrs.alpha                     = true;
+		//s_attrs.alpha                     = true;
+		// BEGIN CHANGE(fso) ADD: setting alpha to false solves the alpha issue: https://webglfundamentals.org/webgl/lessons/webgl-and-alpha.html
+		s_attrs.alpha = false;
+		// END CHANGE
 		s_attrs.premultipliedAlpha        = false;
 		s_attrs.depth                     = true;
 		s_attrs.stencil                   = true;

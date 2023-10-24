@@ -180,6 +180,13 @@ namespace bgfx
 		"texture3DProjLod",
 		NULL
 	};
+	
+	// added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+	static const char* s_OES_EGL_image_external[] =
+	{
+		"samplerExternalOES",
+		NULL
+	};
 
 	static const char* s_EXT_gpu_shader4[] =
 	{
@@ -2412,6 +2419,12 @@ namespace bgfx
 										bx::stringPrintf(code, "#extension GL_OES_texture_3D : enable\n");
 									}
 
+									// added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+									if (!bx::findIdentifierMatch(input, s_OES_EGL_image_external).isEmpty() )
+									{
+										bx::stringPrintf(code, "#extension GL_OES_EGL_image_external : enable\n");
+									}
+									
 									if ((glsl_profile < 300) && (!bx::findIdentifierMatch(input, s_EXT_shadow_samplers).isEmpty()))
 									{
 										bx::stringPrintf(code

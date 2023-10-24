@@ -5,6 +5,8 @@
 
 #include "shaderc.h"
 #include "glsl_optimizer.h"
+#include <regex> // added by fso
+
 
 namespace bgfx { namespace glsl
 {
@@ -102,6 +104,20 @@ namespace bgfx { namespace glsl
 		}
 
 		UniformArray uniforms;
+		
+		// added by fso: make sure the vertex shader is always highp 
+	    std::string shadercodetemp; 
+  		if (target != kGlslTargetMetal)
+	  	{
+			if (_options.shaderType == 'v') {
+				shadercodetemp.assign(optimizedShader);
+				// its much simpler to use std::string for a replacement than the bx functions
+				shadercodetemp = std::regex_replace(shadercodetemp, std::regex("lowp"), "highp");
+				shadercodetemp = std::regex_replace(shadercodetemp, std::regex("mediump"), "highp");
+				optimizedShader = shadercodetemp.c_str();
+			}
+		} 
+		// added by fso: end
 
 		if (target != kGlslTargetMetal)
 		{

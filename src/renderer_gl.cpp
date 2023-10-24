@@ -686,6 +686,8 @@ namespace bgfx { namespace gl
 			OES_depth24,
 			OES_depth32,
 			OES_depth_texture,
+			OES_EGL_image_external,  // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+			OES_EGL_image_external_essl3,  // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 			OES_element_index_uint,
 			OES_fragment_precision_high,
 			OES_fbo_render_mipmap,
@@ -904,6 +906,8 @@ namespace bgfx { namespace gl
 		{ "OES_depth24",                              false,                             true  },
 		{ "OES_depth32",                              false,                             true  },
 		{ "OES_depth_texture",                        false,                             true  },
+		{ "OES_EGL_image_external",                   false,                             true  }, // GLES2 extension.  // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+		{ "OES_EGL_image_external_essl3",             false,                             true  }, // GLES3 extension.  // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 		{ "OES_element_index_uint",                   false,                             true  },
 		{ "OES_fragment_precision_high",              false,                             true  },
 		{ "OES_fbo_render_mipmap",                    false,                             true  },
@@ -990,6 +994,12 @@ namespace bgfx { namespace gl
 		"dFdx",
 		"dFdy",
 		"fwidth",
+		NULL
+	};
+
+	static const char* s_OES_EGL_image_external[] =   // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+	{
+		"samplerExternalOES",
 		NULL
 	};
 
@@ -2590,6 +2600,9 @@ namespace bgfx { namespace gl
 						}
 					}
 
+                    setTextureFormat(TextureFormat::RGBA4,   GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4); // added by fso. needed for texture lookup
+
+
 					if (BX_ENABLED(BX_PLATFORM_EMSCRIPTEN)
 						&& (s_extension[Extension::WEBGL_depth_texture].m_supported
 						|| s_extension[Extension::MOZ_WEBGL_depth_texture].m_supported
@@ -3682,7 +3695,7 @@ namespace bgfx { namespace gl
 
 			ProgramGL& program = m_program[_blitter.m_program.idx];
 			setProgram(program.m_id);
-			setUniform1i(program.m_sampler[0], 0);
+			setUniform1i(program.m_sampler[0].loc, 0);  // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 
 			float proj[16];
 			bx::mtxOrtho(proj, 0.0f, (float)width, (float)height, 0.0f, 0.0f, 1000.0f, 0.0f, g_caps.homogeneousDepth);
@@ -4908,6 +4921,7 @@ namespace bgfx { namespace gl
 			GLSL_TYPE(GL_IMAGE_CUBE);
 			GLSL_TYPE(GL_INT_IMAGE_CUBE);
 			GLSL_TYPE(GL_UNSIGNED_INT_IMAGE_CUBE);
+			GLSL_TYPE(GL_SAMPLER_EXTERNAL_OES); // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 		}
 
 #undef GLSL_TYPE
@@ -5006,12 +5020,97 @@ namespace bgfx { namespace gl
 		case GL_IMAGE_CUBE:
 		case GL_INT_IMAGE_CUBE:
 		case GL_UNSIGNED_INT_IMAGE_CUBE:
+		case GL_SAMPLER_EXTERNAL_OES: // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 			return UniformType::Sampler;
 		};
 
 		BX_ASSERT(false, "Unrecognized GL type 0x%04x.", _type);
 		return UniformType::End;
 	}
+
+	// added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+	GLenum glSamplerTarget(GLenum _sampler){
+		switch (_sampler)
+		{
+			case GL_SAMPLER_1D:
+			case GL_INT_SAMPLER_1D:
+			case GL_UNSIGNED_INT_SAMPLER_1D:
+			case GL_SAMPLER_1D_SHADOW:
+				return GL_TEXTURE_1D;
+
+			case GL_SAMPLER_1D_ARRAY:
+			case GL_INT_SAMPLER_1D_ARRAY:
+			case GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:
+			case GL_SAMPLER_1D_ARRAY_SHADOW:
+				return GL_TEXTURE_1D_ARRAY;
+
+			case GL_SAMPLER_2D:
+			case GL_INT_SAMPLER_2D:
+			case GL_UNSIGNED_INT_SAMPLER_2D:
+			case GL_SAMPLER_2D_SHADOW:
+				return GL_TEXTURE_2D;
+
+			case GL_SAMPLER_2D_ARRAY:
+			case GL_INT_SAMPLER_2D_ARRAY:
+			case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+			case GL_SAMPLER_2D_ARRAY_SHADOW:
+				return GL_TEXTURE_2D_ARRAY;
+
+			case GL_SAMPLER_2D_MULTISAMPLE:
+				return GL_TEXTURE_2D_MULTISAMPLE;
+
+			case GL_SAMPLER_2D_MULTISAMPLE_ARRAY:
+				return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
+
+			case GL_SAMPLER_CUBE:
+			case GL_SAMPLER_CUBE_SHADOW:
+			case GL_INT_SAMPLER_CUBE:
+			case GL_UNSIGNED_INT_SAMPLER_CUBE:
+				return GL_TEXTURE_CUBE_MAP;
+
+			case GL_SAMPLER_CUBE_MAP_ARRAY:
+			case GL_SAMPLER_CUBE_MAP_ARRAY_SHADOW:
+			case GL_INT_SAMPLER_CUBE_MAP_ARRAY:
+			case GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY:
+				return GL_TEXTURE_CUBE_MAP_ARRAY;
+
+			case GL_SAMPLER_3D:
+			case GL_INT_SAMPLER_3D:
+			case GL_UNSIGNED_INT_SAMPLER_3D:
+				return GL_TEXTURE_3D;
+
+			case GL_SAMPLER_EXTERNAL_OES:
+				return GL_TEXTURE_EXTERNAL_OES;
+
+			case GL_SAMPLER_2D_RECT:
+			case GL_INT_SAMPLER_2D_RECT:
+			case GL_UNSIGNED_INT_SAMPLER_2D_RECT:
+			case GL_SAMPLER_2D_RECT_SHADOW:
+				return GL_TEXTURE_RECTANGLE;
+
+			case GL_IMAGE_1D:
+
+			case GL_INT_IMAGE_1D:
+			case GL_UNSIGNED_INT_IMAGE_1D:
+
+			case GL_IMAGE_2D:
+			case GL_INT_IMAGE_2D:
+			case GL_UNSIGNED_INT_IMAGE_2D:
+
+			case GL_IMAGE_3D:
+			case GL_INT_IMAGE_3D:
+			case GL_UNSIGNED_INT_IMAGE_3D:
+
+			case GL_IMAGE_CUBE:
+			case GL_INT_IMAGE_CUBE:
+			case GL_UNSIGNED_INT_IMAGE_CUBE:
+				return 0;
+		}
+
+		BX_ASSERT(false, "Unrecognized GL sampler type 0x%04x.", _sampler);
+		return 0;
+	}
+	// added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 
 	void ProgramGL::create(const ShaderGL& _vsh, const ShaderGL& _fsh)
 	{
@@ -5161,7 +5260,8 @@ namespace bgfx { namespace gl
 
 		m_numPredefined = 0;
 		m_numSamplers = 0;
-
+		bx::memSet(m_sampler, 0, sizeof(m_sampler) ); // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+		
 		BX_TRACE("Uniforms (%d):", activeUniforms);
 		for (int32_t ii = 0; ii < activeUniforms; ++ii)
 		{
@@ -5260,10 +5360,11 @@ namespace bgfx { namespace gl
 			case GL_IMAGE_CUBE:
 			case GL_INT_IMAGE_CUBE:
 			case GL_UNSIGNED_INT_IMAGE_CUBE:
+			case GL_SAMPLER_EXTERNAL_OES: // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 				if (m_numSamplers < BX_COUNTOF(m_sampler) )
 				{
 					BX_TRACE("Sampler #%d at location %d.", m_numSamplers, loc);
-					m_sampler[m_numSamplers] = loc;
+					m_sampler[m_numSamplers] = {loc, glSamplerTarget(gltype)}; // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 					m_numSamplers++;
 				}
 				else
@@ -5422,8 +5523,8 @@ namespace bgfx { namespace gl
 					GL_CHECK(glVertexAttribDivisor(loc, 0) );
 
 					uint32_t baseVertex = _baseVertex*_layout.m_stride + _layout.m_offset[attr];
-					if ( (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL >= 30) || s_renderGL->m_gles3)
-					&&  !isFloat(type)
+                    if ( (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL >= 30)) // Added by fso, remove support for opengles (errors on Chrome and Samsung S22)
+            		&&  !isFloat(type)
 					&&  !normalized)
 					{
 						GL_CHECK(glVertexAttribIPointer(loc
@@ -6163,16 +6264,18 @@ namespace bgfx { namespace gl
 		}
 	}
 
-	void TextureGL::commit(uint32_t _stage, uint32_t _flags, const float _palette[][4])
+	void TextureGL::commit(uint32_t _stage, uint32_t _flags, const float _palette[][4], GLenum _target) // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 	{
 		const uint32_t flags = 0 == (BGFX_SAMPLER_INTERNAL_DEFAULT & _flags)
 			? _flags
 			: uint32_t(m_flags)
 			;
 		const uint32_t index = (flags & BGFX_SAMPLER_BORDER_COLOR_MASK) >> BGFX_SAMPLER_BORDER_COLOR_SHIFT;
-
+		
 		GL_CHECK(glActiveTexture(GL_TEXTURE0+_stage) );
-		GL_CHECK(glBindTexture(m_target, m_id) );
+		
+		const GLenum target = 0 == _target ? m_target : _target; // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+		GL_CHECK(glBindTexture(target, m_id) ); // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 
 		if (s_renderGL->m_samplerObjectSupport)
 		{
@@ -6315,6 +6418,10 @@ namespace bgfx { namespace gl
 						&& !bx::findIdentifierMatch(code, s_OES_standard_derivatives).isEmpty()
 						;
 
+					const bool  usesSamplerExternal = s_extension[Extension::OES_EGL_image_external].m_supported
+						&& !bx::findIdentifierMatch(code, s_OES_EGL_image_external).isEmpty() // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+						;
+					
 					const bool usesFragData         = !bx::findIdentifierMatch(code, "gl_FragData").isEmpty();
 					const bool usesFragDepth        = !bx::findIdentifierMatch(code, "gl_FragDepth").isEmpty();
 					const bool usesShadowSamplers   = !bx::findIdentifierMatch(code, s_EXT_shadow_samplers).isEmpty();
@@ -6329,6 +6436,10 @@ namespace bgfx { namespace gl
 					if (usesDerivatives)
 					{
 						bx::write(&writer, "#extension GL_OES_standard_derivatives : enable\n", &err);
+					}
+					if (usesSamplerExternal) // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+					{
+						bx::write(&writer, "#extension GL_OES_EGL_image_external : enable\n", &err);
 					}
 
 					if (usesFragData)
@@ -6698,8 +6809,8 @@ namespace bgfx { namespace gl
 					{
 						bx::write(&writer, &err
 							, "#version 300 es\n"
-							  "precision %s float;\n"
-							, m_type == GL_FRAGMENT_SHADER ? "mediump" : "highp"
+							//  "precision %s float;\n"   // added by fso uncommented because precision must be added after declaring the extensions
+							//, m_type == GL_FRAGMENT_SHADER ? "mediump" : "highp"
 							);
 					}
 					else
@@ -6716,6 +6827,14 @@ namespace bgfx { namespace gl
 						  "#define textureCubeGrad textureGrad\n"
 						, &err
 						);
+
+					// added by fso: added texture vertex lookup support for opengl 3.0
+					if (m_type == GL_VERTEX_SHADER) {
+						bx::write(&writer
+							, "#define texture2D     texture\n"
+							  "#define texture2DProj textureProj\n"
+							, &err);
+					}
 
 					if (m_type == GL_FRAGMENT_SHADER)
 					{
@@ -6782,6 +6901,24 @@ namespace bgfx { namespace gl
 						{
 							bx::write(&writer, "#extension GL_ARB_texture_multisample : enable\n", &err);
 						}
+						// added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+						const bool  usesSamplerExternal = s_extension[Extension::OES_EGL_image_external_essl3].m_supported
+							&& !bx::findIdentifierMatch(code, s_OES_EGL_image_external).isEmpty()
+							;
+
+						if(usesSamplerExternal)
+						{
+							bx::write(&writer, "#extension GL_OES_EGL_image_external_essl3 : enable\n", &err);
+						}
+
+						if ( s_renderGL->m_gles3)
+						{
+							bx::write(&writer, &err
+								, "precision %s float;\n"
+								, m_type == GL_FRAGMENT_SHADER ? "mediump" : "highp"
+								);
+						}
+						// added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 
 						if (0 != fragData)
 						{
@@ -7173,7 +7310,7 @@ namespace bgfx { namespace gl
 					const bool writeOnly = 0 != (texture.m_flags&BGFX_TEXTURE_RT_WRITE_ONLY);
 					bimg::TextureFormat::Enum format = bimg::TextureFormat::Enum(texture.m_textureFormat);
 
-					if (!bimg::isDepth(format) )
+					if (!bimg::isDepth(format)  && s_renderGL->m_gles3) // Added by fso, readbuffer is supported for Opengles 3.0 only
 					{
 						GL_CHECK(glDisable(GL_SCISSOR_TEST) );
 
@@ -7661,7 +7798,7 @@ namespace bgfx { namespace gl
 								case Binding::Texture:
 									{
 										TextureGL& texture = m_textures[bind.m_idx];
-										texture.commit(ii, bind.m_samplerFlags, _render->m_colorPalette);
+										texture.commit(ii, bind.m_samplerFlags, _render->m_colorPalette, program.m_sampler[ii].target); // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 									}
 									break;
 
@@ -8198,7 +8335,7 @@ namespace bgfx { namespace gl
 									case Binding::Texture:
 										{
 											TextureGL& texture = m_textures[bind.m_idx];
-											texture.commit(stage, bind.m_samplerFlags, _render->m_colorPalette);
+											texture.commit(stage, bind.m_samplerFlags, _render->m_colorPalette, program.m_sampler[stage].target); // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 										}
 										break;
 
