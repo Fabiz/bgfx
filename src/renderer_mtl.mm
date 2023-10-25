@@ -1949,7 +1949,7 @@ BX_STATIC_ASSERT(BX_COUNTOF(s_accessNames) == Access::Count, "Invalid s_accessNa
 				{
 					BX_TRACE("arg: %s type:%d", utf8String(arg.name), arg.type);
 
-					if (arg.used)
+					if (((MTLArgument*)arg).active) // CHANGE(fso) arg.used will crash on < ios16, see https://github.com/bkaradzic/bgfx/commit/5f564db0d5338c7204efc060ba82b41d80f3682a#r127436500
 					{
 						if (arg.type == MTLBindingTypeBuffer)
 						{
@@ -2354,7 +2354,21 @@ BX_STATIC_ASSERT(BX_COUNTOF(s_accessNames) == Access::Count, "Invalid s_accessNa
 
 					if (NULL != reflection)
 					{
-						processArguments(pso, reflection.vertexBindings, reflection.fragmentBindings);
+// BEGIN CHANGE(fso) support for < ios16, see https://github.com/bkaradzic/bgfx/commit/ef5937bd5137d4cae3b735f25767db8eb90cdf9d
+#if BX_PLATFORM_IOS
+						if (@available(iOS 16, *)) {
+							processArguments(pso, reflection.vertexBindings, reflection.fragmentBindings);
+						} else {
+							processArguments(pso, reflection.vertexArguments, reflection.fragmentArguments);
+						}
+#elif BX_PLATFORM_OSX
+						if (@available(macOS 13, *)) {
+							processArguments(pso, reflection.vertexBindings, reflection.fragmentBindings);
+						} else {
+							processArguments(pso, reflection.vertexArguments, reflection.fragmentArguments);
+						}
+#endif
+// END CHANGE(fso)
 					}
 				}
 
@@ -2401,8 +2415,22 @@ BX_STATIC_ASSERT(BX_COUNTOF(s_accessNames) == Access::Count, "Invalid s_accessNa
 					, MTLPipelineOptionBufferTypeInfo
 					, &reflection
 					);
-				processArguments(pso, reflection.bindings, NULL);
-
+// BEGIN CHANGE(fso) support for < ios16, see https://github.com/bkaradzic/bgfx/commit/ef5937bd5137d4cae3b735f25767db8eb90cdf9d
+#if BX_PLATFORM_IOS
+						if (@available(iOS 16, *)) {
+							processArguments(pso, reflection.bindings, NULL);
+						} else {
+							processArguments(pso, reflection.arguments, NULL);
+						}
+#elif BX_PLATFORM_OSX
+						if (@available(macOS 13, *)) {
+							processArguments(pso, reflection.bindings, NULL);
+						} else {
+							processArguments(pso, reflection.arguments, NULL);
+						}
+#endif
+// END CHANGE(fso)
+				
 				for (uint32_t ii = 0; ii < 3; ++ii)
 				{
 					pso->m_numThreads[ii] = program.m_vsh->m_numThreads[ii];
