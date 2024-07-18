@@ -5262,7 +5262,7 @@ namespace bgfx { namespace gl
 		m_numPredefined = 0;
 		m_numSamplers = 0;
 		bx::memSet(m_sampler, 0, sizeof(m_sampler) ); // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
-		
+
 		BX_TRACE("Uniforms (%d):", activeUniforms);
 		for (int32_t ii = 0; ii < activeUniforms; ++ii)
 		{
@@ -6272,9 +6272,9 @@ namespace bgfx { namespace gl
 			: uint32_t(m_flags)
 			;
 		const uint32_t index = (flags & BGFX_SAMPLER_BORDER_COLOR_MASK) >> BGFX_SAMPLER_BORDER_COLOR_SHIFT;
-		
+
 		GL_CHECK(glActiveTexture(GL_TEXTURE0+_stage) );
-		
+
 		const GLenum target = 0 == _target ? m_target : _target; // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 		GL_CHECK(glBindTexture(target, m_id) ); // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 
@@ -6422,7 +6422,7 @@ namespace bgfx { namespace gl
 					const bool  usesSamplerExternal = s_extension[Extension::OES_EGL_image_external].m_supported
 						&& !bx::findIdentifierMatch(code, s_OES_EGL_image_external).isEmpty() // added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 						;
-					
+
 					const bool usesFragData         = !bx::findIdentifierMatch(code, "gl_FragData").isEmpty();
 					const bool usesFragDepth        = !bx::findIdentifierMatch(code, "gl_FragDepth").isEmpty();
 					const bool usesShadowSamplers   = !bx::findIdentifierMatch(code, s_EXT_shadow_samplers).isEmpty();
@@ -6851,6 +6851,7 @@ namespace bgfx { namespace gl
 					if (m_type == GL_VERTEX_SHADER) {
 						bx::write(&writer
 							, "#define texture2D     texture\n"
+							  "#define texture2DArray texture\n"
 							  "#define texture2DProj textureProj\n"
 							, &err);
 					}
