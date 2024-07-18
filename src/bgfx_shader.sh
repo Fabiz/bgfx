@@ -644,6 +644,16 @@ vec4  mod(vec4  _a, vec4  _b) { return _a - _b * floor(_a / _b); }
 #        define SAMPLEREXTERNAL(_name, _reg) SAMPLER2D(_name, _req)
 #    endif
 // END CHANGE(fso)
+
+// BEGIN CHANGE(fso)
+// set precision for sampler2Darray 
+// remark: by comparing with 100 the profile 100_es is taken
+#    if BGFX_SHADER_LANGUAGE_GLSL == 100
+#        define sampler2DArray highp sampler2DArray
+#    endif
+// END CHANGE(fso)
+
+
  
 #	if BGFX_SHADER_LANGUAGE_GLSL >= 130
 #		define texture2D(_sampler, _coord)      texture(_sampler, _coord)
