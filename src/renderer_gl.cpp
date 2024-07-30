@@ -6215,7 +6215,16 @@ namespace bgfx { namespace gl
 			if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL) || s_renderGL->m_gles3
 			||  s_extension[Extension::APPLE_texture_max_level].m_supported)
 			{
-				GL_CHECK(glTexParameteri(targetMsaa, GL_TEXTURE_MAX_LEVEL, numMips-1) );
+				// added by fso
+				// exclude emscription plattform to fix Chrome v127 on M1 Mac bug
+				// check in dev 2024 if this fix is still needed
+				// calling GL_TEXTURE_MAX_LEVEL seems to affect offscreen rendering of terrains
+				// see https://issues.chromium.org/issues/355605685 and
+				// https://github.com/floooh/sokol/pull/1087/commits/6bd89f5e683a64021d0568b778004d77574e9760
+#if !BX_PLATFORM_EMSCRIPTEN
+				GL_CHECK(glTexParameteri(targetMsaa, GL_TEXTURE_MAX_LEVEL, numMips - 1));
+#endif          // added by fso
+
 			}
 
 			if (target == GL_TEXTURE_3D)
