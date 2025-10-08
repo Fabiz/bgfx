@@ -89,7 +89,6 @@ static const uint16_t s_planeIndices[] =
 };
 
 static bool s_oglNdc = false;
-static float s_texelHalf = 0.0f;
 
 static uint32_t s_viewMask = 0;
 
@@ -708,7 +707,7 @@ uint16_t weldVertices(WeldedVertex* _output, const bgfx::VertexLayout& _layout, 
 	uint16_t numVertices = 0;
 
 	const uint32_t size = sizeof(uint16_t)*(hashSize + _num);
-	uint16_t* hashTable = (uint16_t*)alloca(size);
+	uint16_t* hashTable = (uint16_t*)BX_STACK_ALLOC(size);
 	bx::memSet(hashTable, 0xff, size);
 
 	uint16_t* next = hashTable + hashSize;
@@ -1786,7 +1785,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
-		init.platformData.type = entry::getNativeWindowHandleType(entry::kDefaultWindowHandle);
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width  = m_viewState.m_width;
 		init.resolution.height = m_viewState.m_height;
 		init.resolution.reset  = m_reset;
@@ -1797,7 +1796,6 @@ public:
 
 		const bgfx::Caps* caps = bgfx::getCaps();
 		s_oglNdc    = caps->homogeneousDepth;
-		s_texelHalf = bgfx::RendererType::Direct3D9 == caps->rendererType ? 0.5f : 0.0f;
 
 		// Imgui
 		imguiCreate();
@@ -2187,7 +2185,7 @@ public:
 			//update settings
 			s_uniforms.m_params.m_ambientPass     = 1.0f;
 			s_uniforms.m_params.m_lightingPass    = 1.0f;
-			s_uniforms.m_params.m_texelHalf       = s_texelHalf;
+			s_uniforms.m_params.m_texelHalf       = 0.0f;
 			s_uniforms.m_svparams.m_useStencilTex = float(m_useStencilTexture);
 
 			//set picked bunny model

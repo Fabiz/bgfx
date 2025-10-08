@@ -175,7 +175,7 @@ static const uint32_t s_indexesL3[] =
 	12u, 5u, 11u,
 	12u, 11u, 10u,
 	12u, 10u, 13u,
-	12u, 13u, 14u,        //End fo first big triangle
+	12u, 13u, 14u,        //End of first big triangle
 
 	15u, 14u, 13u,
 	15u, 13u, 10u,
@@ -339,7 +339,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
-		init.platformData.type = entry::getNativeWindowHandleType(entry::kDefaultWindowHandle);
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset = m_reset;

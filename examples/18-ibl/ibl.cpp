@@ -420,7 +420,7 @@ public:
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
-		init.platformData.type = entry::getNativeWindowHandleType(entry::kDefaultWindowHandle);
+		init.platformData.type = entry::getNativeWindowHandleType();
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
@@ -636,7 +636,7 @@ public:
 				ImGui::Separator();
 				ImGui::Text("Workflow:");
 				ImGui::Indent();
-				ImGui::RadioButton("Metalness", &m_settings.m_metalOrSpec, 0);
+				ImGui::RadioButton("Metalness##Button", &m_settings.m_metalOrSpec, 0);
 				ImGui::RadioButton("Specular", &m_settings.m_metalOrSpec, 1);
 				ImGui::Unindent();
 
@@ -645,7 +645,7 @@ public:
 				ImGui::Indent();
 				ImGui::PushItemWidth(130.0f);
 				ImGui::SliderFloat("Glossiness", &m_settings.m_glossiness, 0.0f, 1.0f);
-				ImGui::SliderFloat(0 == m_settings.m_metalOrSpec ? "Metalness" : "Diffuse - Specular", &m_settings.m_reflectivity, 0.0f, 1.0f);
+				ImGui::SliderFloat(0 == m_settings.m_metalOrSpec ? "Metalness##Slider" : "Diffuse - Specular", &m_settings.m_reflectivity, 0.0f, 1.0f);
 				ImGui::PopItemWidth();
 				ImGui::Unindent();
 			}

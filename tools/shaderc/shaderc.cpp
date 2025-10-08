@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -51,7 +51,7 @@ namespace bgfx
 
 		"Unknown?!"
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_shadingLangName) == ShadingLang::Count+1, "ShadingLang::Enum and s_shadingLangName mismatch");
+	static_assert(BX_COUNTOF(s_shadingLangName) == ShadingLang::Count+1, "ShadingLang::Enum and s_shadingLangName mismatch");
 
 	const char* getName(ShadingLang::Enum _lang)
 	{
@@ -77,6 +77,25 @@ namespace bgfx
 	// 4.3    430      vhdgf+c
 	// 4.4    440
 	//
+	// Metal Shading Language (MSL) profile naming convention:
+	//  metal<MSL version>-<SPIR-V version>
+	//
+	// See section "Compiler Options Controlling the Language Version" from the
+	// MSL spec for the correlation between MSL version and platform OS version:
+	//	https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf
+	//
+	// MSL version | SPIR-V version | shaderc encoding
+	//    1.0      |       1.0      |      1000         (deprecated)
+	//    1.1      |       1.0      |      1110
+	//    1.2      |       1.0      |      1210
+	//    2.0      |       1.1      |      2011
+	//    2.1      |       1.1      |      2111
+	//    2.2      |       1.1      |      2211
+	//    2.3      |       1.4      |      2314
+	//    2.4      |       1.4      |      2414
+	//    3.0      |       1.4      |      3014
+	//    3.1      |       1.4      |      3114
+	//
 	// SPIR-V profile naming convention:
 	//  spirv<SPIR-V version>-<Vulkan version>
 	//
@@ -100,10 +119,19 @@ namespace bgfx
 		{  ShadingLang::ESSL,  300,    "300_es"     },
 		{  ShadingLang::ESSL,  310,    "310_es"     },
 		{  ShadingLang::ESSL,  320,    "320_es"     },
-		{  ShadingLang::HLSL,  300,    "s_3_0"      },
 		{  ShadingLang::HLSL,  400,    "s_4_0"      },
 		{  ShadingLang::HLSL,  500,    "s_5_0"      },
-		{  ShadingLang::Metal, 1000,   "metal"      },
+		{  ShadingLang::Metal, 1210,   "metal"      },
+		{  ShadingLang::Metal, 1000,   "metal10-10" },
+		{  ShadingLang::Metal, 1110,   "metal11-10" },
+		{  ShadingLang::Metal, 1210,   "metal12-10" },
+		{  ShadingLang::Metal, 2011,   "metal20-11" },
+		{  ShadingLang::Metal, 2111,   "metal21-11" },
+		{  ShadingLang::Metal, 2211,   "metal22-11" },
+		{  ShadingLang::Metal, 2314,   "metal23-14" },
+		{  ShadingLang::Metal, 2414,   "metal24-14" },
+		{  ShadingLang::Metal, 3014,   "metal30-14" },
+		{  ShadingLang::Metal, 3114,   "metal31-14" },
 		{  ShadingLang::PSSL,  1000,   "pssl"       },
 		{  ShadingLang::SpirV, 1010,   "spirv"      },
 		{  ShadingLang::SpirV, 1010,   "spirv10-10" },
@@ -272,10 +300,13 @@ namespace bgfx
 		NULL
 	};
 
-	static const char* s_unsignedVecs[] =
+	static const char* s_integerVecs[] =
 	{
+		"ivec2",
 		"uvec2",
+		"ivec3",
 		"uvec3",
+		"ivec4",
 		"uvec4",
 		NULL
 	};
@@ -288,7 +319,7 @@ namespace bgfx
 		"mat3", "float3x3",
 		"mat4", "float4x4",
 	};
-	BX_STATIC_ASSERT(BX_COUNTOF(s_uniformTypeName) == UniformType::Count*2);
+	static_assert(BX_COUNTOF(s_uniformTypeName) == UniformType::Count*2);
 
 	static const char* s_allowedVertexShaderInputs[] =
 	{
@@ -408,17 +439,17 @@ namespace bgfx
 
 		for (size_t ii = 0; ii < includeDirs.size(); ++ii)
 		{
-			BX_TRACE("\t  include :%s\n", includeDirs[ii].c_str());
+			BX_TRACE("\t  include :%s\n", includeDirs[ii].c_str() );
 		}
 
 		for (size_t ii = 0; ii < defines.size(); ++ii)
 		{
-			BX_TRACE("\t  define :%s\n", defines[ii].c_str());
+			BX_TRACE("\t  define :%s\n", defines[ii].c_str() );
 		}
 
 		for (size_t ii = 0; ii < dependencies.size(); ++ii)
 		{
-			BX_TRACE("\t  dependency :%s\n", dependencies[ii].c_str());
+			BX_TRACE("\t  dependency :%s\n", dependencies[ii].c_str() );
 		}
 	}
 
@@ -473,7 +504,7 @@ namespace bgfx
 		int32_t len = bx::vsnprintf(out, max, _format, argList);
 		if (len > max)
 		{
-			out = (char*)alloca(len);
+			out = (char*)BX_STACK_ALLOC(len);
 			len = bx::vsnprintf(out, len, _format, argList);
 		}
 
@@ -568,7 +599,7 @@ namespace bgfx
 			int32_t len = bx::vsnprintf(out, max, _format, argList);
 			if (len > max)
 			{
-				out = (char*)alloca(len);
+				out = (char*)BX_STACK_ALLOC(len);
 				len = bx::vsnprintf(out, len, _format, argList);
 			}
 
@@ -659,7 +690,7 @@ namespace bgfx
 	{
 		const int32_t len = bx::strLen(_find);
 
-		char* replace = (char*)alloca(len+1);
+		char* replace = (char*)BX_STACK_ALLOC(len+1);
 		bx::strCopy(replace, len+1, _replace);
 		for (int32_t ii = bx::strLen(replace); ii < len; ++ii)
 		{
@@ -1003,7 +1034,7 @@ namespace bgfx
 
 		bx::printf(
 			  "shaderc, bgfx shader compiler tool, version %d.%d.%d.\n"
-			  "Copyright 2011-2023 Branimir Karadzic. All rights reserved.\n"
+			  "Copyright 2011-2025 Branimir Karadzic. All rights reserved.\n"
 			  "License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE\n\n"
 			, BGFX_SHADERC_VERSION_MAJOR
 			, BGFX_SHADERC_VERSION_MINOR
@@ -1015,7 +1046,7 @@ namespace bgfx
 
 			  "\n"
 			  "Options:\n"
-			  "  -h, --help            	       Display this help and exit.\n"
+			  "  -h, --help                    Display this help and exit.\n"
 			  "  -v, --version                 Output version information and exit.\n"
 			  "  -f <file path>                Input's file path.\n"
 			  "  -i <include path>             Include path. (for multiple paths use -i multiple times)\n"
@@ -1062,10 +1093,15 @@ namespace bgfx
 			  "      --verbose                 Be verbose.\n"
 
 			  "\n"
-			  "(DX9 and DX11 only):\n"
+			  "(Vulkan, DirectX and Metal):\n"
 
 			  "\n"
 			  "      --debug                   Debug information.\n"
+
+			  "\n"
+			  "(DirectX only):\n"
+
+			  "\n"
 			  "      --disasm                  Disassemble compiled shader.\n"
 			  "  -O <level>                    Set optimization level. Can be 0 to 3.\n"
 			  "      --Werror                  Treat warnings as errors.\n"
@@ -1134,6 +1170,7 @@ namespace bgfx
 		preprocessor.setDefaultDefine("BX_PLATFORM_ANDROID");
 		preprocessor.setDefaultDefine("BX_PLATFORM_EMSCRIPTEN");
 		preprocessor.setDefaultDefine("BX_PLATFORM_IOS");
+		preprocessor.setDefaultDefine("BX_PLATFORM_VISIONOS");
 		preprocessor.setDefaultDefine("BX_PLATFORM_LINUX");
 		preprocessor.setDefaultDefine("BX_PLATFORM_OSX");
 		preprocessor.setDefaultDefine("BX_PLATFORM_PS4");
@@ -1187,18 +1224,6 @@ namespace bgfx
 			preprocessor.setDefine("BX_PLATFORM_EMSCRIPTEN=1");
 			preprocessor.setDefine(glslDefine);
 		}
-		else if (0 == bx::strCmpI(platform, "ios") )
-		{
-			preprocessor.setDefine("BX_PLATFORM_IOS=1");
-			if (profile->lang == ShadingLang::Metal)
-			{
-				preprocessor.setDefine("BGFX_SHADER_LANGUAGE_METAL=1");
-			}
-			else
-			{
-				preprocessor.setDefine(glslDefine);
-			}
-		}
 		else if (0 == bx::strCmpI(platform, "linux") )
 		{
 			preprocessor.setDefine("BX_PLATFORM_LINUX=1");
@@ -1211,20 +1236,35 @@ namespace bgfx
 				preprocessor.setDefine(glslDefine);
 			}
 		}
-		else if (0 == bx::strCmpI(platform, "osx") )
+		else if (
+			0 == bx::strCmpI(platform, "ios") ||
+			0 == bx::strCmpI(platform, "osx") ||
+			0 == bx::strCmpI(platform, "visionos")
+		)
 		{
-			preprocessor.setDefine("BX_PLATFORM_OSX=1");
+			if (0 == bx::strCmpI(platform, "osx"))
+			{
+				preprocessor.setDefine("BX_PLATFORM_OSX=1");
+			}
+			else if (0 == bx::strCmpI(platform, "visionos")) {
+				preprocessor.setDefine("BX_PLATFORM_VISIONOS=1");
+			}
+			else
+			{
+				preprocessor.setDefine("BX_PLATFORM_IOS=1");
+			}
+
 			if (profile->lang != ShadingLang::Metal)
 			{
 				preprocessor.setDefine(glslDefine);
 			}
-			char temp[256];
+			char temp[32];
 			bx::snprintf(
-				  temp
+				temp
 				, sizeof(temp)
 				, "BGFX_SHADER_LANGUAGE_METAL=%d"
 				, (profile->lang == ShadingLang::Metal) ? profile->id : 0
-				);
+			);
 			preprocessor.setDefine(temp);
 		}
 		else if (0 == bx::strCmpI(platform, "windows") )
@@ -1348,7 +1388,7 @@ namespace bgfx
 
 				bx::StringView assign = bx::strSubstr(parse, 0, 1);
 				bx::StringView init;
-				if (0 == bx::strCmp(assign, "=", 1))
+				if (0 == bx::strCmp(assign, "=", 1) )
 				{
 					parse = bx::strLTrimSpace(bx::StringView(parse.getPtr() + 1, parse.getTerm() ) );
 					init.set(parse.getPtr(), eol.getPtr() );
@@ -1511,7 +1551,7 @@ namespace bgfx
 			{
 				bx::write(_shaderWriter, uint16_t(0), &err);
 
-				uint32_t shaderSize = (uint32_t)bx::strLen(input);
+				const uint32_t shaderSize = (uint32_t)bx::strLen(input);
 				bx::write(_shaderWriter, shaderSize, &err);
 				bx::write(_shaderWriter, input, shaderSize, &err);
 				bx::write(_shaderWriter, uint8_t(0), &err);
@@ -1520,7 +1560,7 @@ namespace bgfx
 			}
 			else if (profile->lang == ShadingLang::Metal)
 			{
-				compiled = compileMetalShader(_options, BX_MAKEFOURCC('M', 'T', 'L', 0), input, _shaderWriter, _messageWriter);
+				compiled = compileMetalShader(_options, profile->id, input, _shaderWriter, _messageWriter);
 			}
 			else if (profile->lang == ShadingLang::SpirV)
 			{
@@ -1550,7 +1590,7 @@ namespace bgfx
 				}
 				else
 				{
-					if (profile->lang != ShadingLang::PSSL)
+					if (profile->lang == ShadingLang::PSSL)
 					{
 						preprocessor.writef(getPsslPreamble() );
 					}
@@ -1677,7 +1717,7 @@ namespace bgfx
 
 							if (profile->lang == ShadingLang::Metal)
 							{
-								compiled = compileMetalShader(_options, BX_MAKEFOURCC('M', 'T', 'L', 0), code, _shaderWriter, _messageWriter);
+								compiled = compileMetalShader(_options, profile->id, code, _shaderWriter, _messageWriter);
 							}
 							else if (profile->lang == ShadingLang::SpirV)
 							{
@@ -2237,7 +2277,7 @@ namespace bgfx
 								const bool usesTextureArray       = !bx::findIdentifierMatch(input, s_textureArray).isEmpty();
 								const bool usesPacking            = !bx::findIdentifierMatch(input, s_ARB_shading_language_packing).isEmpty();
 								const bool usesViewportLayerArray = !bx::findIdentifierMatch(input, s_ARB_shader_viewport_layer_array).isEmpty();
-								const bool usesUnsignedVecs       = !bx::findIdentifierMatch(preprocessedInput, s_unsignedVecs).isEmpty();
+								const bool usesIntegerVecs        = !bx::findIdentifierMatch(preprocessedInput, s_integerVecs).isEmpty();
 
 								if (profile->lang != ShadingLang::ESSL)
 								{
@@ -2245,7 +2285,7 @@ namespace bgfx
 										|| !bx::findIdentifierMatch(input, s_130).isEmpty()
 										|| usesInterpolationQualifiers
 										|| usesTexelFetch
-										|| usesUnsignedVecs
+										|| usesIntegerVecs
 										) );
 
 									bx::stringPrintf(code, "#version %d\n", need130 ? 130 : glsl_profile);
@@ -2327,15 +2367,6 @@ namespace bgfx
 											);
 									}
 
-									if (130 > glsl_profile)
-									{
-										bx::stringPrintf(code,
-											"#define ivec2 vec2\n"
-											"#define ivec3 vec3\n"
-											"#define ivec4 vec4\n"
-											);
-									}
-
 									if (ARB_shader_texture_lod)
 									{
 										bx::stringPrintf(code,
@@ -2355,11 +2386,11 @@ namespace bgfx
 											);
 									}
 
-									if (need130 || (glsl_profile >= 130))
+									if (need130 || (glsl_profile >= 130) )
 									{
 										bx::stringPrintf(code
-											, "#define bgfxShadow2D(_sampler, _coord)     vec4_splat(texture(_sampler, _coord))\n"
-											  "#define bgfxShadow2DProj(_sampler, _coord) vec4_splat(textureProj(_sampler, _coord))\n"
+											, "#define bgfxShadow2D(_sampler, _coord)     vec4_splat(texture(_sampler, _coord) )\n"
+											  "#define bgfxShadow2DProj(_sampler, _coord) vec4_splat(textureProj(_sampler, _coord) )\n"
 											);
 									}
 									else
@@ -2373,7 +2404,7 @@ namespace bgfx
 								else
 								{
 									if (glsl_profile < 300
-									&&  usesUnsignedVecs)
+									&&  usesIntegerVecs)
 									{
 										glsl_profile = 300;
 									}
@@ -2425,7 +2456,9 @@ namespace bgfx
 										bx::stringPrintf(code, "#extension GL_OES_EGL_image_external : enable\n");
 									}
 									
-									if ((glsl_profile < 300) && (!bx::findIdentifierMatch(input, s_EXT_shadow_samplers).isEmpty()))
+									if (glsl_profile < 300
+									&&  !bx::findIdentifierMatch(input, s_EXT_shadow_samplers).isEmpty() )
+
 									{
 										bx::stringPrintf(code
 											, "#extension GL_EXT_shadow_samplers : enable\n"
@@ -2455,7 +2488,8 @@ namespace bgfx
 											);
 									}
 
-									if ((glsl_profile < 300) && (!bx::findIdentifierMatch(input, "gl_FragDepth").isEmpty() ))
+									if (glsl_profile < 300
+									&&  !bx::findIdentifierMatch(input, "gl_FragDepth").isEmpty() )
 									{
 										bx::stringPrintf(code
 											, "#extension GL_EXT_frag_depth : enable\n"
@@ -2548,8 +2582,8 @@ namespace bgfx
 									);
 
 								bx::stringPrintf(code
-									, "#define bgfxShadow2D(_sampler, _coord)     vec4_splat(texture(_sampler, _coord))\n"
-									  "#define bgfxShadow2DProj(_sampler, _coord) vec4_splat(textureProj(_sampler, _coord))\n"
+									, "#define bgfxShadow2D(_sampler, _coord)     vec4_splat(texture(_sampler, _coord) )\n"
+									  "#define bgfxShadow2DProj(_sampler, _coord) vec4_splat(textureProj(_sampler, _coord) )\n"
 									);
 							}
 
@@ -2587,7 +2621,7 @@ namespace bgfx
 
 							if (profile->lang == ShadingLang::Metal)
 							{
-								compiled = compileMetalShader(_options, BX_MAKEFOURCC('M', 'T', 'L', 0), code, _shaderWriter, _messageWriter);
+								compiled = compileMetalShader(_options, profile->id, code, _shaderWriter, _messageWriter);
 							}
 							else if (profile->lang == ShadingLang::SpirV)
 							{
@@ -2658,7 +2692,8 @@ namespace bgfx
 
 		bool consoleOut = cmdLine.hasArg("stdout");
 		const char* outFilePath = cmdLine.findOption('o');
-		if (NULL == outFilePath && !consoleOut)
+		if (NULL == outFilePath
+		&&  !consoleOut)
 		{
 			help("Output file name must be specified or use \"--stdout\" to output to stdout.");
 			return bx::kExitFailure;
@@ -2726,7 +2761,7 @@ namespace bgfx
 				bin2c = baseName(outFilePath);
 				if (!bin2c.isEmpty() )
 				{
-					char* temp = (char*)alloca(bin2c.getLength()+1);
+					char* temp = (char*)BX_STACK_ALLOC(bin2c.getLength()+1);
 					for (uint32_t ii = 0, num = bin2c.getLength(); ii < num; ++ii)
 					{
 						char ch = bin2c.getPtr()[ii];
@@ -2807,6 +2842,7 @@ namespace bgfx
 				const char* varyingdef = cmdLine.findOption("varyingdef", defaultVarying.c_str() );
 				attribdef.load(varyingdef);
 				varying = attribdef.getData();
+
 				if (NULL     != varying
 				&&  *varying != '\0')
 				{
@@ -2818,11 +2854,12 @@ namespace bgfx
 				}
 			}
 
-			const size_t padding    = 16384;
-			uint32_t size = (uint32_t)bx::getSize(&reader);
-			char* data = new char[size+padding+1];
-			size = (uint32_t)bx::read(&reader, data, size, bx::ErrorAssert{});
+			int32_t size = (int32_t)bx::getSize(&reader);
+			const int32_t total = size + 16384;
+			char* data = new char[total];
+			size = bx::read(&reader, data, size, bx::ErrorAssert{});
 
+			// Trim UTF-8 BOM
 			if (data[0] == '\xef'
 			&&  data[1] == '\xbb'
 			&&  data[2] == '\xbf')
@@ -2831,38 +2868,65 @@ namespace bgfx
 				size -= 3;
 			}
 
+			const char ch = data[0];
+			if (false // https://en.wikipedia.org/wiki/Byte_order_mark#Byte_order_marks_by_encoding
+			||  '\x00' == ch
+			||  '\x0e' == ch
+			||  '\x2b' == ch
+			||  '\x84' == ch
+			||  '\xdd' == ch
+			||  '\xf7' == ch
+			||  '\xfb' == ch
+			||  '\xfe' == ch
+			||  '\xff' == ch
+			   )
+			{
+				bx::printf("Shader input file has unsupported BOM.\n");
+				return bx::kExitFailure;
+			}
+
 			// Compiler generates "error X3000: syntax error: unexpected end of file"
 			// if input doesn't have empty line at EOF.
 			data[size] = '\n';
-			bx::memSet(&data[size+1], 0, padding);
+			bx::memSet(&data[size+1], 0, total-size-1);
 			bx::close(&reader);
 
-			bx::FileWriter* writer = NULL;
-
-			if (!consoleOut)
 			{
-				if (!bin2c.isEmpty())
+				bx::FileWriter* writer = NULL;
+
+				if (!consoleOut)
 				{
-					writer = new Bin2cWriter(bin2c);
-				}
-				else
-				{
-					writer = new bx::FileWriter;
+					if (!bin2c.isEmpty() )
+					{
+						writer = new Bin2cWriter(bin2c);
+					}
+					else
+					{
+						writer = new bx::FileWriter;
+					}
+
+					if (!bx::open(writer, outFilePath) )
+					{
+						bx::printf("Unable to open output file '%s'.\n", outFilePath);
+						return bx::kExitFailure;
+					}
 				}
 
-				if (!bx::open(writer, outFilePath))
+				compiled = compileShader(
+						  varying
+						, commandLineComment.c_str()
+						, data
+						, size
+						, options
+						, consoleOut ? bx::getStdOut() : writer
+						, bx::getStdOut()
+						);
+
+				if (!consoleOut)
 				{
-					bx::printf("Unable to open output file '%s'.\n", outFilePath);
-					return bx::kExitFailure;
+					bx::close(writer);
+					delete writer;
 				}
-			}
-
-			compiled = compileShader(varying, commandLineComment.c_str(), data, size, options, consoleOut ? bx::getStdOut() : writer, bx::getStdOut());
-
-			if (!consoleOut)
-			{
-				bx::close(writer);
-				delete writer;
 			}
 		}
 

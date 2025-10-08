@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -8,7 +8,6 @@
 
 #define BGFX_USE_EGL ( (BGFX_CONFIG_RENDERER_OPENGL || BGFX_CONFIG_RENDERER_OPENGLES) && (0 \
 	|| BX_PLATFORM_ANDROID                                                                  \
-	|| BX_PLATFORM_BSD                                                                      \
 	|| BX_PLATFORM_LINUX                                                                    \
 	|| BX_PLATFORM_NX                                                                       \
 	|| BX_PLATFORM_RPI                                                                      \
@@ -24,7 +23,6 @@
 
 // BEGIN CHANGE(fso) reactivated opengl for osx
 #define BGFX_USE_GL_DYNAMIC_LIB (0 \
-	|| BX_PLATFORM_BSD             \
 	|| BX_PLATFORM_LINUX           \
 	|| BX_PLATFORM_OSX             \
 	|| BX_PLATFORM_WINDOWS         \
@@ -76,7 +74,7 @@
 #		endif // BX_PLATFORM_OSX
 // END CHANGE(fso)
 #	else
-#		if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+#		if BX_PLATFORM_LINUX
 #			define GL_PROTOTYPES
 #			define GL_GLEXT_LEGACY
 #			include <GL/gl.h>
@@ -115,6 +113,7 @@ typedef double GLdouble;
 typedef int64_t  GLint64;
 typedef uint64_t GLuint64;
 #		define GL_PROGRAM_BINARY_LENGTH GL_PROGRAM_BINARY_LENGTH_OES
+#		define GL_NUM_PROGRAM_BINARY_FORMATS GL_NUM_PROGRAM_BINARY_FORMATS_OES
 #		define GL_HALF_FLOAT GL_HALF_FLOAT_OES
 #		define GL_RGBA8 GL_RGBA8_OES
 #		define GL_UNSIGNED_INT_2_10_10_10_REV GL_UNSIGNED_INT_2_10_10_10_REV_EXT

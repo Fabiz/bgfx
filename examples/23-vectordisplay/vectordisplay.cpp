@@ -10,7 +10,6 @@
 //   https://web.archive.org/web/20120313001837/http://paulbourke.net/dataformats/hershey/
 //
 #include <float.h>  // FLT_EPSILON
-#include <alloca.h> // alloca
 
 #include <bx/math.h>
 
@@ -52,14 +51,12 @@ inline float normalizef(float _a)
 
 VectorDisplay::VectorDisplay()
 	: m_originBottomLeft(false)
-	, m_texelHalf(false)
 {
 }
 
-void VectorDisplay::init(bool _originBottomLeft, float _texelHalf)
+void VectorDisplay::init(bool _originBottomLeft)
 {
 	m_originBottomLeft = _originBottomLeft;
-	m_texelHalf = _texelHalf;
 }
 
 
@@ -238,7 +235,7 @@ void VectorDisplay::endFrame()
 			bgfx::setUniform(u_params, &params);
 
 			bgfx::setViewTransform(viewCounter, NULL, proj);
-			screenSpaceQuad(m_glowWidth, m_glowHeight);
+			screenSpaceQuad();
 			bgfx::setViewName(viewCounter, "BlendPassA");
 			bgfx::submit(viewCounter, m_blurShader);
 
@@ -249,7 +246,7 @@ void VectorDisplay::endFrame()
 			bgfx::setTexture(0, s_texColor, bgfx::getTexture(m_glow0FrameBuffer) );
 
 			bgfx::setViewTransform(viewCounter, NULL, proj);
-			screenSpaceQuad(m_glowWidth, m_glowHeight);
+			screenSpaceQuad();
 
 			params[0] = 0.0f;
 			params[1] = 1.0f / m_glowHeight;
@@ -288,7 +285,7 @@ void VectorDisplay::endFrame()
 	params[3] = 1.0f;
 	bgfx::setUniform(u_params, params);
 	bgfx::setViewName(viewCounter, "BlendVectorToDisplay");
-	screenSpaceQuad(m_screenWidth, m_screenHeight);
+	screenSpaceQuad();
 	bgfx::submit(viewCounter, m_blitShader);
 	viewCounter++;
 
@@ -307,7 +304,7 @@ void VectorDisplay::endFrame()
 		params[2] = glow_fin_mult;
 		bgfx::setUniform(u_params, params);
 		bgfx::setViewName(viewCounter, "BlendBlurToDisplay");
-		screenSpaceQuad(m_screenWidth, m_screenHeight);
+		screenSpaceQuad();
 		bgfx::submit(viewCounter, m_blitShader);
 		viewCounter++;
 	}
@@ -341,7 +338,7 @@ void VectorDisplay::endDraw()
 
 	// from the list of points, build a list of lines
 	uint32_t nlines = (uint32_t)m_pendingPoints.size() - 1;
-	Line* lines = (Line*)alloca(nlines * sizeof(Line) );
+	Line* lines = (Line*)BX_STACK_ALLOC(nlines * sizeof(Line) );
 
 	float t = effectiveThickness();
 	int first_last_same = true
@@ -632,7 +629,7 @@ void VectorDisplay::drawFan(float _cx, float _cy, float _pa, float _a, float _t,
 	{
 		_t = -_t;
 		nsteps = (int32_t)bx::max(1.0f, bx::round(a2pa / (bx::kPi / 8.0f) ) );
-		angles = (float*)alloca(sizeof(float) * (nsteps + 1) );
+		angles = (float*)BX_STACK_ALLOC(sizeof(float) * (nsteps + 1) );
 		for (i = 0; i <= nsteps; i++)
 		{
 			angles[i] = _a + i * a2pa / nsteps;
@@ -641,7 +638,7 @@ void VectorDisplay::drawFan(float _cx, float _cy, float _pa, float _a, float _t,
 	else
 	{
 		nsteps = (int32_t)bx::max(1.0f, bx::round(pa2a / (bx::kPi / 8.0f) ) );
-		angles = (float*)alloca(sizeof(float) * (nsteps + 1) );
+		angles = (float*)BX_STACK_ALLOC(sizeof(float) * (nsteps + 1) );
 		for (i = 0; i <= nsteps; i++)
 		{
 			angles[i] = _pa + i * pa2a / nsteps;
@@ -767,7 +764,7 @@ void VectorDisplay::getSize(float* _outWidth, float* _outHeight)
 	*_outHeight = m_screenHeight;
 }
 
-void VectorDisplay::screenSpaceQuad(float _textureWidth, float _textureHeight, float _width, float _height)
+void VectorDisplay::screenSpaceQuad(float _width, float _height)
 {
 	if (3 == getAvailTransientVertexBuffer(3, PosColorUvVertex::ms_layout) )
 	{
@@ -782,13 +779,11 @@ void VectorDisplay::screenSpaceQuad(float _textureWidth, float _textureHeight, f
 		const float miny = 0.0f;
 		const float maxy = _height * 2.0f;
 
-		const float texelHalfW = m_texelHalf / _textureWidth;
-		const float texelHalfH = m_texelHalf / _textureHeight;
-		const float minu = -1.0f + texelHalfW;
-		const float maxu = 1.0f + texelHalfW;
+		const float minu = -1.0f;
+		const float maxu =  1.0f;
 
-		float minv = texelHalfH;
-		float maxv = 2.0f + texelHalfH;
+		float minv = 0.0f;
+		float maxv = 2.0f;
 
 		if (m_originBottomLeft)
 		{

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -7,4 +7,4 @@
 // BEGIN CHANGE(fso) reactivated opengl for osx
 #include "glcontext_nsgl.mm"
 // END CHANGE(fso)
-#include "renderer_mtl.mm"
+//#include "renderer_mtl.mm"

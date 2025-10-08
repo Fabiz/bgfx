@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2023 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -32,22 +32,22 @@
 #define readwrite
 #define IMAGE2D_RO( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image2D,  readonly)
 #define UIMAGE2D_RO(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage2D, readonly)
-#define IMAGE2D_WR( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image2D,  writeonly)
-#define UIMAGE2D_WR(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage2D, writeonly)
+#define IMAGE2D_WO( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image2D,  writeonly)
+#define UIMAGE2D_WO(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage2D, writeonly)
 #define IMAGE2D_RW( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image2D,  readwrite)
 #define UIMAGE2D_RW(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage2D, readwrite)
 
 #define IMAGE2D_ARRAY_RO( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image2DArray,  readonly)
 #define UIMAGE2D_ARRAY_RO(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage2DArray, readonly)
-#define IMAGE2D_ARRAY_WR( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image2DArray,  writeonly)
-#define UIMAGE2D_ARRAY_WR(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage2DArray, writeonly)
+#define IMAGE2D_ARRAY_WO( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image2DArray,  writeonly)
+#define UIMAGE2D_ARRAY_WO(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage2DArray, writeonly)
 #define IMAGE2D_ARRAY_RW( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image2DArray,  readwrite)
 #define UIMAGE2D_ARRAY_RW(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage2DArray, readwrite)
 
 #define IMAGE3D_RO( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image3D,  readonly)
 #define UIMAGE3D_RO(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage3D, readonly)
-#define IMAGE3D_WR( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image3D,  writeonly)
-#define UIMAGE3D_WR(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage3D, writeonly)
+#define IMAGE3D_WO( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image3D,  writeonly)
+#define UIMAGE3D_WO(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage3D, writeonly)
 #define IMAGE3D_RW( _name, _format, _reg) __IMAGE_XX(_name, _format, _reg, image3D,  readwrite)
 #define UIMAGE3D_RW(_name, _format, _reg) __IMAGE_XX(_name, _format, _reg, uimage3D, readwrite)
 
@@ -59,7 +59,7 @@
 
 #define BUFFER_RO(_name, _type, _reg) __BUFFER_XX(_name, _type, _reg, readonly)
 #define BUFFER_RW(_name, _type, _reg) __BUFFER_XX(_name, _type, _reg, readwrite)
-#define BUFFER_WR(_name, _type, _reg) __BUFFER_XX(_name, _type, _reg, writeonly)
+#define BUFFER_WO(_name, _type, _reg) __BUFFER_XX(_name, _type, _reg, writeonly)
 
 #define NUM_THREADS(_x, _y, _z) layout (local_size_x = _x, local_size_y = _y, local_size_z = _z) in;
 
@@ -79,18 +79,27 @@
 #define COMP_r32ui    uint
 #define COMP_rg32ui   uint2
 #define COMP_rgba32ui uint4
+#define COMP_r16ui    uint
+#define COMP_rg16ui   uint2
+#define COMP_rgba16ui uint4
 #define COMP_r32f     float
 #define COMP_r16f     float
 #define COMP_rg16f    float2
 #define COMP_rgba16f  float4
 #if BGFX_SHADER_LANGUAGE_HLSL
-#	define COMP_rgba8 unorm float4
-#	define COMP_rg8   unorm float2
-#	define COMP_r8    unorm float
+#	define COMP_rgba8  unorm float4
+#	define COMP_rg8    unorm float2
+#	define COMP_r8     unorm float
+#	define COMP_rgba16 unorm float4
+#	define COMP_rg16   unorm float2
+#	define COMP_r16    unorm float
 #else
-#	define COMP_rgba8       float4
-#	define COMP_rg8         float2
-#	define COMP_r8          float
+#	define COMP_rgba8        float4
+#	define COMP_rg8          float2
+#	define COMP_r8           float
+#	define COMP_rgba16       float4
+#	define COMP_rg16         float2
+#	define COMP_r16          float
 #endif // BGFX_SHADER_LANGUAGE_HLSL
 #define COMP_rgba32f  float4
 
@@ -99,10 +108,10 @@
 
 #define UIMAGE2D_RO(_name, _format, _reg) IMAGE2D_RO(_name, _format, _reg)
 
-#define IMAGE2D_WR( _name, _format, _reg)                                                 \
+#define IMAGE2D_WO( _name, _format, _reg)                                                 \
 	WRITEONLY FORMAT(_format) RWTexture2D<COMP_ ## _format> _name : REGISTER(u, _reg);  \
-	
-#define UIMAGE2D_WR(_name, _format, _reg) IMAGE2D_WR(_name, _format, _reg)
+
+#define UIMAGE2D_WO(_name, _format, _reg) IMAGE2D_WO(_name, _format, _reg)
 
 #define IMAGE2D_RW( _name, _format, _reg)                            \
 	FORMAT(_format) RWTexture2D<COMP_ ## _format> _name : REGISTER(u, _reg);  \
@@ -114,10 +123,10 @@
 
 #define UIMAGE2D_ARRAY_RO(_name, _format, _reg) IMAGE2D_ARRAY_RO(_name, _format, _reg)
 
-#define IMAGE2D_ARRAY_WR( _name, _format, _reg)                                       \
+#define IMAGE2D_ARRAY_WO( _name, _format, _reg)                                       \
 	WRITEONLY FORMAT(_format) RWTexture2DArray<COMP_ ## _format> _name : REGISTER(u, _reg);    \
 
-#define UIMAGE2D_ARRAY_WR(_name, _format, _reg) IMAGE2D_ARRAY_WR(_name, _format, _reg)
+#define UIMAGE2D_ARRAY_WO(_name, _format, _reg) IMAGE2D_ARRAY_WO(_name, _format, _reg)
 
 #define IMAGE2D_ARRAY_RW(_name, _format, _reg)                              \
 	FORMAT(_format) RWTexture2DArray<COMP_ ## _format> _name : REGISTER(u, _reg);    \
@@ -129,10 +138,10 @@
 
 #define UIMAGE3D_RO(_name, _format, _reg) IMAGE3D_RO(_name, _format, _reg)
 
-#define IMAGE3D_WR( _name, _format, _reg)                                      \
+#define IMAGE3D_WO( _name, _format, _reg)                                      \
 	WRITEONLY FORMAT(_format) RWTexture3D<COMP_ ## _format> _name : REGISTER(u, _reg);
 
-#define UIMAGE3D_WR(_name, _format, _reg) IMAGE3D_RW(_name, _format, _reg)
+#define UIMAGE3D_WO(_name, _format, _reg) IMAGE3D_RW(_name, _format, _reg)
 
 #define IMAGE3D_RW( _name, _format, _reg)                            \
 	FORMAT(_format) RWTexture3D<COMP_ ## _format> _name : REGISTER(u, _reg);  \
@@ -142,11 +151,11 @@
 #if BGFX_SHADER_LANGUAGE_METAL || BGFX_SHADER_LANGUAGE_SPIRV
 #define BUFFER_RO(_name, _struct, _reg) StructuredBuffer<_struct>   _name : REGISTER(t, _reg)
 #define BUFFER_RW(_name, _struct, _reg) RWStructuredBuffer <_struct> _name : REGISTER(u, _reg)
-#define BUFFER_WR(_name, _struct, _reg) BUFFER_RW(_name, _struct, _reg)
+#define BUFFER_WO(_name, _struct, _reg) BUFFER_RW(_name, _struct, _reg)
 #else
 #define BUFFER_RO(_name, _struct, _reg) Buffer<_struct>   _name : REGISTER(t, _reg)
 #define BUFFER_RW(_name, _struct, _reg) RWBuffer<_struct> _name : REGISTER(u, _reg)
-#define BUFFER_WR(_name, _struct, _reg) BUFFER_RW(_name, _struct, _reg)
+#define BUFFER_WO(_name, _struct, _reg) BUFFER_RW(_name, _struct, _reg)
 #endif
 
 #define NUM_THREADS(_x, _y, _z) [numthreads(_x, _y, _z)]
