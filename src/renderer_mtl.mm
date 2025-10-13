@@ -2154,7 +2154,20 @@ static_assert(BX_COUNTOF(s_accessNames) == Access::Count, "Invalid s_accessNames
 				{
 					BX_TRACE("arg: %s type:%d", utf8String(arg.name), arg.type);
 
-					if ((!m_usesMTLBindings && [(MTLArgument*)arg isActive]) || (m_usesMTLBindings && arg.used))
+					// CHANGE(fso) arg.used lead to a darkscreen on iPhone 8 and probably iPhone X for ios 16
+					// careful: this bug happens only when starting the app from the home screen on iPhone 8 (and not from Xcode)
+					// see https://github.com/bkaradzic/bgfx/commit/5f564db0d5338c7204efc060ba82b41d80f3682a#r127436500 and
+					// https://github.com/bkaradzic/bgfx/issues/3392
+					bool shouldprocess = false;
+					
+					if (@available(iOS 17, *)) {
+						shouldprocess = ((!m_usesMTLBindings && [(MTLArgument*)arg isActive]) || (m_usesMTLBindings && arg.used));
+					}
+					else {
+						shouldprocess = ([(MTLArgument*)arg isActive]);
+					}
+					
+					if (shouldprocess)
 					{
 						if (arg.type == MTLBindingTypeBuffer)
 						{
