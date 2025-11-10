@@ -51,7 +51,7 @@ public:
 			, 0
 			);
 
-		imguiCreate();
+		imguiCreate(18.0 * 2.);
 	}
 
 	virtual int shutdown() override

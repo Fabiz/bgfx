@@ -132,7 +132,7 @@ void showExampleDialog(entry::AppI* _app, const char* _errorText)
 		, ImGuiCond_FirstUseEver
 		);
 	ImGui::SetNextWindowSize(
-		  ImVec2(300.0f, 210.0f)
+		  ImVec2(600.0f, 420.0f)
 		, ImGuiCond_FirstUseEver
 		);
 
