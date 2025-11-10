@@ -1143,24 +1143,29 @@ public static class bgfx
 		TransparentBackbuffer  = 0x0000000004000000,
 	
 		/// <summary>
+		/// Variable Rate Shading
+		/// </summary>
+		VariableRateShading    = 0x0000000008000000,
+	
+		/// <summary>
 		/// Vertex attribute half-float is supported.
 		/// </summary>
-		VertexAttribHalf       = 0x0000000008000000,
+		VertexAttribHalf       = 0x0000000010000000,
 	
 		/// <summary>
 		/// Vertex attribute 10_10_10_2 is supported.
 		/// </summary>
-		VertexAttribUint10     = 0x0000000010000000,
+		VertexAttribUint10     = 0x0000000020000000,
 	
 		/// <summary>
 		/// Rendering with VertexID only is supported.
 		/// </summary>
-		VertexId               = 0x0000000020000000,
+		VertexId               = 0x0000000040000000,
 	
 		/// <summary>
 		/// Viewport layer is available in vertex shader.
 		/// </summary>
-		ViewportLayerArray     = 0x0000000040000000,
+		ViewportLayerArray     = 0x0000000080000000,
 	
 		/// <summary>
 		/// All texture compare modes are supported.
@@ -2007,6 +2012,20 @@ public static class bgfx
 	}
 	
 	[AllowDuplicates]
+	public enum ShadingRate : uint32
+	{
+		Rate1x1,
+		Rate1x2,
+		Rate2x1,
+		Rate2x2,
+		Rate2x4,
+		Rate4x2,
+		Rate4x4,
+	
+		Count
+	}
+	
+	[AllowDuplicates]
 	public enum NativeWindowHandleType : uint32
 	{
 		/// <summary>
@@ -2083,8 +2102,9 @@ public static class bgfx
 			public uint32 maxOcclusionQueries;
 			public uint32 maxEncoders;
 			public uint32 minResourceCbSize;
-			public uint32 transientVbSize;
-			public uint32 transientIbSize;
+			public uint32 maxTransientVbSize;
+			public uint32 maxTansientIbSize;
+			public uint32 minUniformBufferSize;
 		}
 	
 		public RendererType rendererType;
@@ -2120,7 +2140,8 @@ public static class bgfx
 	[CRepr]
 	public struct Resolution
 	{
-		public TextureFormat format;
+		public TextureFormat formatColor;
+		public TextureFormat formatDepthStencil;
 		public uint32 width;
 		public uint32 height;
 		public uint32 reset;
@@ -2137,8 +2158,9 @@ public static class bgfx
 		{
 			public uint16 maxEncoders;
 			public uint32 minResourceCbSize;
-			public uint32 transientVbSize;
-			public uint32 transientIbSize;
+			public uint32 maxTransientVbSize;
+			public uint32 maxTransientIbSize;
+			public uint32 minUniformBufferSize;
 		}
 	
 		public RendererType type;
@@ -3628,6 +3650,17 @@ public static class bgfx
 	public static extern void set_view_order(ViewId _id, uint16 _num, ViewId* _order);
 	
 	/// <summary>
+	/// Set view shading rate.
+	/// @attention Availability depends on: `BGFX_CAPS_VARIABLE_RATE_SHADING`.
+	/// </summary>
+	///
+	/// <param name="_id">View id.</param>
+	/// <param name="_shadingRate">Shading rate.</param>
+	///
+	[LinkName("bgfx_set_view_shading_rate")]
+	public static extern void set_view_shading_rate(ViewId _id, ShadingRate _shadingRate);
+	
+	/// <summary>
 	/// Reset all view settings to default.
 	/// </summary>
 	///
@@ -4197,9 +4230,10 @@ public static class bgfx
 	///
 	/// <param name="_handle">Texture handle.</param>
 	/// <param name="_ptr">Native API pointer to texture.</param>
+	/// <param name="_layerIndex">Layer index for texture arrays (only implemented for D3D11).</param>
 	///
 	[LinkName("bgfx_override_internal_texture_ptr")]
-	public static extern void* override_internal_texture_ptr(TextureHandle _handle, void* _ptr);
+	public static extern void* override_internal_texture_ptr(TextureHandle _handle, void* _ptr, uint16 _layerIndex);
 	
 	/// <summary>
 	/// Override internal texture by creating new texture. Previously created

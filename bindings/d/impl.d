@@ -3,10 +3,22 @@
 + │ AUTO GENERATED! DO NOT EDIT! │
 + └==============================┘
 +/
-module bgfx.fakeenum;
+///Do NOT import this module! Use the symbols with the same names in `bgfx/package.d` instead.
+module bgfx.impl;
 
-//NOTE: Do NOT use this module! Use the enums with the same names in `bgfx/package.d` instead.
+import bindbc.bgfx.config;
+import bgfx;
+
 package:
+
+mixin(joinFnBinds((){
+	FnBind[] ret = [
+		{q{const(Memory)*}, q{alloc}, q{uint size}, ext: `C++, "bgfx"`},
+		{q{const(Memory)*}, q{copy}, q{const(void)* data, uint size}, ext: `C++, "bgfx"`},
+	];
+	return ret;
+}()));
+
 extern(C++, "bgfx") package final abstract class Fatal{
 	enum Enum{
 		debugCheck,invalidShader,unableToInitialize,unableToCreateTexture,deviceLost,count
@@ -70,6 +82,11 @@ extern(C++, "bgfx") package final abstract class TopologySort{
 extern(C++, "bgfx") package final abstract class ViewMode{
 	enum Enum{
 		default_,sequential,depthAscending,depthDescending,count
+	}
+}
+extern(C++, "bgfx") package final abstract class ShadingRate{
+	enum Enum{
+		rate1x1,rate1x2,rate2x1,rate2x2,rate2x4,rate4x2,rate4x4,count
 	}
 }
 extern(C++, "bgfx") package final abstract class NativeWindowHandleType{

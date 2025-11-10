@@ -723,17 +723,20 @@ enum CapsFlags : const ulong
 	// Transparent back buffer supported.
 	TRANSPARENTBACKBUFFER  = 0x0000000004000000,
 
+	// Variable Rate Shading
+	VARIABLERATESHADING    = 0x0000000008000000,
+
 	// Vertex attribute half-float is supported.
-	VERTEXATTRIBHALF       = 0x0000000008000000,
+	VERTEXATTRIBHALF       = 0x0000000010000000,
 
 	// Vertex attribute 10_10_10_2 is supported.
-	VERTEXATTRIBUINT10     = 0x0000000010000000,
+	VERTEXATTRIBUINT10     = 0x0000000020000000,
 
 	// Rendering with VertexID only is supported.
-	VERTEXID               = 0x0000000020000000,
+	VERTEXID               = 0x0000000040000000,
 
 	// Viewport layer is available in vertex shader.
-	VIEWPORTLAYERARRAY     = 0x0000000040000000,
+	VIEWPORTLAYERARRAY     = 0x0000000080000000,
 
 	// All texture compare modes are supported.
 	TEXTURECOMPAREALL      = 0x0000000000180000,
@@ -1294,6 +1297,19 @@ enum ViewMode : uint
 	COUNT
 }
 
+enum ShadingRate : uint
+{
+	RATE1X1,
+	RATE1X2,
+	RATE2X1,
+	RATE2X2,
+	RATE2X4,
+	RATE4X2,
+	RATE4X4,
+
+	COUNT
+}
+
 enum NativeWindowHandleType : uint
 {
 	// Platform default handle type (X11 on Linux).
@@ -1379,9 +1395,11 @@ struct CapsLimits
 	// Minimum resource command buffer size.
 	uint minResourceCbSize;
 	// Maximum transient vertex buffer size.
-	uint transientVbSize;
+	uint maxTransientVbSize;
 	// Maximum transient index buffer size.
-	uint transientIbSize;
+	uint maxTansientIbSize;
+	// Mimimum uniform buffer size.
+	uint minUniformBufferSize;
 }
 
 // Renderer capabilities.
@@ -1465,8 +1483,10 @@ struct PlatformData
 // Backbuffer resolution and reset parameters.
 struct Resolution
 {
-	// Backbuffer format.
-	TextureFormat format;
+	// Backbuffer color format.
+	TextureFormat formatColor;
+	// Backbuffer depth/stencil format.
+	TextureFormat formatDepthStencil;
 	// Backbuffer width.
 	uint width;
 	// Backbuffer height.
@@ -1489,9 +1509,11 @@ struct InitLimits
 	// Minimum resource command buffer size.
 	uint minResourceCbSize;
 	// Maximum transient vertex buffer size.
-	uint transientVbSize;
+	uint maxTransientVbSize;
 	// Maximum transient index buffer size.
-	uint transientIbSize;
+	uint maxTransientIbSize;
+	// Mimimum uniform buffer size.
+	uint minUniformBufferSize;
 }
 
 // Initialization parameters used by `bgfx::init`.
@@ -2558,6 +2580,12 @@ extern fn void set_view_transform(ushort _id, void* _view, void* _proj) @extern(
 // _order : `View remap id table. Passing `NULL` will reset view ids to default state.`
 extern fn void set_view_order(ushort _id, ushort _num, ushort* _order) @extern("bgfx_set_view_order");
 
+// Set view shading rate.
+// @attention Availability depends on: `BGFX_CAPS_VARIABLE_RATE_SHADING`.
+// _id : `View id.`
+// _shadingRate : `Shading rate.`
+extern fn void set_view_shading_rate(ushort _id, ShadingRate _shadingRate) @extern("bgfx_set_view_shading_rate");
+
 // Reset all view settings to default.
 extern fn void reset_view(ushort _id) @extern("bgfx_reset_view");
 
@@ -2897,7 +2925,8 @@ extern fn InternalData* get_internal_data() @extern("bgfx_get_internal_data");
 // @warning Must be called only on render thread.
 // _handle : `Texture handle.`
 // _ptr : `Native API pointer to texture.`
-extern fn uptr override_internal_texture_ptr(TextureHandle _handle, uptr _ptr) @extern("bgfx_override_internal_texture_ptr");
+// _layerIndex : `Layer index for texture arrays (only implemented for D3D11).`
+extern fn uptr override_internal_texture_ptr(TextureHandle _handle, uptr _ptr, ushort _layerIndex) @extern("bgfx_override_internal_texture_ptr");
 
 // Override internal texture by creating new texture. Previously created
 // internal texture will released.

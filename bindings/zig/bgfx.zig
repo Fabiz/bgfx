@@ -705,17 +705,20 @@ pub const CapsFlags_Texture3D: CapsFlags              = 0x0000000002000000;
 /// Transparent back buffer supported.
 pub const CapsFlags_TransparentBackbuffer: CapsFlags  = 0x0000000004000000;
 
+/// Variable Rate Shading
+pub const CapsFlags_VariableRateShading: CapsFlags    = 0x0000000008000000;
+
 /// Vertex attribute half-float is supported.
-pub const CapsFlags_VertexAttribHalf: CapsFlags       = 0x0000000008000000;
+pub const CapsFlags_VertexAttribHalf: CapsFlags       = 0x0000000010000000;
 
 /// Vertex attribute 10_10_10_2 is supported.
-pub const CapsFlags_VertexAttribUint10: CapsFlags     = 0x0000000010000000;
+pub const CapsFlags_VertexAttribUint10: CapsFlags     = 0x0000000020000000;
 
 /// Rendering with VertexID only is supported.
-pub const CapsFlags_VertexId: CapsFlags               = 0x0000000020000000;
+pub const CapsFlags_VertexId: CapsFlags               = 0x0000000040000000;
 
 /// Viewport layer is available in vertex shader.
-pub const CapsFlags_ViewportLayerArray: CapsFlags     = 0x0000000040000000;
+pub const CapsFlags_ViewportLayerArray: CapsFlags     = 0x0000000080000000;
 
 /// All texture compare modes are supported.
 pub const CapsFlags_TextureCompareAll: CapsFlags      = 0x0000000000180000;
@@ -1254,6 +1257,18 @@ pub const ViewMode = enum(c_int) {
     Count
 };
 
+pub const ShadingRate = enum(c_int) {
+    Rate1x1,
+    Rate1x2,
+    Rate2x1,
+    Rate2x2,
+    Rate2x4,
+    Rate4x2,
+    Rate4x4,
+
+    Count
+};
+
 pub const NativeWindowHandleType = enum(c_int) {
     /// Platform default handle type (X11 on Linux).
     Default,
@@ -1309,8 +1324,9 @@ pub const Caps = extern struct {
         maxOcclusionQueries: u32,
         maxEncoders: u32,
         minResourceCbSize: u32,
-        transientVbSize: u32,
-        transientIbSize: u32,
+        maxTransientVbSize: u32,
+        maxTansientIbSize: u32,
+        minUniformBufferSize: u32,
     };
 
         rendererType: RendererType,
@@ -1340,7 +1356,8 @@ pub const Caps = extern struct {
     };
 
     pub const Resolution = extern struct {
-        format: TextureFormat,
+        formatColor: TextureFormat,
+        formatDepthStencil: TextureFormat,
         width: u32,
         height: u32,
         reset: u32,
@@ -1353,8 +1370,9 @@ pub const Init = extern struct {
     pub const Limits = extern struct {
         maxEncoders: u16,
         minResourceCbSize: u32,
-        transientVbSize: u32,
-        transientIbSize: u32,
+        maxTransientVbSize: u32,
+        maxTransientIbSize: u32,
+        minUniformBufferSize: u32,
     };
 
         type: RendererType,
@@ -2924,6 +2942,15 @@ pub inline fn setViewOrder(_id: ViewId, _num: u16, _order: [*c]const ViewId) voi
 }
 extern fn bgfx_set_view_order(_id: ViewId, _num: u16, _order: [*c]const ViewId) void;
 
+/// Set view shading rate.
+/// @attention Availability depends on: `BGFX_CAPS_VARIABLE_RATE_SHADING`.
+/// <param name="_id">View id.</param>
+/// <param name="_shadingRate">Shading rate.</param>
+pub inline fn setViewShadingRate(_id: ViewId, _shadingRate: ShadingRate) void {
+    return bgfx_set_view_shading_rate(_id, _shadingRate);
+}
+extern fn bgfx_set_view_shading_rate(_id: ViewId, _shadingRate: ShadingRate) void;
+
 /// Reset all view settings to default.
 pub inline fn resetView(_id: ViewId) void {
     return bgfx_reset_view(_id);
@@ -3284,10 +3311,11 @@ extern fn bgfx_get_internal_data() [*c]const InternalData;
 /// @warning Must be called only on render thread.
 /// <param name="_handle">Texture handle.</param>
 /// <param name="_ptr">Native API pointer to texture.</param>
-pub inline fn overrideInternalTexturePtr(_handle: TextureHandle, _ptr: usize) usize {
-    return bgfx_override_internal_texture_ptr(_handle, _ptr);
+/// <param name="_layerIndex">Layer index for texture arrays (only implemented for D3D11).</param>
+pub inline fn overrideInternalTexturePtr(_handle: TextureHandle, _ptr: usize, _layerIndex: u16) usize {
+    return bgfx_override_internal_texture_ptr(_handle, _ptr, _layerIndex);
 }
-extern fn bgfx_override_internal_texture_ptr(_handle: TextureHandle, _ptr: usize) usize;
+extern fn bgfx_override_internal_texture_ptr(_handle: TextureHandle, _ptr: usize, _layerIndex: u16) usize;
 
 /// Override internal texture by creating new texture. Previously created
 /// internal texture will released.

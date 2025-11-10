@@ -34,7 +34,8 @@ namespace entry
 	extern bx::AllocatorI* getDefaultAllocator();
 	bx::AllocatorI* g_allocator = getDefaultAllocator();
 
-	static bx::FilePath s_currentDir;
+	using FixedString4096 = bx::FixedStringT<4096>;
+	static FixedString4096 s_currentDir;
 
 	class FileReader : public bx::FileReader
 	{
@@ -43,8 +44,9 @@ namespace entry
 	public:
 		virtual bool open(const bx::FilePath& _filePath, bx::Error* _err) override
 		{
-			bx::FilePath filePath(s_currentDir);
-			filePath.join(_filePath);
+			FixedString4096 filePath(s_currentDir);
+			filePath.append(_filePath);
+
 			return super::open(filePath.getCPtr(), _err);
 		}
 	};
@@ -800,7 +802,7 @@ restart:
 		&&  needReset)
 		{
 			_reset = s_reset;
-			BX_TRACE("bgfx::reset(%d, %d, 0x%x)", _width, _height, _reset)
+			BX_TRACE("bgfx::reset(%d, %d, 0x%x)", _width, _height, _reset);
 			bgfx::reset(_width, _height, _reset);
 			inputSetMouseResolution(uint16_t(_width), uint16_t(_height) );
 		}
@@ -980,7 +982,7 @@ restart:
 		if (needReset)
 		{
 			_reset = s_reset;
-			BX_TRACE("bgfx::reset(%d, %d, 0x%x)", s_window[0].m_width, s_window[0].m_height, _reset)
+			BX_TRACE("bgfx::reset(%d, %d, 0x%x)", s_window[0].m_width, s_window[0].m_height, _reset);
 			bgfx::reset(s_window[0].m_width, s_window[0].m_height, _reset);
 			inputSetMouseResolution(uint16_t(s_window[0].m_width), uint16_t(s_window[0].m_height) );
 		}
