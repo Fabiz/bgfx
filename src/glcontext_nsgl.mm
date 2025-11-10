@@ -326,7 +326,7 @@ uint64_t GlContext::getCaps() const
     return caps;
 }
 
-SwapChainGL* GlContext::createSwapChain(void* _nwh)
+SwapChainGL* GlContext::createSwapChain(void* _nwh, int _width, int _height)
 {
     return BX_NEW(g_allocator, SwapChainGL)(_nwh,(NSOpenGLContext*)m_context);
 }
