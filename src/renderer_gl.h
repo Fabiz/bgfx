@@ -11,7 +11,8 @@
 	|| BX_PLATFORM_LINUX                                                                    \
 	|| BX_PLATFORM_NX                                                                       \
 	|| BX_PLATFORM_RPI                                                                      \
-	) )
+	) )                                                                                     \
+	|| (BGFX_CONFIG_RENDERER_OPENGLES && BX_PLATFORM_WINDOWS)
 
 #define BGFX_USE_HTML5 (BGFX_CONFIG_RENDERER_OPENGLES && (0 \
 	|| BX_PLATFORM_EMSCRIPTEN                               \
@@ -1623,7 +1624,7 @@ namespace bgfx { namespace gl
 		}
 
 		void create(uint8_t _num, const Attachment* _attachment);
-		void create(uint16_t _denseIdx, void* _nwh, uint32_t _width, uint32_t _height, TextureFormat::Enum _format, TextureFormat::Enum _depthFormat);
+		void create(uint16_t _denseIdx, void* _nwh, uint32_t _width, uint32_t _height);
 		void postReset();
 		uint16_t destroy();
 		void resolve();

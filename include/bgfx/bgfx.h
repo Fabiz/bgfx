@@ -403,23 +403,43 @@ namespace bgfx
 		};
 	};
 
+	/// Shading Rate.
+	///
+	/// @attention C99's equivalent binding is `bgfx_bgfx_shading_rate_t`.
+	///
+	struct ShadingRate
+	{
+		/// Shading rate:
+		enum Enum
+		{
+			Rate1x1,
+			Rate1x2,
+			Rate2x1,
+			Rate2x2,
+			Rate2x4,
+			Rate4x2,
+			Rate4x4,
+
+			Count
+		};
+	};
+
 	/// Native window handle type.
 	///
 	/// @attention C99's equivalent binding is `bgfx_native_window_handle_type_t`.
 	///
-
 	struct NativeWindowHandleType
 	{
-		 enum Enum
-		 {
-		       Default = 0, //!< Platform default handle type (X11 on Linux).
-		       Wayland,     //!< Wayland.
+		enum Enum
+		{
+			Default = 0, //!< Platform default handle type (X11 on Linux).
+			Wayland,     //!< Wayland.
 
-		       Count
-		 };
+			Count
+		};
 	};
 
-	static const uint16_t kInvalidHandle = UINT16_MAX;
+	constexpr uint16_t kInvalidHandle = UINT16_MAX;
 
 	BGFX_HANDLE(DynamicIndexBufferHandle)
 	BGFX_HANDLE(DynamicVertexBufferHandle)
@@ -658,13 +678,14 @@ namespace bgfx
 	{
 		Resolution();
 
-		TextureFormat::Enum format; //!< Backbuffer format.
-		uint32_t width;             //!< Backbuffer width.
-		uint32_t height;            //!< Backbuffer height.
-		uint32_t reset;             //!< Reset parameters.
-		uint8_t  numBackBuffers;    //!< Number of back buffers.
-		uint8_t  maxFrameLatency;   //!< Maximum frame latency.
-		uint8_t  debugTextScale;    //!< Scale factor for debug text.
+		TextureFormat::Enum formatColor;        //!< Backbuffer color format.
+		TextureFormat::Enum formatDepthStencil; //!< Backbuffer depth/stencil format.
+		uint32_t width;                         //!< Backbuffer width.
+		uint32_t height;                        //!< Backbuffer height.
+		uint32_t reset;                         //!< Reset parameters.
+		uint8_t  numBackBuffers;                //!< Number of back buffers.
+		uint8_t  maxFrameLatency;               //!< Maximum frame latency.
+		uint8_t  debugTextScale;                //!< Scale factor for debug text.
 	};
 
 	/// Initialization parameters used by `bgfx::init`.
@@ -714,10 +735,11 @@ namespace bgfx
 		{
 			Limits();
 
-			uint16_t maxEncoders;       //!< Maximum number of encoder threads.
-			uint32_t minResourceCbSize; //!< Minimum resource command buffer size.
-			uint32_t transientVbSize;   //!< Maximum transient vertex buffer size.
-			uint32_t transientIbSize;   //!< Maximum transient index buffer size.
+			uint16_t maxEncoders;          //!< Maximum number of encoder threads.
+			uint32_t minResourceCbSize;    //!< Minimum resource command buffer size.
+			uint32_t maxTransientVbSize;   //!< Maximum transient vertex buffer size.
+			uint32_t maxTransientIbSize;   //!< Maximum transient index buffer size.
+			uint32_t minUniformBufferSize; //!< Mimimum uniform buffer size.
 		};
 
 		Limits limits; //!< Configurable runtime limits.
@@ -816,8 +838,9 @@ namespace bgfx
 			uint32_t maxOcclusionQueries;     //!< Maximum number of occlusion query handles.
 			uint32_t maxEncoders;             //!< Maximum number of encoder threads.
 			uint32_t minResourceCbSize;       //!< Minimum resource command buffer size.
-			uint32_t transientVbSize;         //!< Maximum transient vertex buffer size.
-			uint32_t transientIbSize;         //!< Maximum transient index buffer size.
+			uint32_t maxTransientVbSize;      //!< Maximum transient vertex buffer size.
+			uint32_t maxTransientIbSize;      //!< Maximum transient index buffer size.
+			uint32_t minUniformBufferSize;    //!< Mimimum uniform buffer size.
 		};
 
 		Limits limits; //!< Renderer runtime limits.
@@ -3542,6 +3565,19 @@ namespace bgfx
 		  ViewId _id = 0
 		, uint16_t _num = UINT16_MAX
 		, const ViewId* _remap = NULL
+		);
+
+	/// Set view shading rate.
+	///
+	/// @param[in] _id View id.
+	/// @param[in] _shadingRate Shading rate.
+	///
+	/// @attention Availability depends on: `BGFX_CAPS_VARIABLE_RATE_SHADING`.
+	/// @attention C99's equivalent binding is `bgfx_set_view_shading_rate`.
+	///
+	void setViewShadingRate(
+		  ViewId _id
+		, ShadingRate::Enum _shadingRate = ShadingRate::Rate1x1
 		);
 
 	/// Reset all view settings to default.

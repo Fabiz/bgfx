@@ -1,7 +1,7 @@
 -- vim: syntax=lua
 -- bgfx interface
 
-version(129)
+version(133)
 
 typedef "bool"
 typedef "char"
@@ -392,6 +392,7 @@ flag.Caps { bits = 64, base = 1, name = "Caps" }
 	.Texture_2dArray        --- 2D texture array is supported.
 	.Texture_3d             --- 3D textures are supported.
 	.TransparentBackbuffer  --- Transparent back buffer supported.
+	.VariableRateShading    --- Variable Rate Shading
 	.VertexAttribHalf       --- Vertex attribute half-float is supported.
 	.VertexAttribUint10     --- Vertex attribute 10_10_10_2 is supported.
 	.VertexId               --- Rendering with VertexID only is supported.
@@ -689,6 +690,17 @@ enum.ViewMode { underscore, comment = "View modes:" }
 	.DepthDescending --- Sort draw call depth in descending order.
 	()
 
+--- Shading Rate.
+enum.ShadingRate { underscore, comment = "Shading rate:" }
+	.Rate1x1
+	.Rate1x2
+	.Rate2x1
+	.Rate2x2
+	.Rate2x4
+	.Rate4x2
+	.Rate4x4
+	()
+
 --- Native window handle type.
 enum.NativeWindowHandleType { underscore, comment = "Native Window handle type:" }
 	.Default         --- Platform default handle type (X11 on Linux).
@@ -732,8 +744,9 @@ struct.Limits  { namespace = "Caps" }
 	.maxOcclusionQueries     "uint32_t" --- Maximum number of occlusion query handles.
 	.maxEncoders             "uint32_t" --- Maximum number of encoder threads.
 	.minResourceCbSize       "uint32_t" --- Minimum resource command buffer size.
-	.transientVbSize         "uint32_t" --- Maximum transient vertex buffer size.
-	.transientIbSize         "uint32_t" --- Maximum transient index buffer size.
+	.maxTransientVbSize      "uint32_t" --- Maximum transient vertex buffer size.
+	.maxTansientIbSize       "uint32_t" --- Maximum transient index buffer size.
+	.minUniformBufferSize    "uint32_t" --- Mimimum uniform buffer size.
 
 --- Renderer capabilities.
 struct.Caps
@@ -792,20 +805,22 @@ struct.PlatformData { ctor }
 
 --- Backbuffer resolution and reset parameters.
 struct.Resolution { ctor }
-	.format          "TextureFormat::Enum" --- Backbuffer format.
-	.width           "uint32_t"            --- Backbuffer width.
-	.height          "uint32_t"            --- Backbuffer height.
-	.reset           "uint32_t"            --- Reset parameters.
-	.numBackBuffers  "uint8_t"             --- Number of back buffers.
-	.maxFrameLatency "uint8_t"             --- Maximum frame latency.
-	.debugTextScale  "uint8_t"             --- Scale factor for debug text.
+	.formatColor        "TextureFormat::Enum" --- Backbuffer color format.
+	.formatDepthStencil "TextureFormat::Enum" --- Backbuffer depth/stencil format.
+	.width              "uint32_t"            --- Backbuffer width.
+	.height             "uint32_t"            --- Backbuffer height.
+	.reset              "uint32_t"            --- Reset parameters.
+	.numBackBuffers     "uint8_t"             --- Number of back buffers.
+	.maxFrameLatency    "uint8_t"             --- Maximum frame latency.
+	.debugTextScale     "uint8_t"             --- Scale factor for debug text.
 
 --- Configurable runtime limits parameters.
 struct.Limits { ctor, namespace = "Init" }
-	.maxEncoders       "uint16_t" --- Maximum number of encoder threads.
-	.minResourceCbSize "uint32_t" --- Minimum resource command buffer size.
-	.transientVbSize   "uint32_t" --- Maximum transient vertex buffer size.
-	.transientIbSize   "uint32_t" --- Maximum transient index buffer size.
+	.maxEncoders          "uint16_t" --- Maximum number of encoder threads.
+	.minResourceCbSize    "uint32_t" --- Minimum resource command buffer size.
+	.maxTransientVbSize   "uint32_t" --- Maximum transient vertex buffer size.
+	.maxTransientIbSize   "uint32_t" --- Maximum transient index buffer size.
+	.minUniformBufferSize "uint32_t" --- Mimimum uniform buffer size.
 
 --- Initialization parameters used by `bgfx::init`.
 struct.Init { ctor }
@@ -2147,6 +2162,16 @@ func.setViewOrder
 	                       --- to default state.
 	 { default = NULL }
 
+--- Set view shading rate.
+---
+--- @attention Availability depends on: `BGFX_CAPS_VARIABLE_RATE_SHADING`.
+---
+func.setViewShadingRate
+	"void"
+	.id          "ViewId"            --- View id.
+	.shadingRate "ShadingRate::Enum" --- Shading rate.
+	 { default = "ShadingRate::Rate1x1" }
+
 --- Reset all view settings to default.
 func.resetView
 	"void"
@@ -2701,10 +2726,12 @@ func.getInternalData
 --- @warning Must be called only on render thread.
 ---
 func.overrideInternal { cname = "override_internal_texture_ptr" }
-	"uintptr_t"             --- Native API pointer to texture. If result is 0, texture is not created
-	                        --- yet from the main thread.
-	.handle "TextureHandle" --- Texture handle.
-	.ptr    "uintptr_t"     --- Native API pointer to texture.
+	"uintptr_t"                  --- Native API pointer to texture. If result is 0, texture is not created
+	                             --- yet from the main thread.
+	.handle      "TextureHandle" --- Texture handle.
+	.ptr         "uintptr_t"     --- Native API pointer to texture.
+	.layerIndex  "uint16_t"      --- Layer index for texture arrays (only implemented for D3D11).
+	{ default = 0 }
 
 --- Override internal texture by creating new texture. Previously created
 --- internal texture will released.

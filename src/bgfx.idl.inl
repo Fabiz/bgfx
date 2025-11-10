@@ -699,6 +699,11 @@ BGFX_C_API void bgfx_set_view_order(bgfx_view_id_t _id, uint16_t _num, const bgf
 	bgfx::setViewOrder((bgfx::ViewId)_id, _num, (const bgfx::ViewId*)_order);
 }
 
+BGFX_C_API void bgfx_set_view_shading_rate(bgfx_view_id_t _id, bgfx_shading_rate_t _shadingRate)
+{
+	bgfx::setViewShadingRate((bgfx::ViewId)_id, (bgfx::ShadingRate::Enum)_shadingRate);
+}
+
 BGFX_C_API void bgfx_reset_view(bgfx_view_id_t _id)
 {
 	bgfx::resetView((bgfx::ViewId)_id);
@@ -1010,10 +1015,10 @@ BGFX_C_API const bgfx_internal_data_t* bgfx_get_internal_data(void)
 	return (const bgfx_internal_data_t*)bgfx::getInternalData();
 }
 
-BGFX_C_API uintptr_t bgfx_override_internal_texture_ptr(bgfx_texture_handle_t _handle, uintptr_t _ptr)
+BGFX_C_API uintptr_t bgfx_override_internal_texture_ptr(bgfx_texture_handle_t _handle, uintptr_t _ptr, uint16_t _layerIndex)
 {
 	union { bgfx_texture_handle_t c; bgfx::TextureHandle cpp; } handle = { _handle };
-	return bgfx::overrideInternal(handle.cpp, _ptr);
+	return bgfx::overrideInternal(handle.cpp, _ptr, _layerIndex);
 }
 
 BGFX_C_API uintptr_t bgfx_override_internal_texture(bgfx_texture_handle_t _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, bgfx_texture_format_t _format, uint64_t _flags)
@@ -1405,6 +1410,7 @@ BGFX_C_API bgfx_interface_vtbl_t* bgfx_get_interface(uint32_t _version)
 			bgfx_set_view_frame_buffer,
 			bgfx_set_view_transform,
 			bgfx_set_view_order,
+			bgfx_set_view_shading_rate,
 			bgfx_reset_view,
 			bgfx_encoder_begin,
 			bgfx_encoder_end,

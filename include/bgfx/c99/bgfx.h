@@ -390,6 +390,24 @@ typedef enum bgfx_view_mode
 } bgfx_view_mode_t;
 
 /**
+ * Shading Rate.
+ *
+ */
+typedef enum bgfx_shading_rate
+{
+    BGFX_SHADING_RATE_RATE_1X_1,              /** ( 0)                                */
+    BGFX_SHADING_RATE_RATE_1X_2,              /** ( 1)                                */
+    BGFX_SHADING_RATE_RATE_2X_1,              /** ( 2)                                */
+    BGFX_SHADING_RATE_RATE_2X_2,              /** ( 3)                                */
+    BGFX_SHADING_RATE_RATE_2X_4,              /** ( 4)                                */
+    BGFX_SHADING_RATE_RATE_4X_2,              /** ( 5)                                */
+    BGFX_SHADING_RATE_RATE_4X_4,              /** ( 6)                                */
+
+    BGFX_SHADING_RATE_COUNT
+
+} bgfx_shading_rate_t;
+
+/**
  * Native window handle type.
  *
  */
@@ -538,8 +556,9 @@ typedef struct bgfx_caps_limits_s
     uint32_t             maxOcclusionQueries; /** Maximum number of occlusion query handles. */
     uint32_t             maxEncoders;        /** Maximum number of encoder threads.       */
     uint32_t             minResourceCbSize;  /** Minimum resource command buffer size.    */
-    uint32_t             transientVbSize;    /** Maximum transient vertex buffer size.    */
-    uint32_t             transientIbSize;    /** Maximum transient index buffer size.     */
+    uint32_t             maxTransientVbSize; /** Maximum transient vertex buffer size.    */
+    uint32_t             maxTansientIbSize;  /** Maximum transient index buffer size.     */
+    uint32_t             minUniformBufferSize; /** Mimimum uniform buffer size.             */
 
 } bgfx_caps_limits_t;
 
@@ -645,7 +664,8 @@ typedef struct bgfx_platform_data_s
  */
 typedef struct bgfx_resolution_s
 {
-    bgfx_texture_format_t format;            /** Backbuffer format.                       */
+    bgfx_texture_format_t formatColor;       /** Backbuffer color format.                 */
+    bgfx_texture_format_t formatDepthStencil; /** Backbuffer depth/stencil format.         */
     uint32_t             width;              /** Backbuffer width.                        */
     uint32_t             height;             /** Backbuffer height.                       */
     uint32_t             reset;              /** Reset parameters.                        */
@@ -663,8 +683,9 @@ typedef struct bgfx_init_limits_s
 {
     uint16_t             maxEncoders;        /** Maximum number of encoder threads.       */
     uint32_t             minResourceCbSize;  /** Minimum resource command buffer size.    */
-    uint32_t             transientVbSize;    /** Maximum transient vertex buffer size.    */
-    uint32_t             transientIbSize;    /** Maximum transient index buffer size.     */
+    uint32_t             maxTransientVbSize; /** Maximum transient vertex buffer size.    */
+    uint32_t             maxTransientIbSize; /** Maximum transient index buffer size.     */
+    uint32_t             minUniformBufferSize; /** Mimimum uniform buffer size.             */
 
 } bgfx_init_limits_t;
 
@@ -2389,6 +2410,16 @@ BGFX_C_API void bgfx_set_view_transform(bgfx_view_id_t _id, const void* _view, c
 BGFX_C_API void bgfx_set_view_order(bgfx_view_id_t _id, uint16_t _num, const bgfx_view_id_t* _order);
 
 /**
+ * Set view shading rate.
+ * @attention Availability depends on: `BGFX_CAPS_VARIABLE_RATE_SHADING`.
+ *
+ * @param[in] _id View id.
+ * @param[in] _shadingRate Shading rate.
+ *
+ */
+BGFX_C_API void bgfx_set_view_shading_rate(bgfx_view_id_t _id, bgfx_shading_rate_t _shadingRate);
+
+/**
  * Reset all view settings to default.
  *
  * @param[in] _id
@@ -2952,12 +2983,13 @@ BGFX_C_API const bgfx_internal_data_t* bgfx_get_internal_data(void);
  *
  * @param[in] _handle Texture handle.
  * @param[in] _ptr Native API pointer to texture.
+ * @param[in] _layerIndex Layer index for texture arrays (only implemented for D3D11).
  *
  * @returns Native API pointer to texture. If result is 0, texture is not created
  *  yet from the main thread.
  *
  */
-BGFX_C_API uintptr_t bgfx_override_internal_texture_ptr(bgfx_texture_handle_t _handle, uintptr_t _ptr);
+BGFX_C_API uintptr_t bgfx_override_internal_texture_ptr(bgfx_texture_handle_t _handle, uintptr_t _ptr, uint16_t _layerIndex);
 
 /**
  * Override internal texture by creating new texture. Previously created
@@ -3590,6 +3622,7 @@ typedef enum bgfx_function_id
     BGFX_FUNCTION_ID_SET_VIEW_FRAME_BUFFER,
     BGFX_FUNCTION_ID_SET_VIEW_TRANSFORM,
     BGFX_FUNCTION_ID_SET_VIEW_ORDER,
+    BGFX_FUNCTION_ID_SET_VIEW_SHADING_RATE,
     BGFX_FUNCTION_ID_RESET_VIEW,
     BGFX_FUNCTION_ID_ENCODER_BEGIN,
     BGFX_FUNCTION_ID_ENCODER_END,
@@ -3796,6 +3829,7 @@ struct bgfx_interface_vtbl
     void (*set_view_frame_buffer)(bgfx_view_id_t _id, bgfx_frame_buffer_handle_t _handle);
     void (*set_view_transform)(bgfx_view_id_t _id, const void* _view, const void* _proj);
     void (*set_view_order)(bgfx_view_id_t _id, uint16_t _num, const bgfx_view_id_t* _order);
+    void (*set_view_shading_rate)(bgfx_view_id_t _id, bgfx_shading_rate_t _shadingRate);
     void (*reset_view)(bgfx_view_id_t _id);
     bgfx_encoder_t* (*encoder_begin)(bool _forThread);
     void (*encoder_end)(bgfx_encoder_t* _encoder);
@@ -3843,7 +3877,7 @@ struct bgfx_interface_vtbl
     bgfx_render_frame_t (*render_frame)(int32_t _msecs);
     void (*set_platform_data)(const bgfx_platform_data_t * _data);
     const bgfx_internal_data_t* (*get_internal_data)(void);
-    uintptr_t (*override_internal_texture_ptr)(bgfx_texture_handle_t _handle, uintptr_t _ptr);
+    uintptr_t (*override_internal_texture_ptr)(bgfx_texture_handle_t _handle, uintptr_t _ptr, uint16_t _layerIndex);
     uintptr_t (*override_internal_texture)(bgfx_texture_handle_t _handle, uint16_t _width, uint16_t _height, uint8_t _numMips, bgfx_texture_format_t _format, uint64_t _flags);
     void (*set_marker)(const char* _name, int32_t _len);
     void (*set_state)(uint64_t _state, uint32_t _rgba);
