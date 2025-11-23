@@ -513,7 +513,18 @@ static_assert(BX_COUNTOF(s_accessNames) == Access::Count, "Invalid s_accessNames
 			m_fbh = BGFX_INVALID_HANDLE;
 			bx::memSet(m_uniforms, 0, sizeof(m_uniforms) );
 			m_resolution = _init.resolution;
-
+			
+			// CHANGE(fso)
+			if (@available(iOS 16, *)) {
+				// nothing to do. use default texture format
+			}
+			else {
+				// on devices before iOS 16 use bgra8 format. otherwise 'invalid pixel format 70' will happen
+				m_resolution.formatColor = bgfx::TextureFormat::BGRA8;
+			}
+			// END CHANGE(fso)
+			
+			
 			m_device = (id<MTLDevice>)g_platformData.context;
 
 			if (NULL == m_device)
@@ -1517,6 +1528,16 @@ static_assert(BX_COUNTOF(s_accessNames) == Access::Count, "Invalid s_accessNames
 			|| (m_resolution.reset&maskFlags) != (_resolution.reset&maskFlags) )
 			{
 				m_resolution = _resolution;
+				
+				// CHANGE(fso)
+				if (@available(iOS 16, *)) {
+					// nothing to do. use default texture format
+				}
+				else {
+					// on devices before iOS 16 use bgra8 format. otherwise 'invalid pixel format 70' will happen
+					m_resolution.formatColor = bgfx::TextureFormat::BGRA8;
+				}
+				// END CHANGE(fso)
 
 				const MTLPixelFormat prevPixelFormat = getSwapChainPixelFormat(swapChain);
 
