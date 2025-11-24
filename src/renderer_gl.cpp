@@ -7640,6 +7640,33 @@ namespace bgfx { namespace gl
 
 		BGFX_GL_PROFILER_BEGIN_LITERAL("rendererSubmit", kColorView);
 
+        // BEGIN CHANGE(fso) deactivate vao support when more than 1 window is displayed. otherwise app crashes on e.g Google Pixel 10 pro
+        if (m_numWindows >= 2)
+        {
+            if (m_vaoSupport) {
+                m_vaoSupport = false;
+                GL_CHECK(glBindVertexArray(0));
+                GL_CHECK(glDeleteVertexArrays(1, &m_vao));
+                m_vao = 0;
+            }
+        }
+        else {
+            // reactivate when only 1 window is diplayed
+            if (!m_vaoSupport) {
+                m_vaoSupport = !BX_ENABLED(BX_PLATFORM_EMSCRIPTEN)
+                               && (m_gles3
+                                   || s_extension[Extension::ARB_vertex_array_object].m_supported
+                                   || s_extension[Extension::OES_vertex_array_object].m_supported
+                               );
+                if (m_vaoSupport)
+                {
+                    GL_CHECK(glGenVertexArrays(1, &m_vao) );
+                    GL_CHECK(glBindVertexArray(m_vao) );
+                }
+            }
+        }
+        // END CHANGE(fso)
+
 		if (0 != m_vao)
 		{
 			GL_CHECK(glBindVertexArray(m_vao) );
