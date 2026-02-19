@@ -156,9 +156,9 @@ private:
 
 static void* s_opengl = NULL;
 
-void GlContext::create(uint32_t _width, uint32_t _height, uint32_t /*_flags*/)
+void GlContext::create(const Resolution& _resolution)
 {
-    BX_UNUSED(_width, _height);
+    BX_UNUSED(_resolution);
 
     s_opengl = bx::dlopen("/System/Library/Frameworks/OpenGL.framework/Versions/Current/OpenGL");
     BX_ASSERT(NULL != s_opengl, "OpenGL dynamic library is not found!");
@@ -281,12 +281,11 @@ void GlContext::destroy()
     bx::dlclose(s_opengl);
 }
 
-void GlContext::resize(uint32_t _width, uint32_t _height, uint32_t _flags)
+void GlContext::resize(const Resolution& _resolution)
 {
-    BX_UNUSED(_width, _height);
 
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && (MAC_OS_X_VERSION_MAX_ALLOWED >= 1070)
-    bool hidpi = !!(_flags&BGFX_RESET_HIDPI);
+    bool hidpi = !!(_resolution.reset&BGFX_RESET_HIDPI);
     if (m_view)
     {
         NSOpenGLView* glView = (NSOpenGLView*)m_view;
@@ -295,7 +294,7 @@ void GlContext::resize(uint32_t _width, uint32_t _height, uint32_t _flags)
     }
 #endif // defined(MAC_OS_X_VERSION_MAX_ALLOWED) && (MAC_OS_X_VERSION_MAX_ALLOWED >= 1070)
 
-    bool vsync = !!(_flags&BGFX_RESET_VSYNC);
+    bool vsync = !!(_resolution.reset&BGFX_RESET_VSYNC);
     GLint interval = vsync ? 1 : 0;
     NSOpenGLContext* glContext = (NSOpenGLContext*)m_context;
     [glContext setValues:&interval forParameter:NSOpenGLCPSwapInterval];
