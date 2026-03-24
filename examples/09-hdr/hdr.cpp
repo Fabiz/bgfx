@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -187,8 +187,10 @@ public:
 		s_texLum    = bgfx::createUniform("s_texLum",   bgfx::UniformType::Sampler);
 		s_texBlur   = bgfx::createUniform("s_texBlur",  bgfx::UniformType::Sampler);
 		u_mtx       = bgfx::createUniform("u_mtx",      bgfx::UniformType::Mat4);
-		u_tonemap   = bgfx::createUniform("u_tonemap",  bgfx::UniformType::Vec4);
 		u_offset    = bgfx::createUniform("u_offset",   bgfx::UniformType::Vec4, 16);
+
+		// Tonemap value will be updated once per frame.
+		u_tonemap   = bgfx::createUniform("u_tonemap",  bgfx::UniformFreq::Frame, bgfx::UniformType::Vec4);
 
 		m_mesh = meshLoad("meshes/bunny.bin");
 
@@ -200,13 +202,23 @@ public:
 		m_lum[3] = bgfx::createFrameBuffer(  4,   4, bgfx::TextureFormat::BGRA8);
 		m_lum[4] = bgfx::createFrameBuffer(  1,   1, bgfx::TextureFormat::BGRA8);
 
+		bgfx::setName(m_lum[0], "Luminance 0");
+		bgfx::setName(m_lum[1], "Luminance 1");
+		bgfx::setName(m_lum[2], "Luminance 2");
+		bgfx::setName(m_lum[3], "Luminance 3");
+		bgfx::setName(m_lum[4], "Luminance 4");
+
 		m_bright = bgfx::createFrameBuffer(bgfx::BackbufferRatio::Half,   bgfx::TextureFormat::BGRA8);
 		m_blur   = bgfx::createFrameBuffer(bgfx::BackbufferRatio::Eighth, bgfx::TextureFormat::BGRA8);
+
+		bgfx::setName(m_bright, "Bright");
+		bgfx::setName(m_blur, "Blur");
 
 		m_lumBgra8 = 0;
 		if ( (BGFX_CAPS_TEXTURE_BLIT|BGFX_CAPS_TEXTURE_READ_BACK) == (bgfx::getCaps()->supported & (BGFX_CAPS_TEXTURE_BLIT|BGFX_CAPS_TEXTURE_READ_BACK) ) )
 		{
 			m_rb = bgfx::createTexture2D(1, 1, false, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_BLIT_DST|BGFX_TEXTURE_READ_BACK);
+			bgfx::setName(m_rb, "Read Back Texture");
 		}
 		else
 		{
@@ -229,7 +241,8 @@ public:
 
 		m_scrollArea = 0;
 
-		m_time = 0.0f;
+		m_time = 0;
+		m_frameTime.reset();
 	}
 
 	virtual int shutdown() override
@@ -282,6 +295,9 @@ public:
 	{
 		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState) )
 		{
+			m_frameTime.frame();
+			const float deltaTime = bx::toSeconds<float>(m_frameTime.getDeltaTime() );
+
 			if (!bgfx::isValid(m_fbh)
 			||  m_oldWidth  != m_width
 			||  m_oldHeight != m_height
@@ -366,7 +382,9 @@ public:
 				float exponent = arr.bgra[3] / 255.0f * 255.0f - 128.0f;
 				float lumAvg = arr.bgra[2] / 255.0f * bx::exp2(exponent);
 
+				ImGui::BeginDisabled(true);
 				ImGui::SliderFloat("Lum Avg", &lumAvg, 0.0f, 1.0f);
+				ImGui::EndDisabled();
 			}
 
 			const bgfx::Caps* caps = bgfx::getCaps();
@@ -397,13 +415,7 @@ public:
 			// if no other draw calls are submitted to view 0.
 			bgfx::touch(0);
 
-			int64_t now = bx::getHPCounter();
-			static int64_t last = now;
-			const int64_t frameTime = now - last;
-			last = now;
-			const double freq = double(bx::getHPFrequency() );
-
-			m_time += (float)(frameTime*m_speed/freq);
+			m_time += m_speed * deltaTime;
 
 			bgfx::ViewId shuffle[10] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 			bx::shuffle(&m_rng, shuffle, BX_COUNTOF(shuffle) );
@@ -515,7 +527,8 @@ public:
 			// Set view and projection matrix for view hdrMesh.
 			bgfx::setViewTransform(hdrMesh, view, proj);
 
-			float tonemap[4] = { m_middleGray, bx::square(m_white), m_threshold, m_time };
+			const float tonemap[4] = { m_middleGray, bx::square(m_white), m_threshold, m_time };
+			bgfx::setFrameUniform(u_tonemap, tonemap);
 
 			// Render skybox into view hdrSkybox.
 			bgfx::setTexture(0, s_texCube, m_uffizi);
@@ -526,7 +539,6 @@ public:
 
 			// Render m_mesh into view hdrMesh.
 			bgfx::setTexture(0, s_texCube, m_uffizi);
-			bgfx::setUniform(u_tonemap, tonemap);
 			meshSubmit(m_mesh, hdrMesh, m_meshProgram, NULL);
 
 			// Calculate luminance.
@@ -569,14 +581,12 @@ public:
 			bgfx::setTexture(0, s_texColor, m_fbtextures[0]);
 			bgfx::setTexture(1, s_texLum, bgfx::getTexture(m_lum[4]) );
 			bgfx::setState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A);
-			bgfx::setUniform(u_tonemap, tonemap);
 			screenSpaceQuad(m_caps->originBottomLeft);
 			bgfx::submit(hdrBrightness, m_brightProgram);
 
 			// m_blur m_bright pass vertically.
 			bgfx::setTexture(0, s_texColor, bgfx::getTexture(m_bright) );
 			bgfx::setState(BGFX_STATE_WRITE_RGB|BGFX_STATE_WRITE_A);
-			bgfx::setUniform(u_tonemap, tonemap);
 			screenSpaceQuad(m_caps->originBottomLeft);
 			bgfx::submit(hdrVBlur, m_blurProgram);
 
@@ -652,7 +662,9 @@ public:
 	int32_t m_scrollArea;
 
 	const bgfx::Caps* m_caps;
+
 	float m_time;
+	FrameTime m_frameTime;
 };
 
 } // namespace

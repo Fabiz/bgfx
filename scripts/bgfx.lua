@@ -1,5 +1,5 @@
 --
--- Copyright 2010-2025 Branimir Karadzic. All rights reserved.
+-- Copyright 2010-2026 Branimir Karadzic. All rights reserved.
 -- License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
 --
 
@@ -199,32 +199,7 @@ function bgfxProjectBase(_kind, _defines)
 			path.join(BGFX_DIR, "src/topology.cpp"),
 			path.join(BGFX_DIR, "src/vertexlayout.cpp"),
 		}
-
-		configuration { "xcode* or osx* or ios*" }
-			files {
-				path.join(BGFX_DIR, "src/amalgamated.mm"),
-			}
-
-			excludes {
-				path.join(BGFX_DIR, "src/renderer_**.mm"),
-				path.join(BGFX_DIR, "src/amalgamated.cpp"),
-			}
-
-		configuration { "not (xcode* or osx* or ios*)" }
-			excludes {
-				path.join(BGFX_DIR, "src/**.mm"),
-			}
-
-		configuration {}
-
 	else
-		configuration { "xcode* or osx* or ios*" }
-			files {
-				path.join(BGFX_DIR, "src/renderer_**.mm"),
-			}
-
-		configuration {}
-
 		excludes {
 			path.join(BGFX_DIR, "src/amalgamated.**"),
 		}

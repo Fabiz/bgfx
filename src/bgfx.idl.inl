@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -172,9 +172,9 @@ BGFX_C_API void bgfx_reset(uint32_t _width, uint32_t _height, uint32_t _flags, b
 	bgfx::reset(_width, _height, _flags, (bgfx::TextureFormat::Enum)_format);
 }
 
-BGFX_C_API uint32_t bgfx_frame(bool _capture)
+BGFX_C_API uint32_t bgfx_frame(uint8_t _flags)
 {
-	return bgfx::frame(_capture);
+	return bgfx::frame(_flags);
 }
 
 BGFX_C_API bgfx_renderer_type_t bgfx_get_renderer_type(void)
@@ -469,10 +469,10 @@ BGFX_C_API bgfx_texture_handle_t bgfx_create_texture(const bgfx_memory_t* _mem, 
 	return handle_ret.c;
 }
 
-BGFX_C_API bgfx_texture_handle_t bgfx_create_texture_2d(uint16_t _width, uint16_t _height, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem)
+BGFX_C_API bgfx_texture_handle_t bgfx_create_texture_2d(uint16_t _width, uint16_t _height, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem, uint64_t _external)
 {
 	union { bgfx_texture_handle_t c; bgfx::TextureHandle cpp; } handle_ret;
-	handle_ret.cpp = bgfx::createTexture2D(_width, _height, _hasMips, _numLayers, (bgfx::TextureFormat::Enum)_format, _flags, (const bgfx::Memory*)_mem);
+	handle_ret.cpp = bgfx::createTexture2D(_width, _height, _hasMips, _numLayers, (bgfx::TextureFormat::Enum)_format, _flags, (const bgfx::Memory*)_mem, _external);
 	return handle_ret.c;
 }
 
@@ -483,17 +483,17 @@ BGFX_C_API bgfx_texture_handle_t bgfx_create_texture_2d_scaled(bgfx_backbuffer_r
 	return handle_ret.c;
 }
 
-BGFX_C_API bgfx_texture_handle_t bgfx_create_texture_3d(uint16_t _width, uint16_t _height, uint16_t _depth, bool _hasMips, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem)
+BGFX_C_API bgfx_texture_handle_t bgfx_create_texture_3d(uint16_t _width, uint16_t _height, uint16_t _depth, bool _hasMips, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem, uint64_t _external)
 {
 	union { bgfx_texture_handle_t c; bgfx::TextureHandle cpp; } handle_ret;
-	handle_ret.cpp = bgfx::createTexture3D(_width, _height, _depth, _hasMips, (bgfx::TextureFormat::Enum)_format, _flags, (const bgfx::Memory*)_mem);
+	handle_ret.cpp = bgfx::createTexture3D(_width, _height, _depth, _hasMips, (bgfx::TextureFormat::Enum)_format, _flags, (const bgfx::Memory*)_mem, _external);
 	return handle_ret.c;
 }
 
-BGFX_C_API bgfx_texture_handle_t bgfx_create_texture_cube(uint16_t _size, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem)
+BGFX_C_API bgfx_texture_handle_t bgfx_create_texture_cube(uint16_t _size, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags, const bgfx_memory_t* _mem, uint64_t _external)
 {
 	union { bgfx_texture_handle_t c; bgfx::TextureHandle cpp; } handle_ret;
-	handle_ret.cpp = bgfx::createTextureCube(_size, _hasMips, _numLayers, (bgfx::TextureFormat::Enum)_format, _flags, (const bgfx::Memory*)_mem);
+	handle_ret.cpp = bgfx::createTextureCube(_size, _hasMips, _numLayers, (bgfx::TextureFormat::Enum)_format, _flags, (const bgfx::Memory*)_mem, _external);
 	return handle_ret.c;
 }
 
@@ -598,6 +598,13 @@ BGFX_C_API bgfx_uniform_handle_t bgfx_create_uniform(const char* _name, bgfx_uni
 {
 	union { bgfx_uniform_handle_t c; bgfx::UniformHandle cpp; } handle_ret;
 	handle_ret.cpp = bgfx::createUniform(_name, (bgfx::UniformType::Enum)_type, _num);
+	return handle_ret.c;
+}
+
+BGFX_C_API bgfx_uniform_handle_t bgfx_create_uniform_with_freq(const char* _name, bgfx_uniform_freq_t _freq, bgfx_uniform_type_t _type, uint16_t _num)
+{
+	union { bgfx_uniform_handle_t c; bgfx::UniformHandle cpp; } handle_ret;
+	handle_ret.cpp = bgfx::createUniform(_name, (bgfx::UniformFreq::Enum)_freq, (bgfx::UniformType::Enum)_type, _num);
 	return handle_ret.c;
 }
 
@@ -709,9 +716,9 @@ BGFX_C_API void bgfx_reset_view(bgfx_view_id_t _id)
 	bgfx::resetView((bgfx::ViewId)_id);
 }
 
-BGFX_C_API bgfx_encoder_t* bgfx_encoder_begin(bool _forThread)
+BGFX_C_API bgfx_encoder_t* bgfx_encoder_begin(bool _forceNewEncoder)
 {
-	return (bgfx_encoder_t*)bgfx::begin(_forThread);
+	return (bgfx_encoder_t*)bgfx::begin(_forceNewEncoder);
 }
 
 BGFX_C_API void bgfx_encoder_end(bgfx_encoder_t* _encoder)
@@ -779,6 +786,18 @@ BGFX_C_API void bgfx_encoder_set_uniform(bgfx_encoder_t* _this, bgfx_uniform_han
 	bgfx::Encoder* This = (bgfx::Encoder*)_this;
 	union { bgfx_uniform_handle_t c; bgfx::UniformHandle cpp; } handle = { _handle };
 	This->setUniform(handle.cpp, _value, _num);
+}
+
+BGFX_C_API void bgfx_set_view_uniform(bgfx_view_id_t _id, bgfx_uniform_handle_t _handle, const void* _value, uint16_t _num)
+{
+	union { bgfx_uniform_handle_t c; bgfx::UniformHandle cpp; } handle = { _handle };
+	bgfx::setViewUniform((bgfx::ViewId)_id, handle.cpp, _value, _num);
+}
+
+BGFX_C_API void bgfx_set_frame_uniform(bgfx_uniform_handle_t _handle, const void* _value, uint16_t _num)
+{
+	union { bgfx_uniform_handle_t c; bgfx::UniformHandle cpp; } handle = { _handle };
+	bgfx::setFrameUniform(handle.cpp, _value, _num);
 }
 
 BGFX_C_API void bgfx_encoder_set_index_buffer(bgfx_encoder_t* _this, bgfx_index_buffer_handle_t _handle, uint32_t _firstIndex, uint32_t _numIndices)
@@ -1392,6 +1411,7 @@ BGFX_C_API bgfx_interface_vtbl_t* bgfx_get_interface(uint32_t _version)
 			bgfx_get_texture,
 			bgfx_destroy_frame_buffer,
 			bgfx_create_uniform,
+			bgfx_create_uniform_with_freq,
 			bgfx_get_uniform_info,
 			bgfx_destroy_uniform,
 			bgfx_create_occlusion_query,
@@ -1424,6 +1444,8 @@ BGFX_C_API bgfx_interface_vtbl_t* bgfx_get_interface(uint32_t _version)
 			bgfx_encoder_set_transform_cached,
 			bgfx_encoder_alloc_transform,
 			bgfx_encoder_set_uniform,
+			bgfx_set_view_uniform,
+			bgfx_set_frame_uniform,
 			bgfx_encoder_set_index_buffer,
 			bgfx_encoder_set_dynamic_index_buffer,
 			bgfx_encoder_set_transient_index_buffer,

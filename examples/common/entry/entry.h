@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -369,6 +369,9 @@ namespace entry
 
 	///
 	int runApp(AppI* _app, int _argc, const char* const* _argv);
+
+	///
+	void setRestartArgs(const char* _args);
 
 } // namespace entry
 

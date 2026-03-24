@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2025 Branimir Karadzic. All rights reserved.
+ * Copyright 2011-2026 Branimir Karadzic. All rights reserved.
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
@@ -62,8 +62,10 @@ struct SampleData
 
 static SampleData s_frameTime;
 
-static bool bar(float _width, float _maxWidth, float _height, const ImVec4& _color)
+static bool bar(const char* _name, float _width, float _maxWidth, float _height, const ImVec4& _color)
 {
+	ImGui::PushID(_name);
+
 	const ImGuiStyle& style = ImGui::GetStyle();
 
 	ImVec4 hoveredColor(
@@ -81,23 +83,27 @@ static bool bar(float _width, float _maxWidth, float _height, const ImVec4& _col
 
 	bool itemHovered = false;
 
-	ImGui::Button("##", ImVec2(_width, _height) );
+	ImGui::Button("##button", ImVec2(_width, _height) );
 	itemHovered |= ImGui::IsItemHovered();
 
 	ImGui::SameLine();
-	ImGui::InvisibleButton("##", ImVec2(bx::max(1.0f, _maxWidth-_width), _height) );
+	ImGui::InvisibleButton("##invisible_button", ImVec2(bx::max(1.0f, _maxWidth-_width), _height) );
 	itemHovered |= ImGui::IsItemHovered();
 
 	ImGui::PopStyleVar(2);
 	ImGui::PopStyleColor(3);
 
+	ImGui::PopID();
+
 	return itemHovered;
 }
 
-static const ImVec4 s_resourceColor(0.5f, 0.5f, 0.5f, 1.0f);
+static constexpr ImVec4 kResourceColor(0.5f, 0.5f, 0.5f, 1.0f);
 
 static void resourceBar(const char* _name, const char* _tooltip, uint32_t _num, uint32_t _max, float _maxWidth, float _height)
 {
+	ImGui::PushID(_name);
+
 	bool itemHovered = false;
 
 	ImGui::Text("%s: %4d / %4d", _name, _num, _max);
@@ -106,7 +112,7 @@ static void resourceBar(const char* _name, const char* _tooltip, uint32_t _num, 
 
 	const float percentage = float(_num)/float(_max);
 
-	itemHovered |= bar(bx::max(1.0f, percentage*_maxWidth), _maxWidth, _height, s_resourceColor);
+	itemHovered |= bar("Resource", bx::max(1.0f, percentage * _maxWidth), _maxWidth, _height, kResourceColor);
 	ImGui::SameLine();
 
 	ImGui::Text("%5.2f%%", percentage*100.0f);
@@ -118,9 +124,62 @@ static void resourceBar(const char* _name, const char* _tooltip, uint32_t _num, 
 			, percentage*100.0f
 			);
 	}
+
+	ImGui::PopID();
 }
 
 static bool s_showStats = false;
+
+static const char* getRendererArg(bgfx::RendererType::Enum _type)
+{
+	switch (_type)
+	{
+	case bgfx::RendererType::Direct3D11: return "--d3d11";
+	case bgfx::RendererType::Direct3D12: return "--d3d12";
+	case bgfx::RendererType::Metal:      return "--mtl";
+	case bgfx::RendererType::OpenGL:     return "--gl";
+	case bgfx::RendererType::Vulkan:     return "--vk";
+	case bgfx::RendererType::WebGPU:     return "--wgpu";
+	case bgfx::RendererType::Noop:       return "--noop";
+	default: break;
+	}
+
+	return "";
+}
+
+static const char* getPciIdArg(uint16_t _pciId)
+{
+	switch (_pciId)
+	{
+	case BGFX_PCI_ID_SOFTWARE_RASTERIZER: return "--sw";
+	case BGFX_PCI_ID_AMD:                 return "--amd";
+	case BGFX_PCI_ID_APPLE:               return "--apple";
+	case BGFX_PCI_ID_ARM:                 return "--arm";
+	case BGFX_PCI_ID_INTEL:               return "--intel";
+	case BGFX_PCI_ID_NVIDIA:              return "--nvidia";
+	case BGFX_PCI_ID_MICROSOFT:           return "--microsoft";
+	default: break;
+	}
+
+	return "";
+}
+
+static const char* getPciIdName(uint16_t _pciId)
+{
+	switch (_pciId)
+	{
+	case BGFX_PCI_ID_AMD:                 return "AMD";
+	case BGFX_PCI_ID_APPLE:               return "Apple";
+	case BGFX_PCI_ID_ARM:                 return "ARM";
+	case BGFX_PCI_ID_INTEL:               return "Intel";
+	case BGFX_PCI_ID_MICROSOFT:           return "Microsoft";
+	case BGFX_PCI_ID_NVIDIA:              return "nVidia";
+	case BGFX_PCI_ID_SOFTWARE_RASTERIZER: return "Software Rasterizer";
+	default: break;
+	}
+
+	return "?";
+}
 
 void showExampleDialog(entry::AppI* _app, const char* _errorText)
 {
@@ -239,43 +298,88 @@ void showExampleDialog(entry::AppI* _app, const char* _errorText)
 		ImGui::PopStyleVar();
 	}
 
-#if 0
+	const bgfx::Caps* caps = bgfx::getCaps();
+
+	static bool s_rendererHeaderOpen = false;
+
+	char rendererHeader[64];
+	if (s_rendererHeaderOpen)
+	{
+		bx::strCopy(rendererHeader, BX_COUNTOF(rendererHeader), "Choose Renderer / GPU###gpu-choice");
+	}
+	else
+	{
+		bx::snprintf(
+			  rendererHeader
+			, BX_COUNTOF(rendererHeader)
+			, "Renderer: %s / %s###gpu-choice"
+			, bgfx::getRendererName(bgfx::getRendererType() )
+			, getPciIdName(caps->vendorId)
+			);
+	}
+
+	s_rendererHeaderOpen = ImGui::CollapsingHeader(rendererHeader);
+	if (s_rendererHeaderOpen)
 	{
 		bgfx::RendererType::Enum supportedRenderers[bgfx::RendererType::Count];
-		uint8_t num = bgfx::getSupportedRenderers(BX_COUNTOF(supportedRenderers), supportedRenderers);
-
-		const bgfx::Caps* caps = bgfx::getCaps();
+		const uint8_t num = bgfx::getSupportedRenderers(BX_COUNTOF(supportedRenderers), supportedRenderers);
 
 		const char* items[bgfx::RendererType::Count];
 
+		uint8_t filteredNum = 0;
+		bgfx::RendererType::Enum filteredRenderers[bgfx::RendererType::Count];
 		int32_t current = 0;
 		for (uint8_t ii = 0; ii < num; ++ii)
 		{
-			items[ii] = bgfx::getRendererName(supportedRenderers[ii]);
+			if (bgfx::RendererType::Noop == supportedRenderers[ii])
+			{
+				continue;
+			}
+
+			filteredRenderers[filteredNum] = supportedRenderers[ii];
+			items[filteredNum] = bgfx::getRendererName(supportedRenderers[ii]);
 			if (supportedRenderers[ii] == caps->rendererType)
 			{
-				current = ii;
+				current = filteredNum;
 			}
+			++filteredNum;
 		}
 
-		if (ImGui::Combo("Renderer", &current, items, num) )
+		const float labelWidth = ImGui::CalcTextSize("Renderer ").x + 10.0f;
+
+		const char* newRendererArg = NULL;
+		const char* newPciIdArg    = NULL;
+
+		ImGui::TextUnformatted("Renderer"); ImGui::SameLine(labelWidth);
+		ImGui::PushItemWidth(-1);
+		if (ImGui::Combo("##Renderer", &current, items, filteredNum) )
 		{
-			cmdExec("app restart");
+			newRendererArg = getRendererArg(filteredRenderers[current]);
 		}
 
-		num = caps->numGPUs;
-		if (0 != num)
+		const uint8_t numGPUs = caps->numGPUs;
+		ImGui::BeginDisabled(0 == numGPUs);
 		{
+			static char unknownVendor[BX_COUNTOF(bgfx::Caps::gpu)][16];
 			current = 0;
-			for (uint8_t ii = 0; ii < num; ++ii)
+			for (uint8_t ii = 0; ii < numGPUs; ++ii)
 			{
 				const bgfx::Caps::GPU& gpu = caps->gpu[ii];
 
-				items[ii] = gpu.vendorId == BGFX_PCI_ID_AMD    ? "AMD"
-						  : gpu.vendorId == BGFX_PCI_ID_INTEL  ? "Intel"
-						  : gpu.vendorId == BGFX_PCI_ID_NVIDIA ? "nVidia"
-						  : "Unknown?"
-						  ;
+				switch (gpu.vendorId)
+				{
+				case BGFX_PCI_ID_AMD:                 items[ii] = "AMD";                 break;
+				case BGFX_PCI_ID_APPLE:               items[ii] = "Apple";               break;
+				case BGFX_PCI_ID_INTEL:               items[ii] = "Intel";               break;
+				case BGFX_PCI_ID_NVIDIA:              items[ii] = "nVidia";              break;
+				case BGFX_PCI_ID_MICROSOFT:           items[ii] = "Microsoft";           break;
+				case BGFX_PCI_ID_ARM:                 items[ii] = "ARM";                 break;
+				case BGFX_PCI_ID_SOFTWARE_RASTERIZER: items[ii] = "Software Rasterizer"; break;
+				default:
+					bx::snprintf(unknownVendor[ii], BX_COUNTOF(unknownVendor[ii]), "0x%04x", gpu.vendorId);
+					items[ii] = unknownVendor[ii];
+					break;
+				}
 
 				if (caps->vendorId == gpu.vendorId
 				&&  caps->deviceId == gpu.deviceId)
@@ -284,15 +388,31 @@ void showExampleDialog(entry::AppI* _app, const char* _errorText)
 				}
 			}
 
-			if (ImGui::Combo("GPU", &current, items, num) )
+			ImGui::TextUnformatted("GPU"); ImGui::SameLine(labelWidth);
+			if (ImGui::Combo("##GPU", &current, items, numGPUs) )
 			{
-				cmdExec("app restart");
+				newPciIdArg = getPciIdArg(caps->gpu[current].vendorId);
 			}
 		}
+		ImGui::EndDisabled();
+
+		ImGui::PopItemWidth();
+
+		if (NULL != newRendererArg
+		||  NULL != newPciIdArg)
+		{
+			const char* rendererArg = NULL != newRendererArg ? newRendererArg : getRendererArg(caps->rendererType);
+			const char* pciIdArg    = NULL != newPciIdArg    ? newPciIdArg    : getPciIdArg(caps->vendorId);
+
+			char args[64];
+			bx::snprintf(args, BX_COUNTOF(args), "%s %s", rendererArg, pciIdArg);
+
+			entry::setRestartArgs(args);
+			cmdExec("app restart");
+		}
+
+		ImGui::Separator();
 	}
-#else
-	ImGui::Text("Renderer: %s", bgfx::getRendererName(bgfx::getRendererType()));
-#endif // 0
 
 	const bgfx::Stats* stats = bgfx::getStats();
 	const double toMsCpu = 1000.0/stats->cpuTimerFreq;
@@ -351,8 +471,6 @@ void showExampleDialog(entry::AppI* _app, const char* _errorText)
 		{
 			if (ImGui::CollapsingHeader(ICON_FA_PUZZLE_PIECE " Resources") )
 			{
-				const bgfx::Caps* caps = bgfx::getCaps();
-
 				const float itemHeight = ImGui::GetTextLineHeightWithSpacing();
 				const float maxWidth   = 90.0f;
 
@@ -411,7 +529,7 @@ void showExampleDialog(entry::AppI* _app, const char* _errorText)
 									const float cpuMs    = float( (encoderStats.cpuTimeEnd-encoderStats.cpuTimeBegin)*toCpuMs);
 									const float cpuWidth = bx::clamp(cpuMs*scale, 1.0f, maxWidth);
 
-									if (bar(cpuWidth, maxWidth, itemHeight, cpuColor) )
+									if (bar("CPU", cpuWidth, maxWidth, itemHeight, cpuColor))
 									{
 										ImGui::SetTooltip("Encoder %d, CPU: %f [ms]"
 											, pos
@@ -447,7 +565,9 @@ void showExampleDialog(entry::AppI* _app, const char* _errorText)
 
 									ImGui::SameLine(64.0f);
 
-									if (bar(cpuWidth, maxWidth, itemHeight, cpuColor) )
+									ImGui::PushID(viewStats.name);
+
+									if (bar("CPU", cpuWidth, maxWidth, itemHeight, cpuColor))
 									{
 										ImGui::SetTooltip("View %d \"%s\", CPU: %f [ms]"
 											, pos
@@ -457,7 +577,7 @@ void showExampleDialog(entry::AppI* _app, const char* _errorText)
 									}
 
 									ImGui::SameLine();
-									if (bar(gpuWidth, maxWidth, itemHeight, gpuColor) )
+									if (bar("GPU", gpuWidth, maxWidth, itemHeight, gpuColor) )
 									{
 										ImGui::SetTooltip("View: %d \"%s\", GPU: %f [ms]"
 											, pos
@@ -465,6 +585,8 @@ void showExampleDialog(entry::AppI* _app, const char* _errorText)
 											, gpuTimeElapsed
 											);
 									}
+
+									ImGui::PopID();
 								}
 							}
 
