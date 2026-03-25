@@ -3673,8 +3673,11 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 			}
 
 			m_metalLayer->setDevice(s_renderMtl->m_device);
-			MtlObjAccess::send<void>(m_metalLayer, sel_registerName("setMagnificationFilter:"), nsstr("nearest") );
-
+			
+			// CHANGE(fso) instead of setting the magnification filter here (which lead to a warning 'wrong thread') set the magnificationfilter directly in MetalView.swift
+			//	MtlObjAccess::send<void>(m_metalLayer, sel_registerName("setMagnificationFilter:"), nsstr("nearest") );
+			// END CHANGE(fso)
+			
 			const Resolution& resolution = s_renderMtl->m_resolution;
 			m_metalLayer->setPixelFormat( (MTL::PixelFormat)( (resolution.reset & BGFX_RESET_SRGB_BACKBUFFER)
 				? s_textureFormat[resolution.formatColor].m_fmtSrgb
