@@ -1563,7 +1563,10 @@ namespace bgfx
 	{
 		if (BX_ENABLED(BGFX_CONFIG_MULTITHREADED) )
 		{
-			if (s_renderFrameCalled)
+			// BEGIN CHANGE (fso)
+			// if (s_renderFrameCalled)
+			if (s_renderFrameCalled && NULL != s_ctx)
+			// END CHANGE (fso)
 			{
 				BGFX_CHECK_RENDER_THREAD();
 			}
