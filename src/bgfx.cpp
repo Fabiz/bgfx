@@ -2408,7 +2408,8 @@ namespace bgfx
 		if (_forceNewEncoder
 		||  BGFX_API_THREAD_MAGIC != s_threadIndex)
 		{
-			bx::MutexScope scopeLock(m_encoderApiLock);
+			bx::MutexScope beginLockScope(m_encoderBeginLock);
+			bx::MutexScope encoderApiScope(m_encoderApiLock);
 
 			uint16_t idx = m_encoderHandle->alloc();
 			if (kInvalidHandle == idx)
@@ -2445,13 +2446,19 @@ namespace bgfx
 		m_encoder[0].end(true);
 
 #if BGFX_CONFIG_MULTITHREADED
-		bx::MutexScope resourceApiScope(m_resourceApiLock);
-
-		encoderApiWait();
+		m_encoderBeginLock.lock(); // don't let any bgfx::begin calls...
+		encoderApiWait();          // wait for all started encoders to return...
 		bx::MutexScope encoderApiScope(m_encoderApiLock);
+		m_encoderBeginLock.unlock();
+
+		bx::MutexScope resourceApiScope(m_resourceApiLock);
 #else
 		encoderApiWait();
 #endif // BGFX_CONFIG_MULTITHREADED
+
+		m_encoderHandle->reset();
+		const uint16_t idx = m_encoderHandle->alloc();
+		BX_ASSERT(0 == idx, "Internal encoder handle is not 0 (idx %d).", idx); BX_UNUSED(idx);
 
 		if (0 != (_flags & BGFX_FRAME_DISCARD) )
 		{
@@ -3347,7 +3354,7 @@ namespace bgfx
 					uint8_t skip;
 					_cmdbuf.read(skip);
 
-					uintptr_t external;
+					uint64_t external;
 					_cmdbuf.read(external);
 
 					void* ptr = m_renderCtx->createTexture(handle, mem, flags, skip, external);
@@ -3600,11 +3607,6 @@ namespace bgfx
 		} while (!end);
 
 		flushTextureUpdateBatch(_cmdbuf);
-	}
-
-	uint32_t weldVertices(void* _output, const VertexLayout& _layout, const void* _data, uint32_t _num, bool _index32, float _epsilon)
-	{
-		return weldVertices(_output, _layout, _data, _num, _index32, _epsilon, g_allocator);
 	}
 
 	uint32_t topologyConvert(TopologyConvert::Enum _conversion, void* _dst, uint32_t _dstSize, const void* _indices, uint32_t _numIndices, bool _index32)

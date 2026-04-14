@@ -8,7 +8,6 @@
 #if BGFX_CONFIG_RENDERER_VULKAN
 #	include <bx/pixelformat.h>
 #	include "renderer_vk.h"
-#	include "shader_spirv.h"
 
 #if BX_PLATFORM_OSX
 #	import <Cocoa/Cocoa.h>
@@ -806,7 +805,7 @@ VK_IMPORT_DEVICE
 					BX_TRACE("\tv%-3d %s%s"
 						, extensionProperties[extension].specVersion
 						, extensionProperties[extension].extensionName
-						, supported ? " (supported)" : "", extensionProperties[extension].extensionName
+						, supported ? " (supported)" : ""
 						);
 
 					BX_UNUSED(supported);
@@ -879,7 +878,7 @@ VK_IMPORT_DEVICE
 							, indent
 							, extensionProperties[extension].extensionName
 							, extensionProperties[extension].specVersion
-							, supported ? " (supported)" : "", extensionProperties[extension].extensionName
+							, supported ? " (supported)" : ""
 							);
 
 						BX_UNUSED(supported);
@@ -4071,7 +4070,7 @@ VK_IMPORT_DEVICE
 							wds[wdsCount].pBufferInfo      = NULL;
 							wds[wdsCount].pTexelBufferView = NULL;
 
-							const TextureVK& texture = m_textures[bind.m_idx];
+							TextureVK& texture = m_textures[bind.m_idx];
 
 							VkImageViewType type = texture.m_type;
 							if (UINT32_MAX != bindInfo.index)
@@ -4084,10 +4083,7 @@ VK_IMPORT_DEVICE
 								type = VK_IMAGE_VIEW_TYPE_2D_ARRAY;
 							}
 
-							BX_ASSERT(
-								  texture.m_currentImageLayout == texture.m_sampledLayout
-								, "Mismatching image layout. Texture currently used as a framebuffer attachment?"
-								);
+							texture.setState(m_commandBuffer, texture.m_sampledLayout);
 
 							imageInfo[imageCount].imageLayout = texture.m_sampledLayout;
 							imageInfo[imageCount].sampler     = VK_NULL_HANDLE;
@@ -4148,10 +4144,7 @@ VK_IMPORT_DEVICE
 								: _program.m_textures[bindInfo.index].type
 								;
 
-							BX_ASSERT(
-								  texture.m_currentImageLayout == texture.m_sampledLayout
-								, "Mismatching image layout. Texture currently used as a framebuffer attachment?"
-								);
+							texture.setState(m_commandBuffer, texture.m_sampledLayout);
 
 							imageInfo[imageCount].imageLayout = texture.m_sampledLayout;
 							imageInfo[imageCount].sampler     = sampler;
@@ -8732,7 +8725,7 @@ retry:
 
 	void CommandQueueVK::addSwapChain(SwapChainVK& _swapChain)
 	{
-		if (VK_NULL_HANDLE == _swapChain.m_lastImageAcquiredSemaphore)
+		if (VK_NULL_HANDLE != _swapChain.m_lastImageAcquiredSemaphore)
 		{
 			BX_ASSERT(m_numWaitSemaphores < BX_COUNTOF(m_waitSemaphores), "Too many wait semaphores.");
 

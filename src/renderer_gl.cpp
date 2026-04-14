@@ -427,7 +427,11 @@ namespace bgfx { namespace gl
 		GL_DEPTH_COMPONENT16,  // D16
 		GL_DEPTH_COMPONENT24,  // D24
 		GL_DEPTH24_STENCIL8,   // D24S8
+#if BGFX_CONFIG_RENDERER_OPENGLES
+		GL_DEPTH_COMPONENT32F, // D32
+#else
 		GL_DEPTH_COMPONENT32,  // D32
+#endif // BGFX_CONFIG_RENDERER_OPENGLES
 		GL_DEPTH_COMPONENT32F, // D16F
 		GL_DEPTH_COMPONENT32F, // D24F
 		GL_DEPTH_COMPONENT32F, // D32F
@@ -2436,6 +2440,13 @@ namespace bgfx { namespace gl
 				m_workaround.m_detachShader = false;
 			}
 
+			if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGLES)
+			&&  !bx::strFind(m_version, "ANGLE").isEmpty() )
+			{
+				// Extension reports it exist, but it's broken.
+				s_extension[Extension::KHR_debug].m_initialize = false;
+			}
+
 			if (BX_ENABLED(BGFX_CONFIG_RENDERER_USE_EXTENSIONS) )
 			{
 				const char* extensions = (const char*)glGetString(GL_EXTENSIONS);
@@ -3170,12 +3181,23 @@ namespace bgfx { namespace gl
 							) );
 					}
 				}
+				else
+				{
+					glPushDebugGroup = stubPushDebugGroup;
+					glPopDebugGroup  = stubPopDebugGroup;
+					glObjectLabel    = stubObjectLabel;
+				}
 
 				if (NULL == glPushDebugGroup
 				||  NULL == glPopDebugGroup)
 				{
 					glPushDebugGroup = stubPushDebugGroup;
 					glPopDebugGroup  = stubPopDebugGroup;
+				}
+
+				if (NULL == glObjectLabel)
+				{
+					glObjectLabel = stubObjectLabel;
 				}
 
 				if (s_extension[Extension::ARB_seamless_cube_map].m_supported)
@@ -3201,11 +3223,6 @@ namespace bgfx { namespace gl
 					|| s_extension[Extension::EXT_debug_tool].m_supported
 					|| NULL != findModule("Nvda.Graphics.Interception.dll")
 					);
-
-				if (NULL == glObjectLabel)
-				{
-					glObjectLabel = stubObjectLabel;
-				}
 
 				if (NULL == glInvalidateFramebuffer)
 				{
