@@ -3555,6 +3555,14 @@ namespace bgfx { namespace gl
 
 		void createFrameBuffer(FrameBufferHandle _handle, uint8_t _num, const Attachment* _attachment) override
 		{
+			// BEGIN CHANGE(fso) texture framebuffers must be created in the main context. Every swap chain
+			// gets its own GL context (glcontext_egl.cpp, eglCreateContext per SwapChainGL) and, unlike
+			// textures, framebuffer objects are container objects that are NOT shared between contexts.
+			// Whatever context happened to be current here (e.g. a child window's) would own the FBO name,
+			// while setFrameBuffer() always binds texture framebuffers with the main context current - so
+			// the name resolves to a different FBO (or none) there and rendering silently goes elsewhere.
+			m_glctx.makeCurrent(NULL);
+			// END CHANGE(fso)
 			m_frameBuffers[_handle.idx].create(_num, _attachment);
 		}
 
@@ -3568,6 +3576,12 @@ namespace bgfx { namespace gl
 
 		void destroyFrameBuffer(FrameBufferHandle _handle) override
 		{
+			// BEGIN CHANGE(fso) same reason as createFrameBuffer: glDeleteFramebuffers only deletes the
+			// name in the context that owns it, so a texture framebuffer has to be destroyed in the main
+			// context too - otherwise the name leaks there and is never handed back out, while the delete
+			// hits an unrelated (or non-existent) FBO in whatever context happened to be current.
+			m_glctx.makeCurrent(NULL);
+			// END CHANGE(fso)
 			uint16_t denseIdx = m_frameBuffers[_handle.idx].destroy();
 			if (UINT16_MAX != denseIdx)
 			{
@@ -3835,6 +3849,12 @@ namespace bgfx { namespace gl
 
 				setRenderContextSize(m_resolution);
 				updateCapture();
+
+				// BEGIN CHANGE(fso) postReset() re-creates the FBO names, so it has to run in the same
+				// (main) context that createFrameBuffer/setFrameBuffer use - framebuffers are not shared
+				// between the per-swap-chain contexts.
+				m_glctx.makeCurrent(NULL);
+				// END CHANGE(fso)
 
 				for (uint32_t ii = 0; ii < BX_COUNTOF(m_frameBuffers); ++ii)
 				{
