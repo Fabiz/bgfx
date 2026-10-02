@@ -2716,6 +2716,7 @@ namespace bgfx
 			// clear all bytes (inclusively the padding) before we start.
 			bx::memSet(&m_bind, 0, sizeof(m_bind) );
 
+			m_key.reset();
 			m_discard = false;
 			m_draw.clear(BGFX_DISCARD_ALL);
 			m_compute.clear(BGFX_DISCARD_ALL);
