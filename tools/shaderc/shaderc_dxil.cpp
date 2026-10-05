@@ -20,10 +20,15 @@
 #	define _In_bytecount_(size)
 #endif // _In_bytecount_
 
+BX_PRAGMA_DIAGNOSTIC_PUSH()
+BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wattributes") // warning: 'uuid' attribute directive ignored
 #include <unknwnbase.h>
 #include <dxcapi.h>
 #include <winapifamily.h>
 #include <d3d12shader.h>
+BX_PRAGMA_DIAGNOSTIC_POP()
+
+#include "../../src/shader.h"
 
 namespace bgfx { namespace dxil
 {
@@ -156,6 +161,38 @@ namespace bgfx { namespace dxil
 
 	typedef std::vector<std::string> UniformNameList;
 
+	static TextureDimension::Enum d3dSrvDimensionToTextureDimension(D3D_SRV_DIMENSION _dimension)
+	{
+		switch (_dimension)
+		{
+		case D3D_SRV_DIMENSION_TEXTURE1D:
+		case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
+			return TextureDimension::Dimension1D;
+
+		case D3D_SRV_DIMENSION_TEXTURE2D:
+		case D3D_SRV_DIMENSION_TEXTURE2DMS:
+			return TextureDimension::Dimension2D;
+
+		case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
+		case D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
+			return TextureDimension::Dimension2DArray;
+
+		case D3D_SRV_DIMENSION_TEXTURE3D:
+			return TextureDimension::Dimension3D;
+
+		case D3D_SRV_DIMENSION_TEXTURECUBE:
+			return TextureDimension::DimensionCube;
+
+		case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
+			return TextureDimension::DimensionCubeArray;
+
+		default:
+			break;
+		}
+
+		return TextureDimension::Count;
+	}
+
 	struct Dxc
 	{
 		IDxcCompiler3* compiler3 = NULL;
@@ -228,7 +265,7 @@ namespace bgfx { namespace dxil
 		return dxc;
 	}
 
-	bool getReflectionData(ID3D12ShaderReflection* _shaderReflection, bool _vshader, UniformArray& _uniforms, uint8_t& _numAttrs, uint16_t* _attrs, uint16_t& _size, UniformNameList& unusedUniforms, bx::WriterI* _messageWriter)
+	bool getReflectionData(ID3D12ShaderReflection* _shaderReflection, bool _vshader, UniformArray& _uniforms, RawBindings& _rawBindings, uint8_t& _numAttrs, uint16_t* _attrs, uint16_t& _size, UniformNameList& unusedUniforms, bx::WriterI* _messageWriter)
 	{
 		bx::Error messageErr;
 		HRESULT hr = E_FAIL;
@@ -349,6 +386,28 @@ namespace bgfx { namespace dxil
 		}
 
 		BX_TRACE("Bound:");
+
+		std::unordered_map<std::string, uint8_t> textureDimension;
+
+		for (uint32_t ii = 0; ii < desc.BoundResources; ++ii)
+		{
+			D3D12_SHADER_INPUT_BIND_DESC bindDesc;
+
+			if (SUCCEEDED(_shaderReflection->GetResourceBindingDesc(ii, &bindDesc) )
+			&&  D3D_SIT_TEXTURE == bindDesc.Type)
+			{
+				const bx::StringView end = bx::strFind(bindDesc.Name, "Texture");
+				const TextureDimension::Enum dimension = d3dSrvDimensionToTextureDimension(bindDesc.Dimension);
+
+				if (!end.isEmpty()
+				&&  TextureDimension::Count != dimension)
+				{
+					textureDimension[std::string(bindDesc.Name, end.getPtr() - bindDesc.Name)] =
+						textureDimensionToId(dimension);
+				}
+			}
+		}
+
 		for (uint32_t ii = 0; ii < desc.BoundResources; ++ii)
 		{
 			D3D12_SHADER_INPUT_BIND_DESC bindDesc;
@@ -356,7 +415,15 @@ namespace bgfx { namespace dxil
 			hr = _shaderReflection->GetResourceBindingDesc(ii, &bindDesc);
 			if (SUCCEEDED(hr) )
 			{
-				if (D3D_SIT_SAMPLER == bindDesc.Type)
+				if (D3D_SIT_BYTEADDRESS == bindDesc.Type)
+				{
+					_rawBindings.srv |= UINT32_C(1) << bindDesc.BindPoint;
+				}
+				else if (D3D_SIT_UAV_RWBYTEADDRESS == bindDesc.Type)
+				{
+					_rawBindings.uav |= UINT32_C(1) << bindDesc.BindPoint;
+				}
+				else if (D3D_SIT_SAMPLER == bindDesc.Type)
 				{
 					BX_TRACE("\t%s, %d, %d, %d"
 						, bindDesc.Name
@@ -375,6 +442,14 @@ namespace bgfx { namespace dxil
 						un.num = 1;
 						un.regIndex = uint16_t(bindDesc.BindPoint);
 						un.regCount = uint16_t(bindDesc.BindCount);
+
+						const auto it = textureDimension.find(un.name);
+
+						if (it != textureDimension.end() )
+						{
+							un.texDimension = it->second;
+						}
+
 						_uniforms.push_back(un);
 					}
 				}
@@ -405,18 +480,19 @@ namespace bgfx { namespace dxil
 			args[numArgs++] = L"-E";
 			args[numArgs++] = L"main";
 
+			wchar_t target[] = L"cs_6_0";
+			target[0] = 'f' == _options.shaderType ? L'p'
+				:       'v' == _options.shaderType ? L'v'
+				:                                    L'c'
+				;
+			target[5] = wchar_t(L'0' + (_version/10)%10);
+
 			args[numArgs++] = L"-T";
-			if ('c' == _options.shaderType)
+			args[numArgs++] = target;
+
+			if (_options.uses16BitTypes)
 			{
-				args[numArgs++] = L"cs_6_0";
-			}
-			else if ('f' == _options.shaderType)
-			{
-				args[numArgs++] = L"ps_6_0";
-			}
-			else if ('v' == _options.shaderType)
-			{
-				args[numArgs++] = L"vs_6_0";
+				args[numArgs++] = L"-enable-16bit-types";
 			}
 
 			if (_options.warningsAreErrors)
@@ -516,12 +592,13 @@ namespace bgfx { namespace dxil
 			}
 
 			UniformArray uniforms;
+			RawBindings rawBindings;
 			uint8_t numAttrs = 0;
 			uint16_t attrs[bgfx::Attrib::Count];
 			uint16_t size = 0;
 
 			UniformNameList unusedUniforms;
-			if (!getReflectionData(shaderReflection, _options.shaderType == 'v', uniforms, numAttrs, attrs, size, unusedUniforms, _messageWriter) )
+			if (!getReflectionData(shaderReflection, _options.shaderType == 'v', uniforms, rawBindings, numAttrs, attrs, size, unusedUniforms, _messageWriter) )
 			{
 				bx::write(_messageWriter, &messageErr, "Error: Unable to get DXC reflection data.\n");
 				return false;
@@ -587,6 +664,8 @@ namespace bgfx { namespace dxil
 			}
 
 			{
+				rawBindings.write(_shaderWriter, &err);
+
 				uint16_t count = (uint16_t)uniforms.size();
 				bx::write(_shaderWriter, count, &err);
 

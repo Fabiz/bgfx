@@ -7,6 +7,7 @@
 #include <bx/commandline.h>
 #include <bx/file.h>
 #include <bx/sort.h>
+#include <bx/timer.h>
 #include <bgfx/bgfx.h>
 
 #include <time.h>
@@ -28,6 +29,25 @@ namespace entry
 	static uint32_t s_width = ENTRY_DEFAULT_WIDTH;
 	static uint32_t s_height = ENTRY_DEFAULT_HEIGHT;
 	static bool s_exit = false;
+
+	static void resetMainWindow(uint32_t _width, uint32_t _height, uint32_t _reset)
+	{
+		constexpr uint32_t kSwapChainFlags = 0
+			| BGFX_SWAP_CHAIN_FULLSCREEN_MASK
+			| BGFX_SWAP_CHAIN_MSAA_MASK
+			| BGFX_SWAP_CHAIN_SRGB_BACKBUFFER
+			| BGFX_SWAP_CHAIN_HDR10
+			| BGFX_SWAP_CHAIN_HIDPI
+			| BGFX_SWAP_CHAIN_TRANSPARENT_BACKBUFFER
+			;
+
+		bgfx::SwapChain swapChain;
+		swapChain.width  = _width;
+		swapChain.height = _height;
+		swapChain.flags  = _reset &  kSwapChainFlags;
+
+		bgfx::reset(_reset & ~kSwapChainFlags, &swapChain);
+	}
 
 	static bx::FileReaderI* s_fileReader = NULL;
 	static bx::FileWriterI* s_fileWriter = NULL;
@@ -289,7 +309,6 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 			||  setOrToggle(s_reset, "flush",       BGFX_RESET_FLUSH_AFTER_RENDER, 1, _argc, _argv)
 			||  setOrToggle(s_reset, "flip",        BGFX_RESET_FLIP_AFTER_RENDER,  1, _argc, _argv)
 			||  setOrToggle(s_reset, "hidpi",       BGFX_RESET_HIDPI,              1, _argc, _argv)
-			||  setOrToggle(s_reset, "depthclamp",  BGFX_RESET_DEPTH_CLAMP,        1, _argc, _argv)
 			   )
 			{
 				return bx::kExitSuccess;
@@ -535,6 +554,71 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 		return s_numApps;
 	}
 
+	static bx::Ticks s_fixedTimeStep = bx::InitZero;
+
+	bx::Ticks getFixedTimeStep()
+	{
+		return s_fixedTimeStep;
+	}
+
+	///
+	struct TestRun
+	{
+		TestRun(int _argc, const char* const* _argv)
+			: m_frame(0)
+			, m_screenshotFrame(0)
+		{
+			bx::CommandLine cmdLine(_argc, _argv);
+
+			const char* screenshot = cmdLine.findOption("screenshot");
+			if (NULL != screenshot)
+			{
+				bx::strCopy(m_screenshot, sizeof(m_screenshot), screenshot);
+				m_screenshotFrame = 60;
+
+				const char* frame = cmdLine.findOption("screenshot-frame");
+				if (NULL != frame)
+				{
+					bx::fromString(&m_screenshotFrame, frame);
+				}
+			}
+
+			uint32_t fps = 0 != m_screenshotFrame ? 60 : 0;
+			const char* fixedFps = cmdLine.findOption("fixed-fps");
+			if (NULL != fixedFps)
+			{
+				bx::fromString(&fps, fixedFps);
+			}
+
+			s_fixedTimeStep = 0 != fps
+				? bx::Ticks(bx::Ticks::s_kFreq.ticks/fps)
+				: bx::Ticks(bx::InitZero)
+				;
+		}
+
+		///
+		bool frame()
+		{
+			if (0 == m_screenshotFrame)
+			{
+				return true;
+			}
+
+			++m_frame;
+
+			if (m_frame == m_screenshotFrame)
+			{
+				bgfx::requestScreenShot(BGFX_INVALID_HANDLE, m_screenshot);
+			}
+
+			return m_frame < m_screenshotFrame + 3;
+		}
+
+		uint32_t m_frame;
+		uint32_t m_screenshotFrame;
+		char     m_screenshot[bx::kMaxFilePath];
+	};
+
 	int runApp(AppI* _app, int _argc, const char* const* _argv)
 	{
 		setWindowSize(kDefaultWindowHandle, s_width, s_height);
@@ -546,6 +630,8 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 		bx::snprintf(title, BX_COUNTOF(title), "%S - %s", &exeName, _app->getName() );
 		setWindowTitle(kDefaultWindowHandle, title);
 
+		TestRun test(_argc, _argv);
+
 		_app->init(_argc, _argv, s_width, s_height);
 		bgfx::frame();
 
@@ -555,7 +641,8 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 #else
 		while (_app->update() )
 		{
-			if (0 != bx::strLen(s_restartApp) )
+			if (0 != bx::strLen(s_restartApp)
+			||  !test.frame() )
 			{
 				break;
 			}
@@ -648,27 +735,23 @@ restart:
 			{
 				selected = app;
 			}
-#if 0
-			DBG("%c %s, %s"
-				, app == selected ? '>' : ' '
-				, app->getName()
-				, app->getDescription()
-				);
-#endif // 0
 		}
 
 		int32_t result = bx::kExitSuccess;
 		s_restartApp[0] = '\0';
-		if (0 == s_numApps)
+
+		char  extraArgsBuf[256];
+		char  tokenBuf[256];
+		char* extraArgv[32];
+		const char* restartArgv[64];
+
+		int argc = _argc;
+		const char* const* argv = _argv;
+
+		if (0 != bx::strLen(s_restartArgs) )
 		{
-			result = ::_main_(_argc, (char**)_argv);
-		}
-		else if (0 != bx::strLen(s_restartArgs) )
-		{
-			char extraArgsBuf[256];
 			bx::strCopy(extraArgsBuf, BX_COUNTOF(extraArgsBuf), s_restartArgs);
 
-			const char* restartArgv[64];
 			int restartArgc = 0;
 
 			if (0 < _argc)
@@ -676,9 +759,7 @@ restart:
 				restartArgv[restartArgc++] = _argv[0];
 			}
 
-			char* extraArgv[32];
 			int extraArgc;
-			char tokenBuf[256];
 			uint32_t tokenBufSize = sizeof(tokenBuf);
 			bx::tokenizeCommandLine(extraArgsBuf, tokenBuf, tokenBufSize, extraArgc, extraArgv, BX_COUNTOF(extraArgv) );
 
@@ -687,11 +768,17 @@ restart:
 				restartArgv[restartArgc++] = extraArgv[ii];
 			}
 
-			result = runApp(getCurrentApp(selected), restartArgc, restartArgv);
+			argc = restartArgc;
+			argv = restartArgv;
+		}
+
+		if (0 == s_numApps)
+		{
+			result = ::_main_(argc, (char**)argv);
 		}
 		else
 		{
-			result = runApp(getCurrentApp(selected), _argc, _argv);
+			result = runApp(getCurrentApp(selected), argc, argv);
 		}
 
 		if (0 != bx::strLen(s_restartApp) )
@@ -843,7 +930,7 @@ restart:
 		{
 			_reset = s_reset;
 			BX_TRACE("bgfx::reset(%d, %d, 0x%x)", _width, _height, _reset);
-			bgfx::reset(_width, _height, _reset);
+			resetMainWindow(_width, _height, _reset);
 			inputSetMouseResolution(uint16_t(_width), uint16_t(_height) );
 		}
 
@@ -1023,7 +1110,7 @@ restart:
 		{
 			_reset = s_reset;
 			BX_TRACE("bgfx::reset(%d, %d, 0x%x)", s_window[0].m_width, s_window[0].m_height, _reset);
-			bgfx::reset(s_window[0].m_width, s_window[0].m_height, _reset);
+			resetMainWindow(s_window[0].m_width, s_window[0].m_height, _reset);
 			inputSetMouseResolution(uint16_t(s_window[0].m_width), uint16_t(s_window[0].m_height) );
 		}
 

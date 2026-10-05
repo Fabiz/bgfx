@@ -75,6 +75,8 @@ local function convert_type_0(arg)
 		return arg.ctype:gsub("float", "f32")
 	elseif arg.ctype == "const char*" then
 		return "[*c]const u8"
+	elseif arg.ctype == "const uint8_t*" then
+		return "[*c]const u8"
 	elseif hasPrefix(arg.ctype, "char") then
 		return arg.ctype:gsub("char", "u8")
 	elseif hasSuffix(arg.fulltype, "Handle") then
@@ -212,7 +214,7 @@ function gen.gen()
 	return r
 end
 
-local combined = { "State", "Stencil", "Buffer", "Texture", "Sampler", "Reset" }
+local combined = { "State", "Stencil", "Buffer", "Texture", "Sampler", "Reset", "SwapChain" }
 
 for _, v in ipairs(combined) do
 	combined[v] = {}
@@ -286,6 +288,9 @@ function converter.types(params)
 
 		yield("pub const " .. typ.name .. " = extern struct {")
 		yield("    idx: c_ushort,")
+		if typ.tagged then
+		yield("    type: c_ushort,")
+		end
 		yield("};")
 	elseif hasSuffix(typ.name, "::Enum") then
 		lastCombinedFlagBlock()
@@ -312,7 +317,10 @@ function converter.types(params)
 		enum["[" .. typ.typename .. "::Count]"] = #typ.enum
 
 	elseif typ.bits ~= nil then
-		local prefix, name = typ.name:match "(%u%l+)(.*)"
+		local prefix, name = typ.name:match "(%u%l+%u%l+)(.*)"
+		if not combined[prefix] then
+			prefix, name = typ.name:match "(%u%l+)(.*)"
+		end
 		if prefix ~= lastCombinedFlag then
 			lastCombinedFlagBlock()
 			lastCombinedFlag = prefix

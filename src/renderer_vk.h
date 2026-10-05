@@ -303,10 +303,10 @@
 #	define BGFX_VK_END_DEBUG_UTILS_LABEL() BX_NOOP()
 #endif // BGFX_CONFIG_DEBUG_ANNOTATION
 
-#define BGFX_VK_PROFILER_BEGIN(_view, _abgr)                      \
-	BX_MACRO_BLOCK_BEGIN                                          \
-		BGFX_VK_BEGIN_DEBUG_UTILS_LABEL(s_viewName[view], _abgr); \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr);             \
+#define BGFX_VK_PROFILER_BEGIN(_view, _abgr)              \
+	BX_MACRO_BLOCK_BEGIN                                  \
+		BGFX_VK_BEGIN_DEBUG_UTILS_LABEL(viewName, _abgr); \
+		BGFX_PROFILER_BEGIN(viewName, _abgr);             \
 	BX_MACRO_BLOCK_END
 
 #define BGFX_VK_PROFILER_BEGIN_LITERAL(_name, _abgr)   \
@@ -535,8 +535,7 @@ VK_DESTROY_FUNC(DescriptorSet);
 	struct ShaderVK
 	{
 		ShaderVK()
-			: m_code(NULL)
-			, m_module(VK_NULL_HANDLE)
+			: m_module(VK_NULL_HANDLE)
 			, m_constantBuffer(NULL)
 			, m_hash(0)
 			, m_numUniforms(0)
@@ -550,7 +549,6 @@ VK_DESTROY_FUNC(DescriptorSet);
 		void create(const Memory* _mem);
 		void destroy();
 
-		const Memory* m_code;
 		VkShaderModule m_module;
 		UniformBuffer* m_constantBuffer;
 
@@ -607,12 +605,15 @@ VK_DESTROY_FUNC(DescriptorSet);
 	struct TimerQueryVK
 	{
 		TimerQueryVK()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_query(kMinTimerQueries)
+			, m_control(kMinTimerQueries)
 		{
 		}
 
 		VkResult init();
 		void shutdown();
+		VkResult create();
+		void resize(uint32_t _size);
 		uint32_t begin(uint32_t _resultIdx, uint32_t _frameNum);
 		void end(uint32_t _idx);
 		bool update();
@@ -643,8 +644,8 @@ VK_DESTROY_FUNC(DescriptorSet);
 
 		uint64_t m_frequency;
 
-		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
-		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
+		TimerResultT<Result> m_result;
+		TimerQueryArrayT<Query> m_query;
 
 		VkBuffer m_readback;
 		DeviceMemoryAllocationVK m_readbackMemory;
@@ -682,8 +683,9 @@ VK_DESTROY_FUNC(DescriptorSet);
 		void create(VkImage _image, uint32_t _width, uint32_t _height, TextureFormat::Enum _format);
 		void destroy();
 		uint32_t pitch(uint8_t _mip = 0) const;
+		uint32_t stagingSize(VkImageAspectFlags _aspect, uint8_t _mip = 0) const;
 		void copyImageToBuffer(VkCommandBuffer _commandBuffer, VkBuffer _buffer, VkImageLayout _layout, VkImageAspectFlags _aspect, uint16_t _layer = 0, uint8_t _mip = 0) const;
-		void readback(VkDeviceMemory _memory, VkDeviceSize _offset, void* _data, uint8_t _mip = 0) const;
+		void readback(VkDeviceMemory _memory, VkDeviceSize _offset, void* _data, VkImageAspectFlags _aspect, uint8_t _mip = 0) const;
 
 		VkImage  m_image;
 		uint32_t m_width;
@@ -724,7 +726,11 @@ VK_DESTROY_FUNC(DescriptorSet);
 		void copyBufferToTexture(VkCommandBuffer _commandBuffer, VkBuffer _stagingBuffer, uint32_t _bufferImageCopyCount, VkBufferImageCopy* _bufferImageCopy);
 		void setState(VkCommandBuffer _commandBuffer, VkImageLayout _newImageLayout, bool _singleMsaaImage = false);
 
-		VkResult createView(uint32_t _layer, uint32_t _numLayers, uint32_t _mip, uint32_t _numMips, VkImageViewType _type, VkImageAspectFlags _aspectMask, bool _renderTarget, ::VkImageView* _view) const;
+		VkResult createView(uint32_t _layer, uint32_t _numLayers, uint32_t _mip, uint32_t _numMips, VkImageViewType _type, VkImageAspectFlags _aspectMask, bool _renderTarget, ::VkImageView* _view, VkFormat _format = VK_FORMAT_UNDEFINED) const;
+
+		VkFormat getViewFormat(uint32_t _flags, uint32_t _bit) const;
+
+		void resolveRenderPass(VkCommandBuffer _commandBuffer, VkFormat _format, uint32_t _layer, uint32_t _numLayers, uint32_t _mip);
 
 		void*    m_directAccessPtr;
 		uint64_t m_flags;
@@ -768,20 +774,23 @@ VK_DESTROY_FUNC(DescriptorSet);
 	{
 		SwapChainVK()
 			: m_nwh(NULL)
+			, m_vsync(false)
 			, m_swapChain(VK_NULL_HANDLE)
 			, m_lastImageRenderedSemaphore(VK_NULL_HANDLE)
 			, m_lastImageAcquiredSemaphore(VK_NULL_HANDLE)
 			, m_needPresent(false)
 			, m_backBufferDepthStencilImageView(VK_NULL_HANDLE)
+			, m_depthStencilFormat(VK_FORMAT_UNDEFINED)
+			, m_depthStencilAspect(0)
 			, m_backBufferColorMsaaImageView(VK_NULL_HANDLE)
 		{
 		}
 
-		VkResult create(VkCommandBuffer _commandBuffer, void* _nwh, const Resolution& _resolution);
+		VkResult create(VkCommandBuffer _commandBuffer, void* _nwh, const SwapChain& _desc);
 
 		void destroy();
 
-		void update(VkCommandBuffer _commandBuffer, void* _nwh, const Resolution& _resolution);
+		void update(VkCommandBuffer _commandBuffer, void* _nwh, const SwapChain& _desc);
 
 		VkResult createSurface();
 		VkResult createSwapChain();
@@ -807,7 +816,9 @@ VK_DESTROY_FUNC(DescriptorSet);
 		VkSwapchainCreateInfoKHR m_sci;
 
 		void* m_nwh;
-		Resolution m_resolution;
+		SwapChain m_desc;
+
+		bool m_vsync;
 
 		TextureFormat::Enum m_colorFormat;
 		TextureFormat::Enum m_depthFormat;
@@ -838,6 +849,8 @@ VK_DESTROY_FUNC(DescriptorSet);
 
 		TextureVK   m_backBufferDepthStencil;
 		VkImageView m_backBufferDepthStencilImageView;
+		VkFormat           m_depthStencilFormat;
+		VkImageAspectFlags m_depthStencilAspect;
 
 		TextureVK     m_backBufferColorMsaa;
 		VkImageView   m_backBufferColorMsaaImageView;
@@ -864,10 +877,10 @@ VK_DESTROY_FUNC(DescriptorSet);
 		}
 
 		void create(uint8_t _num, const Attachment* _attachment);
-		VkResult create(uint16_t _denseIdx, void* _nwh, uint32_t _width, uint32_t _height, TextureFormat::Enum _format = TextureFormat::Count, TextureFormat::Enum _depthFormat = TextureFormat::Count);
+		VkResult create(uint16_t _denseIdx, const SwapChain& _desc);
 		uint16_t destroy();
 
-		void update(VkCommandBuffer _commandBuffer, const Resolution& _resolution);
+		void update(VkCommandBuffer _commandBuffer, const SwapChain& _desc);
 
 		void preReset();
 		void postReset();
@@ -882,6 +895,11 @@ VK_DESTROY_FUNC(DescriptorSet);
 		void markDirty() { m_needResolve = true; }
 
 		bool isRenderable() const;
+
+		bool isSwapChain() const
+		{
+			return NULL != m_nwh;
+		}
 
 		TextureHandle m_texture[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 		TextureHandle m_depth;

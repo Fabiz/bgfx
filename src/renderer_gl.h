@@ -12,38 +12,32 @@
 	|| BX_PLATFORM_NX                                                                       \
 	|| BX_PLATFORM_RPI                                                                      \
 	) )                                                                                     \
-	|| (BGFX_CONFIG_RENDERER_OPENGLES && BX_PLATFORM_WINDOWS)
+	|| (BGFX_CONFIG_RENDERER_OPENGLES && BX_PLATFORM_WINDOWS && !BGFX_CONFIG_GL_USE_WGL)
 
 #define BGFX_USE_HTML5 (BGFX_CONFIG_RENDERER_OPENGLES && (0 \
 	|| BX_PLATFORM_EMSCRIPTEN                               \
 	) )
 
-#define BGFX_USE_WGL (BGFX_CONFIG_RENDERER_OPENGL && (0 \
-	|| BX_PLATFORM_WINDOWS                              \
+#define BGFX_USE_WGL ( (0                                        \
+	||  BGFX_CONFIG_RENDERER_OPENGL                              \
+	|| (BGFX_CONFIG_RENDERER_OPENGLES && BGFX_CONFIG_GL_USE_WGL) \
+	) && (0                                                      \
+	|| BX_PLATFORM_WINDOWS                                       \
 	) )
 
-// BEGIN CHANGE(fso) reactivated opengl for osx
 #define BGFX_USE_GL_DYNAMIC_LIB (0 \
 	|| BX_PLATFORM_LINUX           \
-	|| BX_PLATFORM_OSX             \
 	|| BX_PLATFORM_WINDOWS         \
 	)
-//#define BGFX_USE_GL_DYNAMIC_LIB (0 \
-//	|| BX_PLATFORM_BSD             \
-//	|| BX_PLATFORM_LINUX           \
-//	|| BX_PLATFORM_WINDOWS         \
-//	)
-// END CHANGE(fso)
-
 
 // Keep a state cache of GL uniform values to avoid redundant uploads
 // on the following platforms.
 #define BGFX_GL_CONFIG_UNIFORM_CACHE BX_PLATFORM_EMSCRIPTEN
 
-#define BGFX_GL_PROFILER_BEGIN(_view, _abgr)                                               \
-	BX_MACRO_BLOCK_BEGIN                                                                   \
-		GL_CHECK(glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, s_viewName[view]) ); \
-		BGFX_PROFILER_BEGIN(s_viewName[view], _abgr);                                      \
+#define BGFX_GL_PROFILER_BEGIN(_view, _abgr)                                       \
+	BX_MACRO_BLOCK_BEGIN                                                           \
+		GL_CHECK(glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, viewName) ); \
+		BGFX_PROFILER_BEGIN(viewName, _abgr);                                      \
 	BX_MACRO_BLOCK_END
 
 #define BGFX_GL_PROFILER_BEGIN_LITERAL(_name, _abgr)                                       \
@@ -59,83 +53,19 @@
 	BX_MACRO_BLOCK_END
 
 #if BGFX_CONFIG_RENDERER_OPENGL
-#	if BGFX_CONFIG_RENDERER_OPENGL >= 31
-#		include <gl/glcorearb.h>
-// BEGIN CHANGE(fso) reactivated opengl for osx
-#		if BX_PLATFORM_OSX
-#			define GL_ARB_shader_objects // OSX collsion with GLhandleARB in gltypes.h
-#		endif // BX_PLATFORM_OSX
-// END CHANGE(fso)
-#	else
-#		if BX_PLATFORM_LINUX
-#			define GL_PROTOTYPES
-#			define GL_GLEXT_LEGACY
-#			include <GL/gl.h>
-#			undef GL_PROTOTYPES
-// BEGIN CHANGE(fso) reactivated opengl for osx
-#		elif BX_PLATFORM_OSX
-#			define GL_GLEXT_LEGACY
-#			define long ptrdiff_t
-#			include <OpenGL/gl.h>
-#			undef long
-#			undef GL_VERSION_1_2
-#			undef GL_VERSION_1_3
-#			undef GL_VERSION_1_4
-#			undef GL_VERSION_1_5
-#			undef GL_VERSION_2_0
-// END CHANGE(fso)
-#		elif BX_PLATFORM_WINDOWS
-#			ifndef WIN32_LEAN_AND_MEAN
-#				define WIN32_LEAN_AND_MEAN
-#			endif // WIN32_LEAN_AND_MEAN
-#			include <windows.h>
-#			include <GL/gl.h>
-#		else
-#			include <GL/gl.h>
-#		endif // BX_PLATFORM_
-
-#		include <gl/glext.h>
-#	endif // BGFX_CONFIG_RENDERER_OPENGL >= 31
+#	include <gl/glcorearb.h>
 
 #elif BGFX_CONFIG_RENDERER_OPENGLES
 typedef double GLdouble;
-#	if BGFX_CONFIG_RENDERER_OPENGLES < 30
-#		include <GLES2/gl2platform.h>
-#		include <GLES2/gl2.h>
-#		include <GLES2/gl2ext.h>
-typedef int64_t  GLint64;
-typedef uint64_t GLuint64;
-#		define GL_PROGRAM_BINARY_LENGTH GL_PROGRAM_BINARY_LENGTH_OES
-#		define GL_NUM_PROGRAM_BINARY_FORMATS GL_NUM_PROGRAM_BINARY_FORMATS_OES
-#		define GL_HALF_FLOAT GL_HALF_FLOAT_OES
-#		define GL_RGBA8 GL_RGBA8_OES
-#		define GL_UNSIGNED_INT_2_10_10_10_REV GL_UNSIGNED_INT_2_10_10_10_REV_EXT
-#		ifndef GL_TEXTURE_3D
-#			define GL_TEXTURE_3D GL_TEXTURE_3D_OES
-#		endif // GL_TEXTURE_3D
-#		define GL_SAMPLER_3D GL_SAMPLER_3D_OES
-#		define GL_TEXTURE_WRAP_R GL_TEXTURE_WRAP_R_OES
-#		ifndef GL_MIN
-#			define GL_MIN GL_MIN_EXT
-#		endif // GL_MIN
-#		ifndef GL_MAX
-#			define GL_MAX GL_MAX_EXT
-#		endif // GL_MAX
-#		define GL_DEPTH_COMPONENT24 GL_DEPTH_COMPONENT24_OES
-#		define GL_DEPTH24_STENCIL8 GL_DEPTH24_STENCIL8_OES
-#		define GL_DEPTH_COMPONENT32 GL_DEPTH_COMPONENT32_OES
-#		define GL_UNSIGNED_INT_24_8 GL_UNSIGNED_INT_24_8_OES
-#	elif BGFX_CONFIG_RENDERER_OPENGLES >= 30
-#		include <GLES3/gl3platform.h>
-#		if BGFX_CONFIG_RENDERER_OPENGLES >= 32
-#			include <GLES3/gl32.h>
-#		elif BGFX_CONFIG_RENDERER_OPENGLES >= 31
-#			include <GLES3/gl31.h>
-#		else
-#			include <GLES3/gl3.h>
-#		endif // BGFX_CONFIG_RENDERER_OPENGLES
-#		include <GLES2/gl2ext.h>
-#	endif // BGFX_CONFIG_RENDERER_
+#	include <GLES3/gl3platform.h>
+#	if BGFX_CONFIG_RENDERER_OPENGLES >= 32
+#		include <GLES3/gl32.h>
+#	elif BGFX_CONFIG_RENDERER_OPENGLES >= 31
+#		include <GLES3/gl31.h>
+#	else
+#		include <GLES3/gl3.h>
+#	endif // BGFX_CONFIG_RENDERER_OPENGLES
+#	include <GLES2/gl2ext.h>
 
 #endif // BGFX_CONFIG_RENDERER_OPENGL
 
@@ -410,6 +340,18 @@ typedef uint64_t GLuint64;
 #ifndef GL_UNSIGNED_INT_10F_11F_11F_REV
 #	define GL_UNSIGNED_INT_10F_11F_11F_REV 0x8C3B
 #endif // GL_UNSIGNED_INT_10F_11F_11F_REV
+
+#ifndef GL_COPY_READ_BUFFER
+#	define GL_COPY_READ_BUFFER 0x8F36
+#endif // GL_COPY_READ_BUFFER
+
+#ifndef GL_COPY_WRITE_BUFFER
+#	define GL_COPY_WRITE_BUFFER 0x8F37
+#endif // GL_COPY_WRITE_BUFFER
+
+#ifndef GL_MAP_READ_BIT
+#	define GL_MAP_READ_BIT 0x0001
+#endif // GL_MAP_READ_BIT
 
 #ifndef GL_COMPRESSED_RGB_S3TC_DXT1_EXT
 #	define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0x83F0
@@ -808,6 +750,18 @@ typedef uint64_t GLuint64;
 #	define GL_UNPACK_ROW_LENGTH 0x0CF2
 #endif // GL_UNPACK_ROW_LENGTH
 
+#ifndef GL_UNPACK_IMAGE_HEIGHT
+#	define GL_UNPACK_IMAGE_HEIGHT 0x806E
+#endif // GL_UNPACK_IMAGE_HEIGHT
+
+#ifndef GL_PACK_ROW_LENGTH
+#	define GL_PACK_ROW_LENGTH 0x0D02
+#endif // GL_PACK_ROW_LENGTH
+
+#ifndef GL_PACK_IMAGE_HEIGHT
+#	define GL_PACK_IMAGE_HEIGHT 0x806C
+#endif // GL_PACK_IMAGE_HEIGHT
+
 #ifndef GL_DEPTH_STENCIL
 #	define GL_DEPTH_STENCIL 0x84F9
 #endif // GL_DEPTH_STENCIL
@@ -1025,6 +979,14 @@ typedef uint64_t GLuint64;
 #	define GL_TEXTURE_MAX_LEVEL 0x813D
 #endif // GL_TEXTURE_MAX_LEVEL
 
+#ifndef GL_TEXTURE_MIN_LOD
+#	define GL_TEXTURE_MIN_LOD 0x813A
+#endif // GL_TEXTURE_MIN_LOD
+
+#ifndef GL_TEXTURE_MAX_LOD
+#	define GL_TEXTURE_MAX_LOD 0x813B
+#endif // GL_TEXTURE_MAX_LOD
+
 #ifndef GL_COMPUTE_SHADER
 #	define GL_COMPUTE_SHADER 0x91B9
 #endif // GL_COMPUTE_SHADER
@@ -1057,6 +1019,10 @@ typedef uint64_t GLuint64;
 #	define GL_SHADER_IMAGE_ACCESS_BARRIER_BIT 0x00000020
 #endif // GL_SHADER_IMAGE_ACCESS_BARRIER_BIT
 
+#ifndef GL_BUFFER_UPDATE_BARRIER_BIT
+#	define GL_BUFFER_UPDATE_BARRIER_BIT 0x00000200
+#endif // GL_BUFFER_UPDATE_BARRIER_BIT
+
 #ifndef GL_SHADER_STORAGE_BARRIER_BIT
 #	define GL_SHADER_STORAGE_BARRIER_BIT 0x00002000
 #endif // GL_SHADER_STORAGE_BARRIER_BIT
@@ -1064,6 +1030,18 @@ typedef uint64_t GLuint64;
 #ifndef GL_SHADER_STORAGE_BUFFER
 #	define GL_SHADER_STORAGE_BUFFER 0x90D2
 #endif // GL_SHADER_STORAGE_BUFFER
+
+#ifndef GL_TEXTURE_SRGB_DECODE_EXT
+#	define GL_TEXTURE_SRGB_DECODE_EXT 0x8A48
+#endif // GL_TEXTURE_SRGB_DECODE_EXT
+
+#ifndef GL_DECODE_EXT
+#	define GL_DECODE_EXT 0x8A49
+#endif // GL_DECODE_EXT
+
+#ifndef GL_SKIP_DECODE_EXT
+#	define GL_SKIP_DECODE_EXT 0x8A4A
+#endif // GL_SKIP_DECODE_EXT
 
 #ifndef GL_IMAGE_1D
 #	define GL_IMAGE_1D 0x904C
@@ -1184,6 +1162,10 @@ typedef uint64_t GLuint64;
 #ifndef GL_SAMPLE_ALPHA_TO_COVERAGE
 #	define GL_SAMPLE_ALPHA_TO_COVERAGE 0x809E
 #endif // GL_SAMPLE_ALPHA_TO_COVERAGE
+
+#ifndef GL_SAMPLE_MASK
+#	define GL_SAMPLE_MASK 0x8E51
+#endif // GL_SAMPLE_MASK
 
 #ifndef GL_CONSERVATIVE_RASTERIZATION_NV
 #	define GL_CONSERVATIVE_RASTERIZATION_NV 0x9346
@@ -1324,6 +1306,10 @@ typedef uint64_t GLuint64;
 #	define GL_LINE_SMOOTH 0x0B20
 #endif // GL_LINE_SMOOTH
 
+#ifndef GL_PRIMITIVE_RESTART_FIXED_INDEX
+#	define GL_PRIMITIVE_RESTART_FIXED_INDEX 0x8D69
+#endif // GL_PRIMITIVE_RESTART_FIXED_INDEX
+
 #ifndef GL_TEXTURE_LOD_BIAS
 #	define GL_TEXTURE_LOD_BIAS 0x8501
 #endif // GL_TEXTURE_LOD_BIAS
@@ -1334,10 +1320,6 @@ typedef uint64_t GLuint64;
 #	include "glcontext_html5.h"
 #elif BGFX_USE_WGL
 #	include "glcontext_wgl.h"
-// BEGIN CHANGE(fso) reactivated opengl for osx
-#elif BX_PLATFORM_OSX
-#	include "glcontext_nsgl.h"
-// END CHANGE(fso)
 #endif // BGFX_USE_*
 
 #ifndef GL_APIENTRY
@@ -1350,6 +1332,7 @@ typedef uint64_t GLuint64;
 
 #if !BGFX_CONFIG_RENDERER_OPENGL
 #	define glClearDepth glClearDepthf
+#	define glDepthRange glDepthRangef
 #endif // !BGFX_CONFIG_RENDERER_OPENGL
 
 namespace bgfx
@@ -1614,11 +1597,11 @@ namespace bgfx { namespace gl
 		bool init(GLenum _target, uint32_t _width, uint32_t _height, uint32_t _depth, uint8_t _numMips, uint64_t _flags, uint64_t _external = 0);
 		void create(const Memory* _mem, uint64_t _flags, uint8_t _skip, uint64_t _external = 0);
 		void destroy();
-		void overrideInternal(uintptr_t _ptr);
 		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem);
 		void clear(uint8_t _mip, uint8_t _numMips, uint16_t _layer, uint16_t _numLayers);
-		void setSamplerState(uint32_t _flags, const float _rgba[4]);
-		void commit(uint32_t _stage, uint32_t _flags, const float _palette[][4], uint8_t _firstMip, uint8_t _numMips, uint16_t _firstLayer, uint16_t _numLayers, GLenum _samplerTarget = 0); // LINE CHANGE(fso) _samplerTarget added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
+		void clearAttached(uint8_t _mipBeg, uint8_t _mipEnd, uint16_t _layer, uint16_t _numLayers);
+		void setSamplerState(uint32_t _flags, const float _rgba[4], uint8_t _lodMin = 0, uint8_t _lodMax = UINT8_MAX);
+		void commit(uint32_t _stage, uint32_t _flags, const float _palette[][4], uint8_t _firstMip, uint8_t _numMips, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _lodMin = 0, uint8_t _lodMax = UINT8_MAX, GLenum _samplerTarget = 0); // LINE CHANGE(fso) _samplerTarget added by fso from https://github.com/bkaradzic/bgfx/commit/594be538919a93006c52e630d03cc33a81a78184
 		GLenum getViewTarget(uint16_t _numLayers, bool _layered = false) const;
 		GLuint getViewId(uint8_t _firstMip, uint8_t _numMips, uint16_t _firstLayer, uint16_t _numLayers, GLenum* _target = NULL, bool _layered = false);
 		void resolve(uint8_t _resolve) const;
@@ -1637,6 +1620,14 @@ namespace bgfx { namespace gl
 				|| isCubeMap()
 				|| GL_TEXTURE_2D_ARRAY == m_target
 				|| GL_TEXTURE_3D       == m_target
+				;
+		}
+
+		bool isMsaaSurface() const
+		{
+			return 0
+				|| GL_TEXTURE_2D_MULTISAMPLE       == m_target
+				|| GL_TEXTURE_2D_MULTISAMPLE_ARRAY == m_target
 				;
 		}
 
@@ -1682,6 +1673,10 @@ namespace bgfx { namespace gl
 	{
 		FrameBufferGL()
 			: m_swapChain(NULL)
+			, m_swapChainColorTex(0)
+			, m_swapChainColorRbo(0)
+			, m_swapChainDepthRbo(0)
+			, m_swapChainMsaa(1)
 			, m_denseIdx(UINT16_MAX)
 			, m_num(0)
 			, m_needPresent(false)
@@ -1690,13 +1685,30 @@ namespace bgfx { namespace gl
 		}
 
 		void create(uint8_t _num, const Attachment* _attachment);
-		void create(uint16_t _denseIdx, void* _nwh, uint32_t _width, uint32_t _height);
+		void create(uint16_t _denseIdx, const SwapChain& _desc);
+		void update(const SwapChain& _desc);
 		void postReset();
 		uint16_t destroy();
 		void resolve();
 		void discard(uint16_t _flags);
+		bool isSrgbWrite() const;
+
+		void createSwapChainFbo(const SwapChain& _desc);
+		void destroySwapChainFbo();
+		void resolveSwapChainFbo();
+		void blitSwapChainFbo();
+
+		GLuint swapChainReadFbo() const
+		{
+			return 0 != m_fbo[1] ? m_fbo[1] : m_fbo[0];
+		}
 
 		SwapChainGL* m_swapChain;
+		SwapChain m_desc;
+		GLuint m_swapChainColorTex;
+		GLuint m_swapChainColorRbo;
+		GLuint m_swapChainDepthRbo;
+		uint32_t m_swapChainMsaa;
 		GLuint m_fbo[2];
 		uint32_t m_width;
 		uint32_t m_height;
@@ -1730,7 +1742,7 @@ namespace bgfx { namespace gl
 		void init();
 
 		void bindAttributesBegin();
-		void bindAttributes(const VertexLayout& _layout, uint32_t _baseVertex = 0);
+		void bindAttributes(const VertexLayout& _layout, uint32_t _baseVertex = 0, bool _lastStream = true);
 		void bindInstanceData(uint32_t _stride, uint32_t _baseVertex = 0) const;
 		void bindAttributesEnd();
 		void unbindInstanceData() const;
@@ -1757,13 +1769,26 @@ namespace bgfx { namespace gl
 	struct TimerQueryGL
 	{
 		TimerQueryGL()
-			: m_control(BX_COUNTOF(m_query) )
+			: m_query(kMinTimerQueries)
+			, m_control(kMinTimerQueries)
 		{
 		}
 
 		void create()
 		{
-			for (uint32_t ii = 0; ii < BX_COUNTOF(m_query); ++ii)
+			create(0, m_control.getSize() );
+
+			m_result.reset();
+		}
+
+		void destroy()
+		{
+			destroy(0, m_control.getSize() );
+		}
+
+		void create(uint32_t _begin, uint32_t _end)
+		{
+			for (uint32_t ii = _begin; ii < _end; ++ii)
 			{
 				Query& query = m_query[ii];
 				query.m_ready = false;
@@ -1771,17 +1796,11 @@ namespace bgfx { namespace gl
 				GL_CHECK(glGenQueries(1, &query.m_begin) );
 				GL_CHECK(glGenQueries(1, &query.m_end) );
 			}
-
-			for (uint32_t ii = 0; ii < BX_COUNTOF(m_result); ++ii)
-			{
-				Result& result = m_result[ii];
-				result.reset();
-			}
 		}
 
-		void destroy()
+		void destroy(uint32_t _begin, uint32_t _end)
 		{
-			for (uint32_t ii = 0; ii < BX_COUNTOF(m_query); ++ii)
+			for (uint32_t ii = _begin; ii < _end; ++ii)
 			{
 				Query& query = m_query[ii];
 				GL_CHECK(glDeleteQueries(1, &query.m_begin) );
@@ -1789,11 +1808,50 @@ namespace bgfx { namespace gl
 			}
 		}
 
+		void resize(uint32_t _size)
+		{
+			const uint32_t size  = m_control.getSize();
+			const uint32_t write = m_control.m_write;
+
+			m_control.resize(int32_t(_size) - int32_t(size) );
+
+			const uint32_t newSize = m_control.getSize();
+
+			if (newSize > size)
+			{
+				const uint32_t num = newSize - size;
+
+				m_query.resize(newSize);
+
+				Query* query = &m_query[0];
+				bx::memMove(&query[write+num], &query[write], (size-write)*sizeof(Query) );
+				create(write, write+num);
+			}
+			else if (newSize < size)
+			{
+				const uint32_t num   = size - newSize;
+				const uint32_t back  = bx::min(num, size-write);
+				const uint32_t front = num - back;
+
+				destroy(write, write+back);
+				destroy(0, front);
+
+				Query* query = &m_query[0];
+				bx::memMove(&query[write], &query[write+back], (size-write-back)*sizeof(Query) );
+				bx::memMove(&query[0], &query[front], newSize*sizeof(Query) );
+
+				m_query.resize(newSize);
+			}
+		}
+
 		uint32_t begin(uint32_t _resultIdx, uint32_t _frameNum)
 		{
 			while (0 == m_control.reserve(1) )
 			{
-				update();
+				if (!update() )
+				{
+					GL_CHECK(glFinish() );
+				}
 			}
 
 			Result& result = m_result[_resultIdx];
@@ -1828,6 +1886,11 @@ namespace bgfx { namespace gl
 			}
 		}
 
+		bool hasPending() const
+		{
+			return 0 != m_control.getNumUsed();
+		}
+
 		bool update()
 		{
 			if (0 != m_control.getNumUsed() )
@@ -1839,8 +1902,8 @@ namespace bgfx { namespace gl
 					return false;
 				}
 
-				GLint available;
-				GL_CHECK(glGetQueryObjectiv(query.m_end
+				GLuint available;
+				GL_CHECK(glGetQueryObjectuiv(query.m_end
 					, GL_QUERY_RESULT_AVAILABLE
 					, &available
 					) );
@@ -1895,9 +1958,9 @@ namespace bgfx { namespace gl
 			bool     m_ready;
 		};
 
-		Result m_result[BGFX_CONFIG_MAX_VIEWS+1];
+		TimerResultT<Result> m_result;
 
-		Query m_query[BGFX_CONFIG_MAX_VIEWS*4];
+		TimerQueryArrayT<Query> m_query;
 		bx::RingBufferControl m_control;
 	};
 

@@ -256,12 +256,12 @@ public:
 		bgfx::Init init;
 		init.type     = args.m_type;
 		init.vendorId = args.m_pciId;
-		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
-		init.platformData.ndt  = entry::getNativeDisplayHandle();
+		init.swapChain.nwh     = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
+		init.swapChain.ndt     = entry::getNativeDisplayHandle();
 		init.platformData.type = entry::getNativeWindowHandleType();
-		init.resolution.width  = m_width;
-		init.resolution.height = m_height;
-		init.resolution.reset  = m_reset;
+		init.swapChain.width  = m_width;
+		init.swapChain.height = m_height;
+		init.reset  = m_reset;
 		bgfx::init(init);
 
 		// Enable debug text.
@@ -309,8 +309,8 @@ public:
 		static_assert(24 == BX_COUNTOF(m_textures));
 
 		const bgfx::Caps* caps = bgfx::getCaps();
-		m_texture3DSupported = !!(caps->supported & BGFX_CAPS_TEXTURE_3D);
-		m_blitSupported      = !!(caps->supported & BGFX_CAPS_TEXTURE_BLIT);
+		m_texture3DSupported = true;
+		m_blitSupported      = true;
 		m_computeSupported   = !!(caps->supported & BGFX_CAPS_COMPUTE);
 		m_numTextures3d      = 0;
 
@@ -449,7 +449,7 @@ public:
 
 		{
 			bgfx::Attachment at;
-			at.init(m_mipRt, bgfx::Access::Write, 0, 1, 0, BGFX_RESOLVE_AUTO_GEN_MIPS);
+			at.init(m_mipRt, bgfx::Access::Write, 0, 1, 0, BGFX_ATTACHMENT_AUTO_GEN_MIPS);
 			m_mipFb = bgfx::createFrameBuffer(1, &at);
 		}
 
@@ -657,18 +657,8 @@ public:
 					{
 						bgfx::blit(
 							  0
-							, m_textureCube[1]
-							, 0
-							, rect.m_x
-							, rect.m_y
-							, face.m_side
-							, m_textureCube[0]
-							, 0
-							, rect.m_x
-							, rect.m_y
-							, face.m_side
-							, rect.m_width
-							, rect.m_height
+							, { .handle = m_textureCube[1], .x = rect.m_x, .y = rect.m_y, .z = face.m_side }
+							, { .handle = m_textureCube[0], .x = rect.m_x, .y = rect.m_y, .z = face.m_side, .width = rect.m_width, .height = rect.m_height }
 							);
 					}
 
@@ -690,18 +680,8 @@ public:
 						{
 							bgfx::blit(
 								  0
-								, m_textureCube[1]
-								, 0
-								, rect.m_x
-								, rect.m_y
-								, face.m_side
-								, m_textureCube[0]
-								, 0
-								, rect.m_x
-								, rect.m_y
-								, face.m_side
-								, rect.m_width
-								, rect.m_height
+								, { .handle = m_textureCube[1], .x = rect.m_x, .y = rect.m_y, .z = face.m_side }
+								, { .handle = m_textureCube[0], .x = rect.m_x, .y = rect.m_y, .z = face.m_side, .width = rect.m_width, .height = rect.m_height }
 								);
 						}
 
@@ -1050,17 +1030,17 @@ public:
 
 			if (m_blitSupported)
 			{
-				bgfx::blit(1, m_blitTestA, 0, 0, m_blitTestB, 0, 0);
-				bgfx::blit(1, m_blitTestC, 0, 0, m_blitTestA, 0, 0);
+				bgfx::blit(1, { .handle = m_blitTestA }, { .handle = m_blitTestB });
+				bgfx::blit(1, { .handle = m_blitTestC }, { .handle = m_blitTestA });
 
-				bgfx::blit(1, m_blitTestA, 0, 0, m_blitTestB, 0, 0);
-				bgfx::blit(1, m_blitTestB, 0, 0, m_blitTestC, 0, 0);
+				bgfx::blit(1, { .handle = m_blitTestA }, { .handle = m_blitTestB });
+				bgfx::blit(1, { .handle = m_blitTestB }, { .handle = m_blitTestC });
 
-				bgfx::blit(1, m_blitTestA, 0, 0, m_blitTestB, 0, 0);
-				bgfx::blit(1, m_blitTestB, 0, 0, m_blitTestA, 0, 0);
+				bgfx::blit(1, { .handle = m_blitTestA }, { .handle = m_blitTestB });
+				bgfx::blit(1, { .handle = m_blitTestB }, { .handle = m_blitTestA });
 
-				bgfx::blit(1, m_blitTestB, 0, 0, m_blitTestA, 0, 0);
-				bgfx::blit(1, m_blitTestC, 0, 0, m_blitTestB, 0, 0);
+				bgfx::blit(1, { .handle = m_blitTestB }, { .handle = m_blitTestA });
+				bgfx::blit(1, { .handle = m_blitTestC }, { .handle = m_blitTestB });
 			}
 
 			imguiEndFrame();

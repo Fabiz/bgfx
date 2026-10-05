@@ -338,8 +338,10 @@ namespace bgfx { namespace spirv
 		"BgfxISampler3D",
 		"BgfxUSampler3D",
 		"BgfxSamplerCube",
+		"BgfxSamplerCubeArray",
 		"BgfxSamplerCubeShadow",
 		"BgfxSampler2DMS",
+		"BgfxSampler2DMSArray",
 	};
 
 	static uint16_t writeUniformArray(bx::WriterI* _shaderWriter, const UniformArray& uniforms, bool isFragmentShader)
@@ -347,6 +349,8 @@ namespace bgfx { namespace spirv
 		uint16_t size = 0;
 
 		bx::ErrorAssert err;
+
+		RawBindings().write(_shaderWriter, &err);
 
 		uint16_t count = uint16_t(uniforms.size());
 		bx::write(_shaderWriter, count, &err);
@@ -479,6 +483,7 @@ namespace bgfx { namespace spirv
 			| EShMsgVulkanRules
 			| EShMsgSpvRules
 			| EShMsgDebugInfo
+			| (_options.uses16BitTypes ? EShMsgHlslEnable16BitTypes : 0)
 			);
 
 		shader->setEntryPoint("main");

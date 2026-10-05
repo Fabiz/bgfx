@@ -531,6 +531,14 @@ struct OcornutImguiContext
 		const double freq = double(bx::getHPFrequency() );
 		io.DeltaTime = float(frameTime/freq);
 
+#if USE_ENTRY
+		const bx::Ticks step = entry::getFixedTimeStep();
+		if (bx::Ticks(bx::InitZero) != step)
+		{
+			io.DeltaTime = bx::toSeconds<float>(step);
+		}
+#endif // USE_ENTRY
+
 		io.AddMousePosEvent( (float)_mx, (float)_my);
 		io.AddMouseButtonEvent(ImGuiMouseButton_Left,   0 != (_button & IMGUI_MBUT_LEFT  ) );
 		io.AddMouseButtonEvent(ImGuiMouseButton_Right,  0 != (_button & IMGUI_MBUT_RIGHT ) );
@@ -605,7 +613,7 @@ void imguiDestroy()
 
 void imguiBeginFrame(int32_t _mx, int32_t _my, uint8_t _button, int32_t _scroll, uint16_t _width, uint16_t _height, int _inputChar, bgfx::ViewId _viewId)
 {
-	s_ctx.beginFrame(_mx, _my, _button, _scroll, _width, _height, _inputChar, _viewId);
+	s_ctx.beginFrame(_mx, _my, _button, _scroll, _width, _height, _inputChar, bx::min(_viewId, bgfx::getCaps()->limits.maxViews-1) );
 }
 
 void imguiEndFrame()
