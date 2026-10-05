@@ -3859,6 +3859,12 @@ namespace bgfx { namespace gl
 
 				GL_CHECK(glBindFramebuffer(GL_READ_FRAMEBUFFER, frameBuffer.swapChainReadFbo() ) );
 			}
+			else
+			{
+				// CHANGE(fso) read the window's back buffer, not whatever FBO the last pass left bound
+				// (e.g. a depth-only or MSAA offscreen target -> GL_INVALID_OPERATION, Linux pfclient).
+				GL_CHECK(glBindFramebuffer(GL_READ_FRAMEBUFFER, NULL == swapChain ? m_backBufferFbo : 0) );
+			}
 
 			uint32_t length = width*height*4;
 			uint8_t* data = (uint8_t*)bx::alloc(g_allocator, length);
