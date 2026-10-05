@@ -207,6 +207,17 @@ WL_EGL_IMPORT
 			m_context = eglCreateContext(m_display, _config, _context, s_contextAttrs);
 			BX_ASSERT(NULL != m_context, "Create swap chain failed: %x", eglGetError() );
 
+			// BEGIN CHANGE(fso) VAOs are not shared between contexts and a desktop GL core profile has
+			// no default VAO: give this context its own, bound in makeCurrent(). (Linux pfclient with
+			// a second window: every draw into it failed with GL_INVALID_OPERATION.)
+			m_vao = 0;
+			EGL_CHECK(eglMakeCurrent(m_display, m_surface, m_surface, m_context) );
+			if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL) )
+			{
+				GL_CHECK(glGenVertexArrays(1, &m_vao) );
+			}
+			// END CHANGE(fso)
+
 			makeCurrent();
 			GL_CHECK(glClearColor(0.0f, 0.0f, 0.0f, 0.0f) );
 			GL_CHECK(glClear(GL_COLOR_BUFFER_BIT) );
@@ -239,6 +250,11 @@ WL_EGL_IMPORT
 		void makeCurrent()
 		{
 			EGL_CHECK(eglMakeCurrent(m_display, m_surface, m_surface, m_context) );
+
+			if (0 != m_vao) // CHANGE(fso) see constructor
+			{
+				GL_CHECK(glBindVertexArray(m_vao) );
+			}
 		}
 
 		void swapBuffers()
@@ -250,6 +266,7 @@ WL_EGL_IMPORT
 		EGLContext m_context;
 		EGLDisplay m_display;
 		EGLSurface m_surface;
+		GLuint m_vao; // CHANGE(fso) deleted with m_context
 #	if BX_PLATFORM_LINUX
 		wl_egl_window *m_eglWindow;
 #	endif

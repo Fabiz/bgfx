@@ -5167,7 +5167,8 @@ namespace bgfx { namespace gl
 					return;
 				}
 
-				if (0 != m_vao)
+				// CHANGE(fso) m_vao belongs to the main context; a swap chain context binds its own (glcontext_egl.cpp)
+				if (0 != m_vao && NULL == m_glctx.m_current)
 				{
 					GL_CHECK(glBindVertexArray(m_vao) );
 				}
@@ -6243,7 +6244,10 @@ namespace bgfx { namespace gl
 			lazyEnableVertexAttribArray(loc);
 			GL_CHECK(glVertexAttribDivisor(loc, 0) );
 
-			if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGL >= 30) // CHANGE(fso) no integer attribute pointers on OpenGL ES: PeakFinder's shaders read these as float (errors on Chrome and Samsung S22)
+			// CHANGE(fso) no integer attribute pointers at all: PeakFinder's shaders read Int16/Uint8 attributes
+			// (terrain MBlockMesh, map buckets) as float. On GLES this errored (Chrome, Samsung S22); on desktop
+			// GL 4.3 the float inputs got undefined values (Linux pfclient: no terrain contours).
+			if (false
 			&&  !isFloat(type)
 			&&  !normalized)
 			{
@@ -9059,7 +9063,8 @@ namespace bgfx { namespace gl
 		BGFX_GL_PROFILER_BEGIN_LITERAL("rendererSubmit", kColorView);
 
         // BEGIN CHANGE(fso) deactivate vao support when more than 1 window is displayed. otherwise app crashes on e.g Google Pixel 10 pro
-        if (m_numWindows >= 2)
+        // GLES only: a desktop GL core profile has no default VAO (VAO 0 -> GL_INVALID_OPERATION on every draw).
+        if (BX_ENABLED(BGFX_CONFIG_RENDERER_OPENGLES) && m_numWindows >= 2)
         {
             if (m_vaoSupport) {
                 m_vaoSupport = false;
