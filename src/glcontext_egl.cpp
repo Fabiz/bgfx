@@ -988,6 +988,15 @@ WL_EGL_IMPORT
 		}
 
 #	if BX_PLATFORM_ANDROID
+		// BEGIN CHANGE(fso) follow a re-pointed main window: Android hands over a new ANativeWindow when the
+		// surface is recreated (resume), and bgfx::reset passes it in _swapChain.nwh. Without this the surface
+		// would be recreated on the dead window.
+		if (NULL != _swapChain.nwh)
+		{
+			m_nwh = _swapChain.nwh;
+		}
+		// END CHANGE(fso)
+
 		if (m_ownsContext
 		&&  NULL != m_display
 		&&  NULL != m_nwh)

@@ -3,9 +3,5 @@
  * License: https://github.com/bkaradzic/bgfx/blob/master/LICENSE
  */
 
+// CHANGE(fso) Objective-C++ entry point for the Apple builds (Metal renderer)
 #include "amalgamated.cpp"
-// BEGIN CHANGE(fso) reactivated opengl for osx
-#include "glcontext_nsgl.mm"
-
-// END CHANGE(fso)
-//#include "renderer_mtl.mm"
