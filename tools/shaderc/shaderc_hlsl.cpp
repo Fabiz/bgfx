@@ -212,26 +212,35 @@ namespace bgfx { namespace hlsl
 
 	static const RemapInputSemantic s_remapInputSemantic[bgfx::Attrib::Count + 1] =
 	{
-		{ bgfx::Attrib::Position,  "POSITION",     0 },
-		{ bgfx::Attrib::Normal,    "NORMAL",       0 },
-		{ bgfx::Attrib::Tangent,   "TANGENT",      0 },
-		{ bgfx::Attrib::Bitangent, "BITANGENT",    0 },
-		{ bgfx::Attrib::Color0,    "COLOR",        0 },
-		{ bgfx::Attrib::Color1,    "COLOR",        1 },
-		{ bgfx::Attrib::Color2,    "COLOR",        2 },
-		{ bgfx::Attrib::Color3,    "COLOR",        3 },
-		{ bgfx::Attrib::Indices,   "BLENDINDICES", 0 },
-		{ bgfx::Attrib::Weight,    "BLENDWEIGHT",  0 },
-		{ bgfx::Attrib::TexCoord0, "TEXCOORD",     0 },
-		{ bgfx::Attrib::TexCoord1, "TEXCOORD",     1 },
-		{ bgfx::Attrib::TexCoord2, "TEXCOORD",     2 },
-		{ bgfx::Attrib::TexCoord3, "TEXCOORD",     3 },
-		{ bgfx::Attrib::TexCoord4, "TEXCOORD",     4 },
-		{ bgfx::Attrib::TexCoord5, "TEXCOORD",     5 },
-		{ bgfx::Attrib::TexCoord6, "TEXCOORD",     6 },
-		{ bgfx::Attrib::TexCoord7, "TEXCOORD",     7 },
-		{ bgfx::Attrib::Count,     "",             0 },
+		{ bgfx::Attrib::Position,   "POSITION",     0 },
+		{ bgfx::Attrib::Normal,     "NORMAL",       0 },
+		{ bgfx::Attrib::Tangent,    "TANGENT",      0 },
+		{ bgfx::Attrib::Bitangent,  "BITANGENT",    0 },
+		{ bgfx::Attrib::Color0,     "COLOR",        0 },
+		{ bgfx::Attrib::Color1,     "COLOR",        1 },
+		{ bgfx::Attrib::Color2,     "COLOR",        2 },
+		{ bgfx::Attrib::Color3,     "COLOR",        3 },
+		{ bgfx::Attrib::Indices,    "BLENDINDICES", 0 },
+		{ bgfx::Attrib::Weight,     "BLENDWEIGHT",  0 },
+		{ bgfx::Attrib::TexCoord0,  "TEXCOORD",     0 },
+		{ bgfx::Attrib::TexCoord1,  "TEXCOORD",     1 },
+		{ bgfx::Attrib::TexCoord2,  "TEXCOORD",     2 },
+		{ bgfx::Attrib::TexCoord3,  "TEXCOORD",     3 },
+		{ bgfx::Attrib::TexCoord4,  "TEXCOORD",     4 },
+		{ bgfx::Attrib::TexCoord5,  "TEXCOORD",     5 },
+		{ bgfx::Attrib::TexCoord6,  "TEXCOORD",     6 },
+		{ bgfx::Attrib::TexCoord7,  "TEXCOORD",     7 },
+		{ bgfx::Attrib::TexCoord8,  "TEXCOORD",     8 },
+		{ bgfx::Attrib::TexCoord9,  "TEXCOORD",     9 },
+		{ bgfx::Attrib::TexCoord10, "TEXCOORD",    10 },
+		{ bgfx::Attrib::TexCoord11, "TEXCOORD",    11 },
+		{ bgfx::Attrib::TexCoord12, "TEXCOORD",    12 },
+		{ bgfx::Attrib::TexCoord13, "TEXCOORD",    13 },
+		{ bgfx::Attrib::TexCoord14, "TEXCOORD",    14 },
+		{ bgfx::Attrib::TexCoord15, "TEXCOORD",    15 },
+		{ bgfx::Attrib::Count,      "",             0 },
 	};
+	static_assert(BX_COUNTOF(s_remapInputSemantic) == bgfx::Attrib::Count + 1);
 
 	const RemapInputSemantic& findInputSemantic(const char* _name, uint8_t _index)
 	{
@@ -367,7 +376,7 @@ namespace bgfx { namespace hlsl
 			BX_TRACE("\t%2d: %s%d, %d, %d", ii, spd.SemanticName, spd.SemanticIndex, spd.SystemValueType, spd.ComponentType);
 		}
 
-		for (uint32_t ii = 0, num = bx::uint32_min(1, desc.ConstantBuffers); ii < num; ++ii)
+		for (uint32_t ii = 0, num = bx::min(1, desc.ConstantBuffers); ii < num; ++ii)
 		{
 			ID3D11ShaderReflectionConstantBuffer* cbuffer = reflect->GetConstantBufferByIndex(ii);
 			D3D11_SHADER_BUFFER_DESC bufferDesc;
@@ -516,7 +525,7 @@ namespace bgfx { namespace hlsl
 
 		if (_options.optimize )
 		{
-			const uint32_t optimization = bx::uint32_min(_options.optimizationLevel, BX_COUNTOF(s_optimizationLevelD3D11) - 1);
+			const uint32_t optimization = bx::min(_options.optimizationLevel, BX_COUNTOF(s_optimizationLevelD3D11) - 1);
 			flags |= s_optimizationLevelD3D11[optimization];
 		}
 		else
@@ -582,7 +591,7 @@ namespace bgfx { namespace hlsl
 			if (found
 			&&  0 != line)
 			{
-				start = bx::uint32_imax(1, line - 10);
+				start = bx::max<int32_t>(1, line-10);
 				end   = start + 20;
 			}
 

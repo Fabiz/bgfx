@@ -12,8 +12,6 @@
 #ifndef BGFX_H_HEADER_GUARD
 #define BGFX_H_HEADER_GUARD
 
-#define BGFX_IDL_CPP 1
-
 #include <stdarg.h> // va_list
 #include <stdint.h> // uint32_t
 #include <stdlib.h> // NULL
@@ -103,24 +101,32 @@ namespace bgfx
 		/// Corresponds to vertex shader attribute.
 		enum Enum
 		{
-			Position,  //!< a_position
-			Normal,    //!< a_normal
-			Tangent,   //!< a_tangent
-			Bitangent, //!< a_bitangent
-			Color0,    //!< a_color0
-			Color1,    //!< a_color1
-			Color2,    //!< a_color2
-			Color3,    //!< a_color3
-			Indices,   //!< a_indices
-			Weight,    //!< a_weight
-			TexCoord0, //!< a_texcoord0
-			TexCoord1, //!< a_texcoord1
-			TexCoord2, //!< a_texcoord2
-			TexCoord3, //!< a_texcoord3
-			TexCoord4, //!< a_texcoord4
-			TexCoord5, //!< a_texcoord5
-			TexCoord6, //!< a_texcoord6
-			TexCoord7, //!< a_texcoord7
+			Position,   //!< a_position
+			Normal,     //!< a_normal
+			Tangent,    //!< a_tangent
+			Bitangent,  //!< a_bitangent
+			Color0,     //!< a_color0
+			Color1,     //!< a_color1
+			Color2,     //!< a_color2
+			Color3,     //!< a_color3
+			Indices,    //!< a_indices
+			Weight,     //!< a_weight
+			TexCoord0,  //!< a_texcoord0
+			TexCoord1,  //!< a_texcoord1
+			TexCoord2,  //!< a_texcoord2
+			TexCoord3,  //!< a_texcoord3
+			TexCoord4,  //!< a_texcoord4
+			TexCoord5,  //!< a_texcoord5
+			TexCoord6,  //!< a_texcoord6
+			TexCoord7,  //!< a_texcoord7
+			TexCoord8,  //!< a_texcoord8
+			TexCoord9,  //!< a_texcoord9
+			TexCoord10, //!< a_texcoord10
+			TexCoord11, //!< a_texcoord11
+			TexCoord12, //!< a_texcoord12
+			TexCoord13, //!< a_texcoord13
+			TexCoord14, //!< a_texcoord14
+			TexCoord15, //!< a_texcoord15
 
 			Count
 		};
@@ -142,6 +148,8 @@ namespace bgfx
 			Uint16, //!< Uint16
 			Half,   //!< Half, availability depends on: `BGFX_CAPS_VERTEX_ATTRIB_HALF`.
 			Float,  //!< Float
+			Int32,  //!< Int32
+			Uint32, //!< Uint32
 
 			Count
 		};
@@ -174,8 +182,11 @@ namespace bgfx
 			BC2,          //!< Block Compression 2. 5-bit R, 6-bit G, 5-bit B, 4-bit explicit A. 8 BPP.
 			BC3,          //!< Block Compression 3. 5-bit R, 6-bit G, 5-bit B, 8-bit interpolated A. 8 BPP.
 			BC4,          //!< Block Compression 4. Single 8-bit red channel, unsigned normalized. 4 BPP.
+			BC4S,         //!< Block Compression 4. Single 8-bit red channel, signed normalized. 4 BPP.
 			BC5,          //!< Block Compression 5. Two 8-bit channels (RG), unsigned normalized. 8 BPP.
+			BC5S,         //!< Block Compression 5. Two 8-bit channels (RG), signed normalized. 8 BPP.
 			BC6H,         //!< Block Compression 6H. Three 16-bit floating-point channels (RGB), HDR. 8 BPP.
+			BC6HU,        //!< Block Compression 6H. Three 16-bit unsigned floating-point channels (RGB), HDR. 8 BPP.
 			BC7,          //!< RGB 4-7 bits per color channel, 0-8 bits alpha. Block Compression 7. High-quality RGBA, 4-7 bits per color, 0-8 bits alpha. 8 BPP.
 			ETC1,         //!< Ericsson Texture Compression 1. 8-bit per channel RGB. 4 BPP.
 			ETC2,         //!< Ericsson Texture Compression 2. 8-bit per channel RGB. 4 BPP.
@@ -260,6 +271,7 @@ namespace bgfx
 			BGR5A1,       //!< Packed 16-bit, 5-bit blue, 5-bit green, 5-bit red, 1-bit alpha. BGRA byte order, unsigned normalized. 16 BPP.
 			RGB5A1,       //!< Packed 16-bit, 5-bit red, 5-bit green, 5-bit blue, 1-bit alpha, unsigned normalized. 16 BPP.
 			RGB10A2,      //!< Packed 32-bit, 10-bit red, 10-bit green, 10-bit blue, 2-bit alpha, unsigned normalized. 32 BPP.
+			RGB10A2U,     //!< Packed 32-bit, 10-bit red, 10-bit green, 10-bit blue, 2-bit alpha, unsigned integer. 32 BPP.
 			RG11B10F,     //!< Packed 32-bit, 11-bit red, 11-bit green, 10-bit blue, unsigned floating point. No alpha. 32 BPP.
 			UnknownDepth, //!< Depth formats below.
 			D16,          //!< 16-bit depth, unsigned normalized. 16 BPP.
@@ -269,6 +281,7 @@ namespace bgfx
 			D16F,         //!< 16-bit depth, floating point. 16 BPP.
 			D24F,         //!< 24-bit depth, floating point (stored as 32-bit). 32 BPP.
 			D32F,         //!< 32-bit depth, floating point. 32 BPP.
+			D32FS8,       //!< 32-bit depth, floating point, with 8-bit stencil (stored as 64-bit). 64 BPP.
 			D0S8,         //!< 8-bit stencil only, no depth. 8 BPP.
 
 			Count
@@ -343,6 +356,23 @@ namespace bgfx
 			Invisible, //!< Query failed test.
 			Visible,   //!< Query passed test.
 			NoResult,  //!< Query result is not available yet.
+
+			Count
+		};
+	};
+
+	/// Video codec enum.
+	///
+	/// @attention C99's equivalent binding is `bgfx_video_codec_t`.
+	///
+	struct VideoCodec
+	{
+		/// Video codecs:
+		enum Enum
+		{
+			H264, //!< H.264 / AVC.
+			H265, //!< H.265 / HEVC.
+			AV1,  //!< AV1.
 
 			Count
 		};
@@ -530,6 +560,8 @@ namespace bgfx
 			uint32_t maxComputeBindings;      //!< Maximum number of compute bindings.
 			uint32_t maxVertexLayouts;        //!< Maximum number of vertex format layouts.
 			uint32_t maxVertexStreams;        //!< Maximum number of vertex streams.
+			uint32_t maxVertexAttributes;     //!< Maximum number of vertex attributes.
+			uint32_t maxInstanceData;         //!< Maximum number of instance data slots.
 			uint32_t maxIndexBuffers;         //!< Maximum number of index buffer handles.
 			uint32_t maxVertexBuffers;        //!< Maximum number of vertex buffer handles.
 			uint32_t maxDynamicIndexBuffers;  //!< Maximum number of dynamic index buffer handles.
@@ -577,6 +609,18 @@ namespace bgfx
 		                                        ///    - `BGFX_CAPS_FORMAT_TEXTURE_MIP_AUTOGEN` - Texture format supports auto-generated
 		                                        ///      mips.
 		                                        ///    - `BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER` - Texture format can be used as back buffer format.
+		                                        ///    - `BGFX_CAPS_FORMAT_TEXTURE_VIDEO_DECODE_DST` - Texture format can be used as video
+		                                        ///      decode destination.
+		uint32_t codecs[VideoCodec::Count];     //!< Supported video codec capabilities flags. A non-zero entry means the codec is
+		                                        ///  supported for hardware decode; bits describe sample depths and chroma
+		                                        ///  subsamplings:
+		                                        ///    - `BGFX_CAPS_VIDEO_CODEC_NONE` - Video codec is not supported.
+		                                        ///    - `BGFX_CAPS_VIDEO_CODEC_BIT_8` - 8-bit sample depth is supported.
+		                                        ///    - `BGFX_CAPS_VIDEO_CODEC_BIT_10` - 10-bit sample depth is supported.
+		                                        ///    - `BGFX_CAPS_VIDEO_CODEC_BIT_12` - 12-bit sample depth is supported.
+		                                        ///    - `BGFX_CAPS_VIDEO_CODEC_CHROMA_420` - 4:2:0 chroma subsampling is supported.
+		                                        ///    - `BGFX_CAPS_VIDEO_CODEC_CHROMA_422` - 4:2:2 chroma subsampling is supported.
+		                                        ///    - `BGFX_CAPS_VIDEO_CODEC_CHROMA_444` - 4:4:4 chroma subsampling is supported.
 	};
 
 	/// Internal data.
@@ -640,11 +684,25 @@ namespace bgfx
 		{
 			Limits();
 
-			uint16_t maxEncoders;          //!< Maximum number of encoder threads.
-			uint32_t minResourceCbSize;    //!< Minimum resource command buffer size.
-			uint32_t maxTransientVbSize;   //!< Maximum transient vertex buffer size.
-			uint32_t maxTransientIbSize;   //!< Maximum transient index buffer size.
-			uint32_t minUniformBufferSize; //!< Mimimum uniform buffer size.
+			uint16_t maxEncoders;           //!< Maximum number of encoder threads.
+			uint32_t numDrawCalls;          //!< Number of draw calls per frame to reserve storage for. Rounded
+			                                ///  up to a multiple of `BGFX_CONFIG_DRAW_CALL_BLOCK`, which is also
+			                                ///  the minimum. This is a reservation, not a limit: submitting more
+			                                ///  than this grows the storage during the frame, up to
+			                                ///  `BGFX_CONFIG_MAX_DRAW_CALLS`. With
+			                                ///  `BGFX_CONFIG_DYNAMIC_FRAME_STORAGE` disabled nothing grows, and
+			                                ///  this is a hard limit that `Caps::Limits::maxDrawCalls` reports
+			                                ///  back; submissions past it are dropped. See
+			                                ///  `Stats::numDrawCallsPeak` to size it.
+			uint32_t numDrawCallPeakFrames; //!< Number of frames the draw-call peak (high-water mark) is observed
+			                                ///  before unused storage is released. Set to 0 to keep whatever has
+			                                ///  been allocated for the lifetime of the context. With
+			                                ///  `BGFX_CONFIG_DYNAMIC_FRAME_STORAGE` disabled nothing per frame is
+			                                ///  resized at all, and this only releases unused uniform buffer space.
+			uint32_t minResourceCbSize;     //!< Minimum resource command buffer size.
+			uint32_t maxTransientVbSize;    //!< Maximum transient vertex buffer size.
+			uint32_t maxTransientIbSize;    //!< Maximum transient index buffer size.
+			uint32_t minUniformBufferSize;  //!< Mimimum uniform buffer size.
 		};
 
 		RendererType::Enum type;   //!< Select rendering backend. When set to RendererType::Count
@@ -665,6 +723,7 @@ namespace bgfx
 		bool debug;                //!< Enable device for debugging.
 		bool profile;              //!< Enable device for profiling.
 		bool fallback;             //!< Enable fallback to next available renderer.
+		bool videoDecode;          //!< Enable video decoding.
 		PlatformData platformData; //!< Platform data.
 		Resolution resolution;     //!< Backbuffer resolution and reset parameters. See: `bgfx::Resolution`.
 		Limits limits;             //!< Configurable runtime limits parameters.
@@ -743,6 +802,70 @@ namespace bgfx
 		uint8_t numMips;            //!< Number of MIP maps.
 		uint8_t bitsPerPixel;       //!< Format bits per pixel.
 		bool cubeMap;               //!< Texture is cubemap.
+	};
+
+	/// Video decoder initialization. Serialized into the Memory passed to
+	/// `createTexture2D`. When the memory blob begins with `magic`, bgfx
+	/// infers the texture is a video decode destination (the caller need not set
+	/// any extra texture flag). Everything else the renderer needs about the
+	/// stream (chroma format, bit depth, profile, level, coded dimensions, DPB
+	/// layout, color metadata) is parsed out of the codec parameter sets at
+	/// create time.
+	///
+	/// @attention C99's equivalent binding is `bgfx_video_decoder_init_t`.
+	///
+	struct VideoDecoderInit
+	{
+		uint32_t magic;               //!< Structure magic. Must be `BX_MAKEFOURCC('V', 'D', 'I', 0x0)`.
+		VideoCodec::Enum codec;       //!< Video codec. See: `VideoCodec::Enum`.
+		const uint8_t* parameterSets; //!< Codec parameter sets (Annex B for H.264/H.265, OBUs for AV1).
+		uint32_t parameterSetsSize;   //!< Parameter sets size in bytes.
+		uint32_t cachedAuBytes;       //!< Soft cap (in bytes) on the streaming access-unit FIFO (when
+		                              ///  `BGFX_VIDEO_DECODER_INIT_RETAIN` is NOT set). 0 selects the
+		                              ///  default. Ignored in RETAIN mode (the retain cache is unbounded).
+		uint8_t flags;                //!< Decoder lifetime flags. See: `BGFX_VIDEO_DECODER_INIT_*`.
+	};
+
+	/// One access unit entry inside a `VideoDecoderFrame` batch. The bitstream
+	/// for the AU lives at offset `Σ aus[0..ii].size` inside the frame's
+	/// `bitstream` buffer (access units are stored back-to-back in decode /
+	/// submission order).
+	///
+	/// @attention C99's equivalent binding is `bgfx_video_decoder_au_t`.
+	///
+	struct VideoDecoderAu
+	{
+		uint32_t size; //!< Access unit size in bytes.
+		int64_t ptsUs; //!< Presentation timestamp in microseconds for this access unit (container-provided).
+	};
+
+	/// Video decoder per-frame submission. Serialized into the Memory passed
+	/// to `updateTexture2D` for a video decode destination texture. The
+	/// renderer parses the slice / tile-group header out of the bitstream and
+	/// translates it to the backend-specific decoder arguments.
+	///
+	/// A single call may submit a batch of access units: `bitstream` is the
+	/// back-to-back concatenation of `numAus` access units, and `aus[ii]`
+	/// holds the size and PTS of each. AUs are enqueued in array order
+	/// (which is the codec's decode order). Set `numAus == 0` (and
+	/// `bitstream == NULL`) for a presentation-only tick that only advances
+	/// the playback clock.
+	///
+	/// The `bitstream` and `aus` pointers must remain valid until bgfx has
+	/// consumed the submission (`bgfx::copy` only deep-copies the
+	/// `VideoDecoderFrame` struct itself, not the buffers it references).
+	///
+	/// @attention C99's equivalent binding is `bgfx_video_decoder_frame_t`.
+	///
+	struct VideoDecoderFrame
+	{
+		uint32_t magic;             //!< Structure magic. Must be `BX_MAKEFOURCC('V', 'D', 'F', 0x0)`.
+		const uint8_t* bitstream;   //!< Concatenated access-unit bitstream (decode order). NULL for presentation-only ticks.
+		const VideoDecoderAu* aus;  //!< Per-AU size and PTS array. NULL when `numAus == 0`.
+		uint32_t numAus;            //!< Number of access units in this batch. 0 for presentation-only ticks.
+		int64_t presentationTimeUs; //!< Current playback wall-clock time. Driver dispatches the picture whose `ptsUs`
+		                            ///  best matches. Must be monotonically non-decreasing between non-`SET` calls.
+		uint8_t flags;              //!< Per-frame submission flags. See: `BGFX_VIDEO_DECODE_FRAME_*`.
 	};
 
 	/// Uniform info.
@@ -846,6 +969,9 @@ namespace bgfx
 		uint32_t numDraw;                   //!< Number of draw calls submitted.
 		uint32_t numCompute;                //!< Number of compute calls submitted.
 		uint32_t numBlit;                   //!< Number of blit calls submitted.
+		uint32_t numDrawCallsPeak;          //!< Highest number of draw+compute calls requested in a single
+		                                    ///  frame so far (peak demand, before any were dropped). Useful
+		                                    ///  to tune `Init::Limits::numDrawCalls`.
 		uint32_t maxGpuLatency;             //!< GPU driver latency.
 		uint32_t gpuFrameNum;               //!< Frame which generated gpuTimeBegin, gpuTimeEnd.
 		uint16_t numDynamicIndexBuffers;    //!< Number of used dynamic index buffers.
@@ -1401,6 +1527,36 @@ namespace bgfx
 			, uint32_t _flags = UINT32_MAX
 			);
 
+		/// Set texture stage for draw primitive, selecting a sub-range of the
+		/// texture's array layers and mip levels.
+		///
+		/// @param[in] _stage Texture unit.
+		/// @param[in] _sampler Program sampler.
+		/// @param[in] _handle Texture handle.
+		/// @param[in] _firstLayer First array layer.
+		/// @param[in] _numLayers Number of array layers.
+		/// @param[in] _firstMip First (most detailed) mip level.
+		/// @param[in] _numMips Number of mip levels.
+		/// @param[in] _flags Texture sampling mode. Default value UINT32_MAX uses
+		///   texture sampling settings from the texture.
+		///   - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap
+		///   mode.
+		///   - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
+		///   sampling.
+		///
+		/// @attention C99's equivalent binding is `bgfx_encoder_set_texture_view`.
+		///
+		void setTexture(
+			  uint8_t _stage
+			, UniformHandle _sampler
+			, TextureHandle _handle
+			, uint16_t _firstLayer
+			, uint16_t _numLayers
+			, uint8_t _firstMip
+			, uint8_t _numMips
+			, uint32_t _flags = UINT32_MAX
+			);
+
 		/// Submit an empty primitive for rendering. Uniforms and draw state
 		/// will be applied but no geometry will be submitted. Useful in cases
 		/// when no other draw/compute primitive is submitted to view, but it's
@@ -1587,6 +1743,29 @@ namespace bgfx
 		void setImage(
 			  uint8_t _stage
 			, TextureHandle _handle
+			, uint8_t _mip
+			, Access::Enum _access
+			, TextureFormat::Enum _format = TextureFormat::Count
+			);
+
+		/// Set compute image stage for draw primitive, selecting a sub-range of the
+		/// texture's array layers and mip levels.
+		///
+		/// @param[in] _stage Compute stage.
+		/// @param[in] _handle Texture handle.
+		/// @param[in] _firstLayer First array layer.
+		/// @param[in] _numLayers Number of array layers.
+		/// @param[in] _mip Mip level.
+		/// @param[in] _access Image access. See `Access::Enum`.
+		/// @param[in] _format Texture format. See: `TextureFormat::Enum`.
+		///
+		/// @attention C99's equivalent binding is `bgfx_encoder_set_image_view`.
+		///
+		void setImage(
+			  uint8_t _stage
+			, TextureHandle _handle
+			, uint16_t _firstLayer
+			, uint16_t _numLayers
 			, uint8_t _mip
 			, Access::Enum _access
 			, TextureFormat::Enum _format = TextureFormat::Count
@@ -2830,6 +3009,33 @@ namespace bgfx
 		, uint64_t _flags
 		);
 
+	/// Validate video codec parameters. Use to check whether the requested
+	/// combination of codec / bit depth / chroma / dimensions / DPB layout can
+	/// be hardware decoded on the current device. Coarse capability discovery
+	/// is `Caps::supported & BGFX_CAPS_VIDEO_DECODE` and `Caps::codecs[]`.
+	///
+	/// @param[in] _codec Video codec. See: `VideoCodec::Enum`.
+	/// @param[in] _chroma Chroma subsampling. 0 = 4:2:0, 2 = 4:2:2, 4 = 4:4:4.
+	/// @param[in] _bitDepth Bit depth per component. 8, 10 or 12.
+	/// @param[in] _codedWidth Coded picture width (macroblock / CTU / superblock aligned).
+	/// @param[in] _codedHeight Coded picture height.
+	/// @param[in] _maxDpbSlots Maximum decoded picture buffer slot count.
+	/// @param[in] _maxActiveReferences Maximum number of reference frames active at once.
+	///
+	/// @returns True if a video decoder with the same parameters can be created.
+	///
+	/// @attention C99's equivalent binding is `bgfx_is_video_codec_valid`.
+	///
+	bool isVideoCodecValid(
+		  VideoCodec::Enum _codec
+		, uint8_t _chroma
+		, uint8_t _bitDepth
+		, uint16_t _codedWidth
+		, uint16_t _codedHeight
+		, uint8_t _maxDpbSlots
+		, uint8_t _maxActiveReferences
+		);
+
 	/// Validate frame buffer parameters.
 	///
 	/// @param[in] _num Number of attachments.
@@ -3121,15 +3327,36 @@ namespace bgfx
 		, uint16_t _pitch = UINT16_MAX
 		);
 
+	/// Clear a texture subresource range to zero.
+	///
+	/// @param[in] _handle Texture handle.
+	/// @param[in] _mip First mip level.
+	/// @param[in] _numMips Number of mip levels.
+	/// @param[in] _layer First array layer (or 3D depth slice base).
+	/// @param[in] _numLayers Number of layers.
+	///
+	/// @attention C99's equivalent binding is `bgfx_clear_texture`.
+	///
+	void clear(
+		  TextureHandle _handle
+		, uint8_t _mip = 0
+		, uint8_t _numMips = UINT8_MAX
+		, uint16_t _layer = 0
+		, uint16_t _numLayers = UINT16_MAX
+		);
+
 	/// Read back texture content.
 	///
 	/// @param[in] _handle Texture handle.
 	/// @param[in] _data Destination buffer.
+	/// @param[in] _layer Texture layer.
 	/// @param[in] _mip Mip level.
 	///
 	/// @returns Frame number when the result will be available. See: `bgfx::frame`.
 	///
 	/// @attention Texture must be created with `BGFX_TEXTURE_READ_BACK` flag.
+	///            It's a texture for CPU readback, and can't be a GPU resource
+	///            at the same time. See `examples/30-picking`.
 	///
 	/// @attention Availability depends on: `BGFX_CAPS_TEXTURE_READ_BACK`.
 	///
@@ -3138,6 +3365,7 @@ namespace bgfx
 	uint32_t readTexture(
 		  TextureHandle _handle
 		, void* _data
+		, uint16_t _layer = 0
 		, uint8_t _mip = 0
 		);
 
@@ -3527,8 +3755,10 @@ namespace bgfx
 	/// Set view rectangle. Draw primitive outside view will be clipped.
 	///
 	/// @param[in] _id View id.
-	/// @param[in] _x Position x from the left corner of the window.
-	/// @param[in] _y Position y from the top corner of the window.
+	/// @param[in] _x Position x from the left corner of the window. Can be
+	///   negative to place view origin outside of the window.
+	/// @param[in] _y Position y from the top corner of the window. Can be
+	///   negative to place view origin outside of the window.
 	/// @param[in] _width Width of view port region.
 	/// @param[in] _height Height of view port region.
 	///
@@ -3536,8 +3766,8 @@ namespace bgfx
 	///
 	void setViewRect(
 		  ViewId _id
-		, uint16_t _x
-		, uint16_t _y
+		, int16_t _x
+		, int16_t _y
 		, uint16_t _width
 		, uint16_t _height
 		);
@@ -3545,8 +3775,10 @@ namespace bgfx
 	/// Set view rectangle. Draw primitive outside view will be clipped.
 	///
 	/// @param[in] _id View id.
-	/// @param[in] _x Position x from the left corner of the window.
-	/// @param[in] _y Position y from the top corner of the window.
+	/// @param[in] _x Position x from the left corner of the window. Can be
+	///   negative to place view origin outside of the window.
+	/// @param[in] _y Position y from the top corner of the window. Can be
+	///   negative to place view origin outside of the window.
 	/// @param[in] _ratio Width and height will be set in respect to back-buffer size.
 	///   See: `BackbufferRatio::Enum`.
 	///
@@ -3554,8 +3786,8 @@ namespace bgfx
 	///
 	void setViewRect(
 		  ViewId _id
-		, uint16_t _x
-		, uint16_t _y
+		, int16_t _x
+		, int16_t _y
 		, BackbufferRatio::Enum _ratio
 		);
 
@@ -4356,6 +4588,36 @@ namespace bgfx
 		, uint32_t _flags = UINT32_MAX
 		);
 
+	/// Set texture stage for draw primitive, selecting a sub-range of the
+	/// texture's array layers and mip levels.
+	///
+	/// @param[in] _stage Texture unit.
+	/// @param[in] _sampler Program sampler.
+	/// @param[in] _handle Texture handle.
+	/// @param[in] _firstLayer First array layer.
+	/// @param[in] _numLayers Number of array layers.
+	/// @param[in] _firstMip First (most detailed) mip level.
+	/// @param[in] _numMips Number of mip levels.
+	/// @param[in] _flags Texture sampling mode. Default value UINT32_MAX uses
+	///   texture sampling settings from the texture.
+	///   - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap
+	///   mode.
+	///   - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
+	///   sampling.
+	///
+	/// @attention C99's equivalent binding is `bgfx_set_texture_view`.
+	///
+	void setTexture(
+		  uint8_t _stage
+		, UniformHandle _sampler
+		, TextureHandle _handle
+		, uint16_t _firstLayer
+		, uint16_t _numLayers
+		, uint8_t _firstMip
+		, uint8_t _numMips
+		, uint32_t _flags = UINT32_MAX
+		);
+
 	/// Submit an empty primitive for rendering. Uniforms and draw state
 	/// will be applied but no geometry will be submitted.
 	///
@@ -4540,6 +4802,29 @@ namespace bgfx
 	void setImage(
 		  uint8_t _stage
 		, TextureHandle _handle
+		, uint8_t _mip
+		, Access::Enum _access
+		, TextureFormat::Enum _format = TextureFormat::Count
+		);
+
+	/// Set compute image stage for draw primitive, selecting a sub-range of the
+	/// texture's array layers and mip levels.
+	///
+	/// @param[in] _stage Compute stage.
+	/// @param[in] _handle Texture handle.
+	/// @param[in] _firstLayer First array layer.
+	/// @param[in] _numLayers Number of array layers.
+	/// @param[in] _mip Mip level.
+	/// @param[in] _access Image access. See `Access::Enum`.
+	/// @param[in] _format Texture format. See: `TextureFormat::Enum`.
+	///
+	/// @attention C99's equivalent binding is `bgfx_set_image_view`.
+	///
+	void setImage(
+		  uint8_t _stage
+		, TextureHandle _handle
+		, uint16_t _firstLayer
+		, uint16_t _numLayers
 		, uint8_t _mip
 		, Access::Enum _access
 		, TextureFormat::Enum _format = TextureFormat::Count

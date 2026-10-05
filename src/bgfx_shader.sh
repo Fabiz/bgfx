@@ -24,7 +24,6 @@
 
 #define BGFX_SHADER_MATRIX_COLUMN_MAJOR (0 \
 	|| BGFX_SHADER_LANGUAGE_GLSL           \
-	|| BGFX_SHADER_LANGUAGE_WGSL           \
 	)
 
 #if BGFX_SHADER_TYPE_FRAGMENT
@@ -678,8 +677,16 @@ vec4  mod(vec4  _a, vec4  _b) { return _a - _b * floor(_a / _b); }
 #		define texture2DArray(_sampler, _coord) texture(_sampler, _coord)
 #		define texture3D(_sampler, _coord)      texture(_sampler, _coord)
 #		define textureCube(_sampler, _coord)    texture(_sampler, _coord)
-#		define texture2DLod(_sampler, _coord, _lod)                textureLod(_sampler, _coord, _lod)
-#		define texture2DLodOffset(_sampler, _coord, _lod, _offset) textureLodOffset(_sampler, _coord, _lod, _offset)
+#		define texture2DLod(_sampler, _coord, _lod)                     textureLod(_sampler, _coord, _lod)
+#		define texture2DLodOffset(_sampler, _coord, _lod, _offset)      textureLodOffset(_sampler, _coord, _lod, _offset)
+#		define texture2DArrayLod(_sampler, _coord, _lod)                textureLod(_sampler, _coord, _lod)
+#		define texture2DArrayLodOffset(_sampler, _coord, _lod, _offset) textureLodOffset(_sampler, _coord, _lod, _offset)
+#		define texture3DLod(_sampler, _coord, _lod)                     textureLod(_sampler, _coord, _lod)
+#		define texture3DLodOffset(_sampler, _coord, _lod, _offset)      textureLodOffset(_sampler, _coord, _lod, _offset)
+#		define textureCubeLod(_sampler, _coord, _lod)                   textureLod(_sampler, _coord, _lod)
+#		define texture2DGrad(_sampler, _coord, _dPdx, _dPdy)            textureGrad(_sampler, _coord, _dPdx, _dPdy)
+#		define texture3DGrad(_sampler, _coord, _dPdx, _dPdy)            textureGrad(_sampler, _coord, _dPdx, _dPdy)
+#		define textureCubeGrad(_sampler, _coord, _dPdx, _dPdy)          textureGrad(_sampler, _coord, _dPdx, _dPdy)
 #		define texture2DBias(_sampler, _coord, _bias)      texture(_sampler, _coord, _bias)
 #		define textureCubeBias(_sampler, _coord, _bias)    texture(_sampler, _coord, _bias)
 #	else
@@ -710,7 +717,7 @@ uvec4 uvec4_splat(uint _x) { return uvec4(_x, _x, _x, _x); }
 
 #if BGFX_SHADER_LANGUAGE_GLSL
 #	define mul(_a, _b) ( (_a) * (_b) )
-#elif BGFX_SHADER_LANGUAGE_WGSL
+#elif BGFX_SHADER_LANGUAGE_WGSL && BGFX_SHADER_MATRIX_COLUMN_MAJOR
 #	define mul(_a, _b) mul(_b, _a)
 #	define mat3x4 float3x4
 #	define mat4x3 float4x3
@@ -886,6 +893,10 @@ uniform mat4 u_modelViewProj;
 uniform vec4 u_alphaRef4;
 #define u_alphaRef u_alphaRef4.x
 uniform mat4 u_model[BGFX_CONFIG_MAX_BONES];
+
+#if BGFX_SHADER_LANGUAGE_GLSL
+uniform vec4 bgfx_ndc;
+#endif // BGFX_SHADER_LANGUAGE_GLSL
 
 #endif // __cplusplus
 

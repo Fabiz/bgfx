@@ -164,6 +164,7 @@ Individual capability flags.
 .. doxygendefine:: BGFX_CAPS_VERTEX_ATTRIB_HALF
 .. doxygendefine:: BGFX_CAPS_VERTEX_ATTRIB_UINT10
 .. doxygendefine:: BGFX_CAPS_VERTEX_ID
+.. doxygendefine:: BGFX_CAPS_VIDEO_DECODE
 .. doxygendefine:: BGFX_CAPS_VIEWPORT_LAYER_ARRAY
 .. doxygendefine:: BGFX_CAPS_TEXTURE_COMPARE_ALL
 
@@ -251,8 +252,8 @@ A View's state is preserved between frames.
     :members:
 
 .. doxygenfunction:: bgfx::setViewName
-.. doxygenfunction:: bgfx::setViewRect(ViewId _id, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height)
-.. doxygenfunction:: bgfx::setViewRect(ViewId _id, uint16_t _x, uint16_t _y, BackbufferRatio::Enum _ratio)
+.. doxygenfunction:: bgfx::setViewRect(ViewId _id, int16_t _x, int16_t _y, uint16_t _width, uint16_t _height)
+.. doxygenfunction:: bgfx::setViewRect(ViewId _id, int16_t _x, int16_t _y, BackbufferRatio::Enum _ratio)
 .. doxygenfunction:: bgfx::setViewScissor
 .. doxygenfunction:: bgfx::setViewClear(ViewId _id, uint16_t _flags, uint32_t _rgba = 0x000000ff, float _depth = 1.0f, uint8_t _stencil = 0)
 .. doxygenfunction:: bgfx::setViewClear(ViewId _id, uint16_t _flags, float _depth, uint8_t _stencil, uint8_t _c0 = UINT8_MAX, uint8_t _c1 = UINT8_MAX, uint8_t _c2 = UINT8_MAX, uint8_t _c3 = UINT8_MAX, uint8_t _c4 = UINT8_MAX, uint8_t _c5 = UINT8_MAX, uint8_t _c6 = UINT8_MAX, uint8_t _c7 = UINT8_MAX)
@@ -454,7 +455,8 @@ Textures
 
 Bind textures to texture stages for draw calls.
 
-.. doxygenfunction:: bgfx::setTexture
+.. doxygenfunction:: bgfx::setTexture(uint8_t _stage, UniformHandle _sampler, TextureHandle _handle, uint32_t _flags = UINT32_MAX)
+.. doxygenfunction:: bgfx::setTexture(uint8_t _stage, UniformHandle _sampler, TextureHandle _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _firstMip, uint8_t _numMips, uint32_t _flags = UINT32_MAX)
 
 Uniforms
 ********
@@ -499,7 +501,8 @@ Images
 
 Bind texture images to compute stages.
 
-.. doxygenfunction:: bgfx::setImage
+.. doxygenfunction:: bgfx::setImage(uint8_t _stage, TextureHandle _handle, uint8_t _mip, Access::Enum _access, TextureFormat::Enum _format = TextureFormat::Count)
+.. doxygenfunction:: bgfx::setImage(uint8_t _stage, TextureHandle _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _mip, Access::Enum _access, TextureFormat::Enum _format = TextureFormat::Count)
 
 Dispatch
 ********
@@ -608,7 +611,17 @@ Textures
 .. doxygenstruct:: bgfx::TextureInfo
     :members:
 
+.. doxygenstruct:: bgfx::VideoDecoderInit
+    :members:
+
+.. doxygenstruct:: bgfx::VideoDecoderAu
+    :members:
+
+.. doxygenstruct:: bgfx::VideoDecoderFrame
+    :members:
+
 .. doxygenfunction:: bgfx::isTextureValid
+.. doxygenfunction:: bgfx::isVideoCodecValid
 .. doxygenfunction:: bgfx::calcTextureSize
 .. doxygenfunction:: bgfx::createTexture
 .. doxygenfunction:: bgfx::createTexture2D(uint16_t _width, uint16_t _height, bool _hasMips, uint16_t _numLayers, TextureFormat::Enum _format, uint64_t _flags = BGFX_TEXTURE_NONE|BGFX_SAMPLER_NONE, const Memory* _mem = NULL, uint64_t _external = 0)
@@ -618,6 +631,7 @@ Textures
 .. doxygenfunction:: bgfx::updateTexture2D
 .. doxygenfunction:: bgfx::updateTexture3D
 .. doxygenfunction:: bgfx::updateTextureCube
+.. doxygenfunction:: bgfx::clear
 .. doxygenfunction:: bgfx::readTexture
 .. doxygenfunction:: bgfx::getDirectAccessPtr
 .. doxygenfunction:: bgfx::destroy(TextureHandle _handle)

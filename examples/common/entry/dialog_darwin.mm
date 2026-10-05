@@ -9,6 +9,7 @@
 #include <bx/allocator.h>
 #include <bx/filepath.h>
 #include <bx/string.h>
+#include <bx/scanner.h>
 #include <bx/readerwriter.h>
 #include <bx/process.h>
 #include <bx/semaphore.h>
@@ -104,7 +105,11 @@ bool openFileSelectionDialog(
 
 		panel.message = [[NSString alloc] initWithBytes:_title.getPtr() length:_title.getLength() encoding:NSASCIIStringEncoding];
 		panel.directoryURL = [NSURL URLWithString:@(_inOutFilePath.getCPtr())];
+
+		BX_PRAGMA_DIAGNOSTIC_PUSH();
+		BX_PRAGMA_DIAGNOSTIC_IGNORED_CLANG_GCC("-Wdeprecated-declarations");
 		panel.allowedFileTypes = fileTypes;
+		BX_PRAGMA_DIAGNOSTIC_POP();
 
 		if ([panel runModal] == NSModalResponseOK)
 		{

@@ -111,6 +111,25 @@ namespace bgfx { namespace gl
 		return context;
 	}
 
+	static HWND createDummyWindow()
+	{
+		// An application can only set the pixel format of a window one time.
+		// Once a window's pixel format is set, it cannot be changed.
+		// MSDN: https://web.archive.org/web/20190207230357/https://docs.microsoft.com/en-us/windows/desktop/api/wingdi/nf-wingdi-setpixelformat
+		return CreateWindowA("STATIC"
+			, ""
+			, WS_POPUP|WS_DISABLED
+			, -32000
+			, -32000
+			, 0
+			, 0
+			, NULL
+			, NULL
+			, GetModuleHandle(NULL)
+			, 0
+			);
+	}
+
 	void GlContext::create(const Resolution& _resolution)
 	{
 		m_opengl32dll = bx::dlopen("opengl32.dll");
@@ -122,17 +141,29 @@ namespace bgfx { namespace gl
 		// If g_platformHooks.nwh is NULL, the assumption is that GL context was created
 		// by user (for example, using SDL, GLFW, etc.)
 		BX_WARN(NULL != g_platformData.nwh
+			||  NULL != g_platformData.context
 			, "bgfx::setPlatform with valid window is not called. This might "
 				"be intentional when GL context is created by the user."
 			);
 
-		if (NULL != g_platformData.nwh && NULL != g_platformData.context )
+		HWND nwh = (HWND)g_platformData.nwh;
+
+		if (NULL == nwh
+		&&  NULL == g_platformData.context)
+		{
+			m_dummyHwnd = createDummyWindow();
+			BGFX_FATAL(NULL != m_dummyHwnd, Fatal::UnableToInitialize, "Failed to create headless window.");
+
+			nwh = m_dummyHwnd;
+		}
+
+		if (NULL != nwh && NULL != g_platformData.context )
 		{
 			// user has provided a context and a window
 			wglMakeCurrent = (PFNWGLMAKECURRENTPROC)bx::dlsym(m_opengl32dll, "wglMakeCurrent");
 			BGFX_FATAL(NULL != wglMakeCurrent, Fatal::UnableToInitialize, "Failed get wglMakeCurrent.");
 
-			m_hdc = GetDC( (HWND)g_platformData.nwh);
+			m_hdc = GetDC(nwh);
 			BGFX_FATAL(NULL != m_hdc, Fatal::UnableToInitialize, "GetDC failed!");
 
 			HGLRC context = (HGLRC)g_platformData.context;
@@ -142,7 +173,7 @@ namespace bgfx { namespace gl
 			m_context = context;
 		}
 
-		if (NULL != g_platformData.nwh && NULL == g_platformData.context )
+		if (NULL != nwh && NULL == g_platformData.context )
 		{
 			wglMakeCurrent = bx::dlsym<PFNWGLMAKECURRENTPROC>(m_opengl32dll, "wglMakeCurrent");
 			BGFX_FATAL(NULL != wglMakeCurrent, Fatal::UnableToInitialize, "Failed get wglMakeCurrent.");
@@ -153,26 +184,11 @@ namespace bgfx { namespace gl
 			wglDeleteContext = bx::dlsym<PFNWGLDELETECONTEXTPROC>(m_opengl32dll, "wglDeleteContext");
 			BGFX_FATAL(NULL != wglDeleteContext, Fatal::UnableToInitialize, "Failed get wglDeleteContext.");
 
-			m_hdc = GetDC( (HWND)g_platformData.nwh);
+			m_hdc = GetDC(nwh);
 			BGFX_FATAL(NULL != m_hdc, Fatal::UnableToInitialize, "GetDC failed!");
 
 			// Dummy window to peek into WGL functionality.
-			//
-			// An application can only set the pixel format of a window one time.
-			// Once a window's pixel format is set, it cannot be changed.
-			// MSDN: https://web.archive.org/web/20190207230357/https://docs.microsoft.com/en-us/windows/desktop/api/wingdi/nf-wingdi-setpixelformat
-			HWND hwnd = CreateWindowA("STATIC"
-				, ""
-				, WS_POPUP|WS_DISABLED
-				, -32000
-				, -32000
-				, 0
-				, 0
-				, NULL
-				, NULL
-				, GetModuleHandle(NULL)
-				, 0
-				);
+			HWND hwnd = createDummyWindow();
 
 			HDC hdc = GetDC(hwnd);
 			BGFX_FATAL(NULL != hdc, Fatal::UnableToInitialize, "GetDC failed!");
@@ -295,9 +311,10 @@ namespace bgfx { namespace gl
 			BGFX_FATAL(0 != result, Fatal::UnableToInitialize, "wglMakeCurrent failed!");
 			m_current = NULL;
 
+			m_swapInterval = !!(_resolution.reset & BGFX_RESET_VSYNC) ? 1 : 0;
 			if (NULL != wglSwapIntervalEXT)
 			{
-				wglSwapIntervalEXT(0);
+				wglSwapIntervalEXT(m_swapInterval);
 			}
 		}
 
@@ -308,7 +325,7 @@ namespace bgfx { namespace gl
 
 	void GlContext::destroy()
 	{
-		if (NULL != g_platformData.nwh)
+		if (NULL != m_hdc)
 		{
 			wglMakeCurrent(NULL, NULL);
 
@@ -319,8 +336,14 @@ namespace bgfx { namespace gl
 
 			}
 
-			ReleaseDC( (HWND)g_platformData.nwh, m_hdc);
+			ReleaseDC(NULL != m_dummyHwnd ? m_dummyHwnd : (HWND)g_platformData.nwh, m_hdc);
 			m_hdc = NULL;
+		}
+
+		if (NULL != m_dummyHwnd)
+		{
+			DestroyWindow(m_dummyHwnd);
+			m_dummyHwnd = NULL;
 		}
 
 		bx::dlclose(m_opengl32dll);
@@ -329,10 +352,15 @@ namespace bgfx { namespace gl
 
 	void GlContext::resize(const Resolution& _resolution)
 	{
+		const bool vsync = !!(_resolution.reset & BGFX_RESET_VSYNC);
+		m_swapInterval = vsync ? 1 : 0;
+
 		if (NULL != wglSwapIntervalEXT)
 		{
-			const bool vsync = !!(_resolution.reset & BGFX_RESET_VSYNC);
-			wglSwapIntervalEXT(vsync ? 1 : 0);
+			// Apply to the currently-bound (main) context. Secondary SwapChainGL contexts
+			// get the value applied lazily in makeCurrent() when they become current, since
+			// wglSwapIntervalEXT is per-context on Windows.
+			wglSwapIntervalEXT(m_swapInterval);
 		}
 	}
 
@@ -392,6 +420,14 @@ namespace bgfx { namespace gl
 			else
 			{
 				_swapChain->makeCurrent();
+			}
+
+			// wglSwapIntervalEXT is per-context on Windows, so re-apply the cached interval
+			// every time a different context becomes current. Without this, secondary swap
+			// chains keep their driver default (typically vsync ON) even after resize().
+			if (NULL != wglSwapIntervalEXT)
+			{
+				wglSwapIntervalEXT(m_swapInterval);
 			}
 		}
 	}

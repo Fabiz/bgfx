@@ -9,7 +9,7 @@ import bindbc.common.types: c_int64, c_uint64, va_list;
 import bindbc.bgfx.config;
 static import bgfx.impl;
 
-enum uint apiVersion = 143;
+enum uint apiVersion = 154;
 
 alias ViewID = ushort;
 
@@ -171,9 +171,8 @@ StencilFuncRMask_ toStencilFuncRMask(uint v) nothrow @nogc pure @safe{ return (v
 
 alias Stencil_ = uint;
 enum Stencil: Stencil_{
-	none     = 0x0000_0000,
-	mask     = 0xFFFF_FFFF,
-	default_ = 0x0000_0000,
+	none  = 0x0000_FF00, ///No stencil test.
+	mask  = 0xFFFF_FFFF, ///Stencil front or back mask.
 }
 
 alias StencilTest_ = uint;
@@ -337,6 +336,13 @@ enum Texture: Texture_{
 	blitDst         = 0x0000_4000_0000_0000, ///Texture will be used as blit destination.
 	readBack        = 0x0000_8000_0000_0000, ///Texture will be used for read back from GPU.
 	externalShared  = 0x0001_0000_0000_0000, ///Texture is shared with other device or other process.
+}
+
+///Do not use! Top nibble is reserved for internal texture flags (see bgfx_p.h).
+alias TextureReserved_ = ulong;
+enum TextureReserved: TextureReserved_{
+	shift  = 60,
+	mask   = 0xF000_0000_0000_0000,
 }
 
 alias TextureRTMSAA_ = ulong;
@@ -525,7 +531,8 @@ enum CapFlags: CapFlags_{
 	vertexAttribHalf        = 0x0000_0000_4000_0000, ///Vertex attribute half-float is supported.
 	vertexAttribUint10      = 0x0000_0000_8000_0000, ///Vertex attribute 10_10_10_2 is supported.
 	vertexID                = 0x0000_0001_0000_0000, ///Rendering with VertexID only is supported.
-	viewportLayerArray      = 0x0000_0002_0000_0000, ///Viewport layer is available in vertex shader.
+	videoDecode             = 0x0000_0002_0000_0000, ///Hardware video decode is supported.
+	viewportLayerArray      = 0x0000_0004_0000_0000, ///Viewport layer is available in vertex shader.
 	textureCompareAll       = 0x0000_0000_0018_0000, ///All texture compare modes are supported.
 }
 
@@ -549,6 +556,61 @@ enum CapsFormat: CapsFormat_{
 	textureMSAA             = 0x0000_4000, ///Texture can be sampled as MSAA.
 	textureMIPAutogen       = 0x0000_8000, ///Texture format supports auto-generated mips.
 	textureBackbuffer       = 0x0001_0000, ///Texture format can be used as back buffer format.
+	textureVideoDecodeDst   = 0x0002_0000, ///Texture format can be used as video decode destination.
+}
+
+alias CapsVideoCodec_ = uint;
+enum CapsVideoCodec: CapsVideoCodec_{
+	none        = 0x0000_0000, ///Video codec is not supported.
+	bit8        = 0x0000_0001, ///8-bit sample depth is supported.
+	bit10       = 0x0000_0002, ///10-bit sample depth is supported.
+	bit12       = 0x0000_0004, ///12-bit sample depth is supported.
+	chroma420   = 0x0000_0008, ///4:2:0 chroma subsampling is supported.
+	chroma422   = 0x0000_0010, ///4:2:2 chroma subsampling is supported.
+	chroma444   = 0x0000_0020, ///4:4:4 chroma subsampling is supported.
+}
+
+///Video decoder lifetime flags (per `VideoDecoderInit::flags`).
+alias VideoDecoderInit_ = ubyte;
+enum VideoDecoderInit: VideoDecoderInit_{
+	none    = 0x00, ///No flags.
+	/**
+	Cache submitted access units in driver-managed memory keyed by `ptsUs` so the
+	presentation clock can revisit / loop without re-streaming. The cache is
+	unbounded: the app picks the total cache size implicitly by choosing how
+	many access units to submit. Without this flag access units are decoded once
+	and dropped (streaming default).
+	*/
+	retain  = 0x01,
+}
+
+///Video decoder per-frame submission flags (per `VideoDecoderFrame::flags`).
+alias VideoDecodeFrame_ = ubyte;
+enum VideoDecodeFrame: VideoDecodeFrame_{
+	none    = 0x00, ///No flags.
+	/**
+	First batch after a position change. The first access unit must be a clean IDR.
+	Driver flushes its DPB, queued access units, and reorder pool before decoding;
+	subsequent `presentationTimeUs` values may land anywhere (monotonicity is only
+	required between non-`Set` ticks).
+	*/
+	set     = 0x01,
+	/**
+	Skip the picker dispatch for this call. Useful while bulk-loading access units
+	so the displayed picture isn't churned mid-load.
+	*/
+	noBlit  = 0x02,
+	/**
+	Marks the last access unit of the clip; permits eager pre-decode in idle time
+	and lets the picker emit the final frame without lookahead stalling.
+	*/
+	final_  = 0x04,
+	/**
+	When `presentationTimeUs` runs past the highest cached `ptsUs`, the picker
+	wraps modulo the cached pts range. Without this flag the picker freezes on
+	the last displayable picture.
+	*/
+	loop    = 0x08,
 }
 
 alias Resolve_ = ubyte;
@@ -647,6 +709,14 @@ enum Attrib: bgfx.impl.Attrib.Enum{
 	texCoord5 = bgfx.impl.Attrib.Enum.texCoord5,
 	texCoord6 = bgfx.impl.Attrib.Enum.texCoord6,
 	texCoord7 = bgfx.impl.Attrib.Enum.texCoord7,
+	texCoord8 = bgfx.impl.Attrib.Enum.texCoord8,
+	texCoord9 = bgfx.impl.Attrib.Enum.texCoord9,
+	texCoord10 = bgfx.impl.Attrib.Enum.texCoord10,
+	texCoord11 = bgfx.impl.Attrib.Enum.texCoord11,
+	texCoord12 = bgfx.impl.Attrib.Enum.texCoord12,
+	texCoord13 = bgfx.impl.Attrib.Enum.texCoord13,
+	texCoord14 = bgfx.impl.Attrib.Enum.texCoord14,
+	texCoord15 = bgfx.impl.Attrib.Enum.texCoord15,
 	count = bgfx.impl.Attrib.Enum.count,
 }
 
@@ -659,6 +729,8 @@ enum AttribType: bgfx.impl.AttribType.Enum{
 	uint16 = bgfx.impl.AttribType.Enum.uint16,
 	half = bgfx.impl.AttribType.Enum.half,
 	float_ = bgfx.impl.AttribType.Enum.float_,
+	int32 = bgfx.impl.AttribType.Enum.int32,
+	uint32 = bgfx.impl.AttribType.Enum.uint32,
 	count = bgfx.impl.AttribType.Enum.count,
 }
 
@@ -684,8 +756,11 @@ enum TextureFormat: bgfx.impl.TextureFormat.Enum{
 	bc2 = bgfx.impl.TextureFormat.Enum.bc2,
 	bc3 = bgfx.impl.TextureFormat.Enum.bc3,
 	bc4 = bgfx.impl.TextureFormat.Enum.bc4,
+	bc4s = bgfx.impl.TextureFormat.Enum.bc4s,
 	bc5 = bgfx.impl.TextureFormat.Enum.bc5,
+	bc5s = bgfx.impl.TextureFormat.Enum.bc5s,
 	bc6h = bgfx.impl.TextureFormat.Enum.bc6h,
+	bc6hu = bgfx.impl.TextureFormat.Enum.bc6hu,
 	bc7 = bgfx.impl.TextureFormat.Enum.bc7,
 	etc1 = bgfx.impl.TextureFormat.Enum.etc1,
 	etc2 = bgfx.impl.TextureFormat.Enum.etc2,
@@ -770,6 +845,7 @@ enum TextureFormat: bgfx.impl.TextureFormat.Enum{
 	bgr5a1 = bgfx.impl.TextureFormat.Enum.bgr5a1,
 	rgb5a1 = bgfx.impl.TextureFormat.Enum.rgb5a1,
 	rgb10a2 = bgfx.impl.TextureFormat.Enum.rgb10a2,
+	rgb10a2u = bgfx.impl.TextureFormat.Enum.rgb10a2u,
 	rg11b10f = bgfx.impl.TextureFormat.Enum.rg11b10f,
 	unknownDepth = bgfx.impl.TextureFormat.Enum.unknownDepth,
 	d16 = bgfx.impl.TextureFormat.Enum.d16,
@@ -779,6 +855,7 @@ enum TextureFormat: bgfx.impl.TextureFormat.Enum{
 	d16f = bgfx.impl.TextureFormat.Enum.d16f,
 	d24f = bgfx.impl.TextureFormat.Enum.d24f,
 	d32f = bgfx.impl.TextureFormat.Enum.d32f,
+	d32fs8 = bgfx.impl.TextureFormat.Enum.d32fs8,
 	d0s8 = bgfx.impl.TextureFormat.Enum.d0s8,
 	count = bgfx.impl.TextureFormat.Enum.count,
 }
@@ -818,6 +895,14 @@ enum OcclusionQueryResult: bgfx.impl.OcclusionQueryResult.Enum{
 	visible = bgfx.impl.OcclusionQueryResult.Enum.visible,
 	noResult = bgfx.impl.OcclusionQueryResult.Enum.noResult,
 	count = bgfx.impl.OcclusionQueryResult.Enum.count,
+}
+
+///Video codec enum.
+enum VideoCodec: bgfx.impl.VideoCodec.Enum{
+	h264 = bgfx.impl.VideoCodec.Enum.h264,
+	h265 = bgfx.impl.VideoCodec.Enum.h265,
+	av1 = bgfx.impl.VideoCodec.Enum.av1,
+	count = bgfx.impl.VideoCodec.Enum.count,
 }
 
 ///Primitive topology.
@@ -1062,6 +1147,8 @@ extern(C++, "bgfx") struct Caps{
 		uint maxComputeBindings; ///Maximum number of compute bindings.
 		uint maxVertexLayouts; ///Maximum number of vertex format layouts.
 		uint maxVertexStreams; ///Maximum number of vertex streams.
+		uint maxVertexAttributes; ///Maximum number of vertex attributes.
+		uint maxInstanceData; ///Maximum number of instance data slots.
 		uint maxIndexBuffers; ///Maximum number of index buffer handles.
 		uint maxVertexBuffers; ///Maximum number of vertex buffer handles.
 		uint maxDynamicIndexBuffers; ///Maximum number of dynamic index buffer handles.
@@ -1115,8 +1202,24 @@ extern(C++, "bgfx") struct Caps{
 	  - `BGFX_CAPS_FORMAT_TEXTURE_MIP_AUTOGEN` - Texture format supports auto-generated
 	    mips.
 	  - `BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER` - Texture format can be used as back buffer format.
+	  - `BGFX_CAPS_FORMAT_TEXTURE_VIDEO_DECODE_DST` - Texture format can be used as video
+	    decode destination.
 	*/
 	uint[TextureFormat.count] formats;
+	
+	/**
+	Supported video codec capabilities flags. A non-zero entry means the codec is
+	supported for hardware decode; bits describe sample depths and chroma
+	subsamplings:
+	  - `BGFX_CAPS_VIDEO_CODEC_NONE` - Video codec is not supported.
+	  - `BGFX_CAPS_VIDEO_CODEC_BIT_8` - 8-bit sample depth is supported.
+	  - `BGFX_CAPS_VIDEO_CODEC_BIT_10` - 10-bit sample depth is supported.
+	  - `BGFX_CAPS_VIDEO_CODEC_BIT_12` - 12-bit sample depth is supported.
+	  - `BGFX_CAPS_VIDEO_CODEC_CHROMA_420` - 4:2:0 chroma subsampling is supported.
+	  - `BGFX_CAPS_VIDEO_CODEC_CHROMA_422` - 4:2:2 chroma subsampling is supported.
+	  - `BGFX_CAPS_VIDEO_CODEC_CHROMA_444` - 4:4:4 chroma subsampling is supported.
+	*/
+	uint[VideoCodec.count] codecs;
 }
 
 ///Internal data.
@@ -1179,6 +1282,28 @@ extern(C++, "bgfx") struct Init{
 	///Configurable runtime limits parameters.
 	extern(C++) struct Limits{
 		ushort maxEncoders; ///Maximum number of encoder threads.
+		
+		/**
+		Number of draw calls per frame to reserve storage for. Rounded
+		up to a multiple of `BGFX_CONFIG_DRAW_CALL_BLOCK`, which is also
+		the minimum. This is a reservation, not a limit: submitting more
+		than this grows the storage during the frame, up to
+		`BGFX_CONFIG_MAX_DRAW_CALLS`. With
+		`BGFX_CONFIG_DYNAMIC_FRAME_STORAGE` disabled nothing grows, and
+		this is a hard limit that `Caps::Limits::maxDrawCalls` reports
+		back; submissions past it are dropped. See
+		`Stats::numDrawCallsPeak` to size it.
+		*/
+		uint numDrawCalls;
+		
+		/**
+		Number of frames the draw-call peak (high-water mark) is observed
+		before unused storage is released. Set to 0 to keep whatever has
+		been allocated for the lifetime of the context. With
+		`BGFX_CONFIG_DYNAMIC_FRAME_STORAGE` disabled nothing per frame is
+		resized at all, and this only releases unused uniform buffer space.
+		*/
+		uint numDrawCallPeakFrames;
 		uint minResourceCBSize; ///Minimum resource command buffer size.
 		uint maxTransientVBSize; ///Maximum transient vertex buffer size.
 		uint maxTransientIBSize; ///Maximum transient index buffer size.
@@ -1220,6 +1345,7 @@ extern(C++, "bgfx") struct Init{
 	bool debug_; ///Enable device for debugging.
 	bool profile; ///Enable device for profiling.
 	bool fallback; ///Enable fallback to next available renderer.
+	bool videoDecode; ///Enable video decoding.
 	PlatformData platformData; ///Platform data.
 	Resolution resolution; ///Backbuffer resolution and reset parameters. See: `bgfx::Resolution`.
 	Limits limits; ///Configurable runtime limits parameters.
@@ -1294,6 +1420,72 @@ extern(C++, "bgfx") struct TextureInfo{
 	ubyte numMIPs; ///Number of MIP maps.
 	ubyte bitsPerPixel; ///Format bits per pixel.
 	bool cubeMap; ///Texture is cubemap.
+}
+
+/**
+Video decoder initialization. Serialized into the Memory passed to
+`createTexture2D`. When the memory blob begins with `magic`, bgfx
+infers the texture is a video decode destination (the caller need not set
+any extra texture flag). Everything else the renderer needs about the
+stream (chroma format, bit depth, profile, level, coded dimensions, DPB
+layout, color metadata) is parsed out of the codec parameter sets at
+create time.
+*/
+extern(C++, "bgfx") struct VideoDecoderInit{
+	uint magic; ///Structure magic. Must be `BX_MAKEFOURCC('V', 'D', 'I', 0x0)`.
+	VideoCodec codec; ///Video codec. See: `VideoCodec::Enum`.
+	const(ubyte)* parameterSets; ///Codec parameter sets (Annex B for H.264/H.265, OBUs for AV1).
+	uint parameterSetsSize; ///Parameter sets size in bytes.
+	
+	/**
+	Soft cap (in bytes) on the streaming access-unit FIFO (when
+	`BGFX_VIDEO_DECODER_INIT_RETAIN` is NOT set). 0 selects the
+	default. Ignored in RETAIN mode (the retain cache is unbounded).
+	*/
+	uint cachedAuBytes;
+	ubyte flags; ///Decoder lifetime flags. See: `BGFX_VIDEO_DECODER_INIT_*`.
+}
+
+/**
+One access unit entry inside a `VideoDecoderFrame` batch. The bitstream
+for the AU lives at offset `Σ aus[0..ii].size` inside the frame's
+`bitstream` buffer (access units are stored back-to-back in decode /
+submission order).
+*/
+extern(C++, "bgfx") struct VideoDecoderAu{
+	uint size; ///Access unit size in bytes.
+	c_int64 ptsUs; ///Presentation timestamp in microseconds for this access unit (container-provided).
+}
+
+/**
+Video decoder per-frame submission. Serialized into the Memory passed
+to `updateTexture2D` for a video decode destination texture. The
+renderer parses the slice / tile-group header out of the bitstream and
+translates it to the backend-specific decoder arguments.
+
+A single call may submit a batch of access units: `bitstream` is the
+back-to-back concatenation of `numAus` access units, and `aus[ii]`
+holds the size and PTS of each. AUs are enqueued in array order
+(which is the codec's decode order). Set `numAus == 0` (and
+`bitstream == NULL`) for a presentation-only tick that only advances
+the playback clock.
+
+The `bitstream` and `aus` pointers must remain valid until bgfx has
+consumed the submission (`bgfx::copy` only deep-copies the
+`VideoDecoderFrame` struct itself, not the buffers it references).
+*/
+extern(C++, "bgfx") struct VideoDecoderFrame{
+	uint magic; ///Structure magic. Must be `BX_MAKEFOURCC('V', 'D', 'F', 0x0)`.
+	const(ubyte)* bitstream; ///Concatenated access-unit bitstream (decode order). NULL for presentation-only ticks.
+	const(VideoDecoderAu)* aus; ///Per-AU size and PTS array. NULL when `numAus == 0`.
+	uint numAus; ///Number of access units in this batch. 0 for presentation-only ticks.
+	
+	/**
+	Current playback wall-clock time. Driver dispatches the picture whose `ptsUs`
+	best matches. Must be monotonically non-decreasing between non-`SET` calls.
+	*/
+	c_int64 presentationTimeUs;
+	ubyte flags; ///Per-frame submission flags. See: `BGFX_VIDEO_DECODE_FRAME_*`.
 }
 
 ///Uniform info.
@@ -1371,6 +1563,13 @@ extern(C++, "bgfx") struct Stats{
 	uint numDraw; ///Number of draw calls submitted.
 	uint numCompute; ///Number of compute calls submitted.
 	uint numBlit; ///Number of blit calls submitted.
+	
+	/**
+	Highest number of draw+compute calls requested in a single
+	frame so far (peak demand, before any were dropped). Useful
+	to tune `Init::Limits::numDrawCalls`.
+	*/
+	uint numDrawCallsPeak;
 	uint maxGpuLatency; ///GPU driver latency.
 	uint gpuFrameNum; ///Frame which generated gpuTimeBegin, gpuTimeEnd.
 	ushort numDynamicIndexBuffers; ///Number of used dynamic index buffers.
@@ -1773,6 +1972,26 @@ extern(C++, "bgfx") struct Encoder{
 			{q{void}, q{setTexture}, q{ubyte stage, UniformHandle sampler, TextureHandle handle, uint flags=uint.max}, ext: `C++`},
 			
 			/**
+			Set texture stage for draw primitive, selecting a sub-range of the
+			texture's array layers and mip levels.
+			Params:
+				stage = Texture unit.
+				sampler = Program sampler.
+				handle = Texture handle.
+				firstLayer = First array layer.
+				numLayers = Number of array layers.
+				firstMIP = First (most detailed) mip level.
+				numMIPs = Number of mip levels.
+				flags = Texture sampling mode. Default value UINT32_MAX uses
+			  texture sampling settings from the texture.
+			  - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap
+			    mode.
+			  - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
+			    sampling.
+			*/
+			{q{void}, q{setTexture}, q{ubyte stage, UniformHandle sampler, TextureHandle handle, ushort firstLayer, ushort numLayers, ubyte firstMIP, ubyte numMIPs, uint flags=uint.max}, ext: `C++`},
+			
+			/**
 			Submit an empty primitive for rendering. Uniforms and draw state
 			will be applied but no geometry will be submitted. Useful in cases
 			when no other draw/compute primitive is submitted to view, but it's
@@ -1899,6 +2118,20 @@ extern(C++, "bgfx") struct Encoder{
 				format = Texture format. See: `TextureFormat::Enum`.
 			*/
 			{q{void}, q{setImage}, q{ubyte stage, TextureHandle handle, ubyte mip, bgfx.impl.Access.Enum access, bgfx.impl.TextureFormat.Enum format=TextureFormat.count}, ext: `C++`},
+			
+			/**
+			Set compute image stage for draw primitive, selecting a sub-range of the
+			texture's array layers and mip levels.
+			Params:
+				stage = Compute stage.
+				handle = Texture handle.
+				firstLayer = First array layer.
+				numLayers = Number of array layers.
+				mip = Mip level.
+				access = Image access. See `Access::Enum`.
+				format = Texture format. See: `TextureFormat::Enum`.
+			*/
+			{q{void}, q{setImage}, q{ubyte stage, TextureHandle handle, ushort firstLayer, ushort numLayers, ubyte mip, bgfx.impl.Access.Enum access, bgfx.impl.TextureFormat.Enum format=TextureFormat.count}, ext: `C++`},
 			
 			/**
 			Dispatch compute.
@@ -2610,6 +2843,22 @@ mixin(joinFnBinds((){
 		{q{bool}, q{isTextureValid}, q{ushort depth, bool cubeMap, ushort numLayers, bgfx.impl.TextureFormat.Enum format, c_uint64 flags}, ext: `C++, "bgfx"`},
 		
 		/**
+		* Validate video codec parameters. Use to check whether the requested
+		* combination of codec / bit depth / chroma / dimensions / DPB layout can
+		* be hardware decoded on the current device. Coarse capability discovery
+		* is `Caps::supported & BGFX_CAPS_VIDEO_DECODE` and `Caps::codecs[]`.
+		Params:
+			codec = Video codec. See: `VideoCodec::Enum`.
+			chroma = Chroma subsampling. 0 = 4:2:0, 2 = 4:2:2, 4 = 4:4:4.
+			bitDepth = Bit depth per component. 8, 10 or 12.
+			codedWidth = Coded picture width (macroblock / CTU / superblock aligned).
+			codedHeight = Coded picture height.
+			maxDpbSlots = Maximum decoded picture buffer slot count.
+			maxActiveReferences = Maximum number of reference frames active at once.
+		*/
+		{q{bool}, q{isVideoCodecValid}, q{bgfx.impl.VideoCodec.Enum codec, ubyte chroma, ubyte bitDepth, ushort codedWidth, ushort codedHeight, ubyte maxDpbSlots, ubyte maxActiveReferences}, ext: `C++, "bgfx"`},
+		
+		/**
 		* Validate frame buffer parameters.
 		Params:
 			num = Number of attachments.
@@ -2802,17 +3051,32 @@ mixin(joinFnBinds((){
 		{q{void}, q{updateTextureCube}, q{TextureHandle handle, ushort layer, ubyte side, ubyte mip, ushort x, ushort y, ushort width, ushort height, const(Memory)* mem, ushort pitch=ushort.max}, ext: `C++, "bgfx"`},
 		
 		/**
+		* Clear a texture subresource range to zero.
+		* 
+		Params:
+			handle = Texture handle.
+			mip = First mip level.
+			numMIPs = Number of mip levels.
+			layer = First array layer (or 3D depth slice base).
+			numLayers = Number of layers.
+		*/
+		{q{void}, q{clear}, q{TextureHandle handle, ubyte mip=0, ubyte numMIPs=ubyte.max, ushort layer=0, ushort numLayers=ushort.max}, ext: `C++, "bgfx"`},
+		
+		/**
 		* Read back texture content.
 		* 
 		* Attention: Texture must be created with `BGFX_TEXTURE_READ_BACK` flag.
+		*            It's a texture for CPU readback, and can't be a GPU resource
+		*            at the same time. See `examples/30-picking`.
 		* Attention: Availability depends on: `BGFX_CAPS_TEXTURE_READ_BACK`.
 		* 
 		Params:
 			handle = Texture handle.
 			data = Destination buffer.
+			layer = Texture layer.
 			mip = Mip level.
 		*/
-		{q{uint}, q{readTexture}, q{TextureHandle handle, void* data, ubyte mip=0}, ext: `C++, "bgfx"`},
+		{q{uint}, q{readTexture}, q{TextureHandle handle, void* data, ushort layer=0, ubyte mip=0}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set texture debug name.
@@ -3095,23 +3359,27 @@ mixin(joinFnBinds((){
 		* Set view rectangle. Draw primitive outside view will be clipped.
 		Params:
 			id = View id.
-			x = Position x from the left corner of the window.
-			y = Position y from the top corner of the window.
+			x = Position x from the left corner of the window. Can be
+		negative to place view origin outside of the window.
+			y = Position y from the top corner of the window. Can be
+		negative to place view origin outside of the window.
 			width = Width of view port region.
 			height = Height of view port region.
 		*/
-		{q{void}, q{setViewRect}, q{ViewID id, ushort x, ushort y, ushort width, ushort height}, ext: `C++, "bgfx"`},
+		{q{void}, q{setViewRect}, q{ViewID id, short x, short y, ushort width, ushort height}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view rectangle. Draw primitive outside view will be clipped.
 		Params:
 			id = View id.
-			x = Position x from the left corner of the window.
-			y = Position y from the top corner of the window.
+			x = Position x from the left corner of the window. Can be
+		negative to place view origin outside of the window.
+			y = Position y from the top corner of the window. Can be
+		negative to place view origin outside of the window.
 			ratio = Width and height will be set in respect to back-buffer size.
 		See: `BackbufferRatio::Enum`.
 		*/
-		{q{void}, q{setViewRect}, q{ViewID id, ushort x, ushort y, bgfx.impl.BackbufferRatio.Enum ratio}, ext: `C++, "bgfx"`},
+		{q{void}, q{setViewRect}, q{ViewID id, short x, short y, bgfx.impl.BackbufferRatio.Enum ratio}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Set view scissor. Draw primitive outside view will be clipped. When
@@ -3725,6 +3993,26 @@ mixin(joinFnBinds((){
 		{q{void}, q{setTexture}, q{ubyte stage, UniformHandle sampler, TextureHandle handle, uint flags=uint.max}, ext: `C++, "bgfx"`},
 		
 		/**
+		* Set texture stage for draw primitive, selecting a sub-range of the
+		* texture's array layers and mip levels.
+		Params:
+			stage = Texture unit.
+			sampler = Program sampler.
+			handle = Texture handle.
+			firstLayer = First array layer.
+			numLayers = Number of array layers.
+			firstMIP = First (most detailed) mip level.
+			numMIPs = Number of mip levels.
+			flags = Texture sampling mode. Default value UINT32_MAX uses
+		  texture sampling settings from the texture.
+		  - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap
+		    mode.
+		  - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
+		    sampling.
+		*/
+		{q{void}, q{setTexture}, q{ubyte stage, UniformHandle sampler, TextureHandle handle, ushort firstLayer, ushort numLayers, ubyte firstMIP, ubyte numMIPs, uint flags=uint.max}, ext: `C++, "bgfx"`},
+		
+		/**
 		* Submit an empty primitive for rendering. Uniforms and draw state
 		* will be applied but no geometry will be submitted.
 		* 
@@ -3849,6 +4137,20 @@ mixin(joinFnBinds((){
 			format = Texture format. See: `TextureFormat::Enum`.
 		*/
 		{q{void}, q{setImage}, q{ubyte stage, TextureHandle handle, ubyte mip, bgfx.impl.Access.Enum access, bgfx.impl.TextureFormat.Enum format=TextureFormat.count}, ext: `C++, "bgfx"`},
+		
+		/**
+		* Set compute image stage for draw primitive, selecting a sub-range of the
+		* texture's array layers and mip levels.
+		Params:
+			stage = Compute stage.
+			handle = Texture handle.
+			firstLayer = First array layer.
+			numLayers = Number of array layers.
+			mip = Mip level.
+			access = Image access. See `Access::Enum`.
+			format = Texture format. See: `TextureFormat::Enum`.
+		*/
+		{q{void}, q{setImage}, q{ubyte stage, TextureHandle handle, ushort firstLayer, ushort numLayers, ubyte mip, bgfx.impl.Access.Enum access, bgfx.impl.TextureFormat.Enum format=TextureFormat.count}, ext: `C++, "bgfx"`},
 		
 		/**
 		* Dispatch compute.

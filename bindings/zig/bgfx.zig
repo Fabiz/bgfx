@@ -176,9 +176,12 @@ pub const StencilFlags_FuncRefShift: StencilFlags           = 0;
 pub const StencilFlags_FuncRefMask: StencilFlags            = 0x000000ff;
 pub const StencilFlags_FuncRmaskShift: StencilFlags         = 8;
 pub const StencilFlags_FuncRmaskMask: StencilFlags          = 0x0000ff00;
-pub const StencilFlags_None: StencilFlags                   = 0x00000000;
+
+/// No stencil test.
+pub const StencilFlags_None: StencilFlags                   = 0x0000ff00;
+
+/// Stencil front or back mask.
 pub const StencilFlags_Mask: StencilFlags                   = 0xffffffff;
-pub const StencilFlags_Default: StencilFlags                = 0x00000000;
 
 /// Enable stencil test, less.
 pub const StencilFlags_TestLess: StencilFlags               = 0x00010000;
@@ -455,6 +458,8 @@ pub const TextureFlags_ReadBack: TextureFlags               = 0x0000800000000000
 
 /// Texture is shared with other device or other process.
 pub const TextureFlags_ExternalShared: TextureFlags         = 0x0001000000000000;
+pub const TextureFlags_ReservedShift: TextureFlags          = 60;
+pub const TextureFlags_ReservedMask: TextureFlags           = 0xf000000000000000;
 
 /// Render target MSAAx2 mode.
 pub const TextureFlags_RtMsaaX2: TextureFlags               = 0x0000002000000000;
@@ -726,8 +731,11 @@ pub const CapsFlags_VertexAttribUint10: CapsFlags     = 0x0000000080000000;
 /// Rendering with VertexID only is supported.
 pub const CapsFlags_VertexId: CapsFlags               = 0x0000000100000000;
 
+/// Hardware video decode is supported.
+pub const CapsFlags_VideoDecode: CapsFlags            = 0x0000000200000000;
+
 /// Viewport layer is available in vertex shader.
-pub const CapsFlags_ViewportLayerArray: CapsFlags     = 0x0000000200000000;
+pub const CapsFlags_ViewportLayerArray: CapsFlags     = 0x0000000400000000;
 
 /// All texture compare modes are supported.
 pub const CapsFlags_TextureCompareAll: CapsFlags      = 0x0000000000180000;
@@ -786,6 +794,65 @@ pub const CapsFormatFlags_TextureMipAutogen: CapsFormatFlags      = 0x00008000;
 
 /// Texture format can be used as back buffer format.
 pub const CapsFormatFlags_TextureBackbuffer: CapsFormatFlags      = 0x00010000;
+
+/// Texture format can be used as video decode destination.
+pub const CapsFormatFlags_TextureVideoDecodeDst: CapsFormatFlags  = 0x00020000;
+
+pub const CapsVideoCodecFlags = u32;
+/// Video codec is not supported.
+pub const CapsVideoCodecFlags_None: CapsVideoCodecFlags                   = 0x00000000;
+
+/// 8-bit sample depth is supported.
+pub const CapsVideoCodecFlags_Bit8: CapsVideoCodecFlags                   = 0x00000001;
+
+/// 10-bit sample depth is supported.
+pub const CapsVideoCodecFlags_Bit10: CapsVideoCodecFlags                  = 0x00000002;
+
+/// 12-bit sample depth is supported.
+pub const CapsVideoCodecFlags_Bit12: CapsVideoCodecFlags                  = 0x00000004;
+
+/// 4:2:0 chroma subsampling is supported.
+pub const CapsVideoCodecFlags_Chroma420: CapsVideoCodecFlags              = 0x00000008;
+
+/// 4:2:2 chroma subsampling is supported.
+pub const CapsVideoCodecFlags_Chroma422: CapsVideoCodecFlags              = 0x00000010;
+
+/// 4:4:4 chroma subsampling is supported.
+pub const CapsVideoCodecFlags_Chroma444: CapsVideoCodecFlags              = 0x00000020;
+
+pub const VideoDecoderInitFlags = u32;
+/// No flags.
+pub const VideoDecoderInitFlags_None: VideoDecoderInitFlags                   = 0x00000000;
+
+/// Cache submitted access units in driver-managed memory keyed by `ptsUs` so the
+/// presentation clock can revisit / loop without re-streaming. The cache is
+/// unbounded: the app picks the total cache size implicitly by choosing how
+/// many access units to submit. Without this flag access units are decoded once
+/// and dropped (streaming default).
+pub const VideoDecoderInitFlags_Retain: VideoDecoderInitFlags                 = 0x00000001;
+
+pub const VideoDecodeFrameFlags = u32;
+/// No flags.
+pub const VideoDecodeFrameFlags_None: VideoDecodeFrameFlags                   = 0x00000000;
+
+/// First batch after a position change. The first access unit must be a clean IDR.
+/// Driver flushes its DPB, queued access units, and reorder pool before decoding;
+/// subsequent `presentationTimeUs` values may land anywhere (monotonicity is only
+/// required between non-`Set` ticks).
+pub const VideoDecodeFrameFlags_Set: VideoDecodeFrameFlags                    = 0x00000001;
+
+/// Skip the picker dispatch for this call. Useful while bulk-loading access units
+/// so the displayed picture isn't churned mid-load.
+pub const VideoDecodeFrameFlags_NoBlit: VideoDecodeFrameFlags                 = 0x00000002;
+
+/// Marks the last access unit of the clip; permits eager pre-decode in idle time
+/// and lets the picker emit the final frame without lookahead stalling.
+pub const VideoDecodeFrameFlags_Final: VideoDecodeFrameFlags                  = 0x00000004;
+
+/// When `presentationTimeUs` runs past the highest cached `ptsUs`, the picker
+/// wraps modulo the cached pts range. Without this flag the picker freezes on
+/// the last displayable picture.
+pub const VideoDecodeFrameFlags_Loop: VideoDecodeFrameFlags                   = 0x00000008;
 
 pub const ResolveFlags = u32;
 /// No resolve flags.
@@ -966,6 +1033,30 @@ pub const Attrib = enum(c_int) {
     /// a_texcoord7
     TexCoord7,
 
+    /// a_texcoord8
+    TexCoord8,
+
+    /// a_texcoord9
+    TexCoord9,
+
+    /// a_texcoord10
+    TexCoord10,
+
+    /// a_texcoord11
+    TexCoord11,
+
+    /// a_texcoord12
+    TexCoord12,
+
+    /// a_texcoord13
+    TexCoord13,
+
+    /// a_texcoord14
+    TexCoord14,
+
+    /// a_texcoord15
+    TexCoord15,
+
     Count
 };
 
@@ -991,6 +1082,12 @@ pub const AttribType = enum(c_int) {
     /// Float
     Float,
 
+    /// Int32
+    Int32,
+
+    /// Uint32
+    Uint32,
+
     Count
 };
 
@@ -1007,11 +1104,20 @@ pub const TextureFormat = enum(c_int) {
     /// Block Compression 4. Single 8-bit red channel, unsigned normalized. 4 BPP.
     BC4,
 
+    /// Block Compression 4. Single 8-bit red channel, signed normalized. 4 BPP.
+    BC4S,
+
     /// Block Compression 5. Two 8-bit channels (RG), unsigned normalized. 8 BPP.
     BC5,
 
+    /// Block Compression 5. Two 8-bit channels (RG), signed normalized. 8 BPP.
+    BC5S,
+
     /// Block Compression 6H. Three 16-bit floating-point channels (RGB), HDR. 8 BPP.
     BC6H,
+
+    /// Block Compression 6H. Three 16-bit unsigned floating-point channels (RGB), HDR. 8 BPP.
+    BC6HU,
 
     /// RGB 4-7 bits per color channel, 0-8 bits alpha. Block Compression 7. High-quality RGBA, 4-7 bits per color, 0-8 bits alpha. 8 BPP.
     BC7,
@@ -1265,6 +1371,9 @@ pub const TextureFormat = enum(c_int) {
     /// Packed 32-bit, 10-bit red, 10-bit green, 10-bit blue, 2-bit alpha, unsigned normalized. 32 BPP.
     RGB10A2,
 
+    /// Packed 32-bit, 10-bit red, 10-bit green, 10-bit blue, 2-bit alpha, unsigned integer. 32 BPP.
+    RGB10A2U,
+
     /// Packed 32-bit, 11-bit red, 11-bit green, 10-bit blue, unsigned floating point. No alpha. 32 BPP.
     RG11B10F,
 
@@ -1291,6 +1400,9 @@ pub const TextureFormat = enum(c_int) {
 
     /// 32-bit depth, floating point. 32 BPP.
     D32F,
+
+    /// 32-bit depth, floating point, with 8-bit stencil (stored as 64-bit). 64 BPP.
+    D32FS8,
 
     /// 8-bit stencil only, no depth. 8 BPP.
     D0S8,
@@ -1361,6 +1473,19 @@ pub const OcclusionQueryResult = enum(c_int) {
 
     /// Query result is not available yet.
     NoResult,
+
+    Count
+};
+
+pub const VideoCodec = enum(c_int) {
+    /// H.264 / AVC.
+    H264,
+
+    /// H.265 / HEVC.
+    H265,
+
+    /// AV1.
+    AV1,
 
     Count
 };
@@ -1508,6 +1633,8 @@ pub const Caps = extern struct {
         maxComputeBindings: u32,
         maxVertexLayouts: u32,
         maxVertexStreams: u32,
+        maxVertexAttributes: u32,
+        maxInstanceData: u32,
         maxIndexBuffers: u32,
         maxVertexBuffers: u32,
         maxDynamicIndexBuffers: u32,
@@ -1530,7 +1657,8 @@ pub const Caps = extern struct {
         numGPUs: u8,
         gpu: [4]GPU,
         limits: Limits,
-        formats: [100]u32,
+        formats: [105]u32,
+        codecs: [3]u32,
     };
 
     pub const InternalData = extern struct {
@@ -1562,6 +1690,8 @@ pub const Caps = extern struct {
 pub const Init = extern struct {
     pub const Limits = extern struct {
         maxEncoders: u16,
+        numDrawCalls: u32,
+        numDrawCallPeakFrames: u32,
         minResourceCbSize: u32,
         maxTransientVbSize: u32,
         maxTransientIbSize: u32,
@@ -1575,6 +1705,7 @@ pub const Init = extern struct {
         debug: bool,
         profile: bool,
         fallback: bool,
+        videoDecode: bool,
         platformData: PlatformData,
         resolution: Resolution,
         limits: Limits,
@@ -1623,6 +1754,29 @@ pub const Init = extern struct {
         numMips: u8,
         bitsPerPixel: u8,
         cubeMap: bool,
+    };
+
+    pub const VideoDecoderInit = extern struct {
+        magic: u32,
+        codec: VideoCodec,
+        parameterSets: [*c]const uint8_t,
+        parameterSetsSize: u32,
+        cachedAuBytes: u32,
+        flags: u8,
+    };
+
+    pub const VideoDecoderAu = extern struct {
+        size: u32,
+        ptsUs: i64,
+    };
+
+    pub const VideoDecoderFrame = extern struct {
+        magic: u32,
+        bitstream: [*c]const uint8_t,
+        aus: [*c]const VideoDecoderAu,
+        numAus: u32,
+        presentationTimeUs: i64,
+        flags: u8,
     };
 
     pub const UniformInfo = extern struct {
@@ -1683,6 +1837,7 @@ pub const Init = extern struct {
         numDraw: u32,
         numCompute: u32,
         numBlit: u32,
+        numDrawCallsPeak: u32,
         maxGpuLatency: u32,
         gpuFrameNum: u32,
         numDynamicIndexBuffers: u16,
@@ -1716,8 +1871,8 @@ pub const Init = extern struct {
     pub const VertexLayout = extern struct {
         hash: u32,
         stride: u16,
-        offset: [18]u16,
-        attributes: [18]u16,
+        offset: [26]u16,
+        attributes: [26]u16,
         /// Start VertexLayout.
         /// <param name="_rendererType">Renderer backend type. See: `bgfx::RendererType`</param>
         pub inline fn begin(self: *VertexLayout, _rendererType: RendererType) *VertexLayout {
@@ -1962,6 +2117,19 @@ pub const Init = extern struct {
         pub inline fn setTexture(self: ?*Encoder, _stage: u8, _sampler: UniformHandle, _handle: TextureHandle, _flags: u32) void {
             return bgfx_encoder_set_texture(self, _stage, _sampler, _handle, _flags);
         }
+        /// Set texture stage for draw primitive, selecting a sub-range of the
+        /// texture's array layers and mip levels.
+        /// <param name="_stage">Texture unit.</param>
+        /// <param name="_sampler">Program sampler.</param>
+        /// <param name="_handle">Texture handle.</param>
+        /// <param name="_firstLayer">First array layer.</param>
+        /// <param name="_numLayers">Number of array layers.</param>
+        /// <param name="_firstMip">First (most detailed) mip level.</param>
+        /// <param name="_numMips">Number of mip levels.</param>
+        /// <param name="_flags">Texture sampling mode. Default value UINT32_MAX uses   texture sampling settings from the texture.   - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap     mode.   - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic     sampling.</param>
+        pub inline fn setTextureView(self: ?*Encoder, _stage: u8, _sampler: UniformHandle, _handle: TextureHandle, _firstLayer: u16, _numLayers: u16, _firstMip: u8, _numMips: u8, _flags: u32) void {
+            return bgfx_encoder_set_texture_view(self, _stage, _sampler, _handle, _firstLayer, _numLayers, _firstMip, _numMips, _flags);
+        }
         /// Submit an empty primitive for rendering. Uniforms and draw state
         /// will be applied but no geometry will be submitted. Useful in cases
         /// when no other draw/compute primitive is submitted to view, but it's
@@ -2066,6 +2234,18 @@ pub const Init = extern struct {
         /// <param name="_format">Texture format. See: `TextureFormat::Enum`.</param>
         pub inline fn setImage(self: ?*Encoder, _stage: u8, _handle: TextureHandle, _mip: u8, _access: Access, _format: TextureFormat) void {
             return bgfx_encoder_set_image(self, _stage, _handle, _mip, _access, _format);
+        }
+        /// Set compute image stage for draw primitive, selecting a sub-range of the
+        /// texture's array layers and mip levels.
+        /// <param name="_stage">Compute stage.</param>
+        /// <param name="_handle">Texture handle.</param>
+        /// <param name="_firstLayer">First array layer.</param>
+        /// <param name="_numLayers">Number of array layers.</param>
+        /// <param name="_mip">Mip level.</param>
+        /// <param name="_access">Image access. See `Access::Enum`.</param>
+        /// <param name="_format">Texture format. See: `TextureFormat::Enum`.</param>
+        pub inline fn setImageView(self: ?*Encoder, _stage: u8, _handle: TextureHandle, _firstLayer: u16, _numLayers: u16, _mip: u8, _access: Access, _format: TextureFormat) void {
+            return bgfx_encoder_set_image_view(self, _stage, _handle, _firstLayer, _numLayers, _mip, _access, _format);
         }
         /// Dispatch compute.
         /// <param name="_id">View id.</param>
@@ -2739,6 +2919,22 @@ pub inline fn isTextureValid(_depth: u16, _cubeMap: bool, _numLayers: u16, _form
 }
 extern fn bgfx_is_texture_valid(_depth: u16, _cubeMap: bool, _numLayers: u16, _format: TextureFormat, _flags: u64) bool;
 
+/// Validate video codec parameters. Use to check whether the requested
+/// combination of codec / bit depth / chroma / dimensions / DPB layout can
+/// be hardware decoded on the current device. Coarse capability discovery
+/// is `Caps::supported & BGFX_CAPS_VIDEO_DECODE` and `Caps::codecs[]`.
+/// <param name="_codec">Video codec. See: `VideoCodec::Enum`.</param>
+/// <param name="_chroma">Chroma subsampling. 0 = 4:2:0, 2 = 4:2:2, 4 = 4:4:4.</param>
+/// <param name="_bitDepth">Bit depth per component. 8, 10 or 12.</param>
+/// <param name="_codedWidth">Coded picture width (macroblock / CTU / superblock aligned).</param>
+/// <param name="_codedHeight">Coded picture height.</param>
+/// <param name="_maxDpbSlots">Maximum decoded picture buffer slot count.</param>
+/// <param name="_maxActiveReferences">Maximum number of reference frames active at once.</param>
+pub inline fn isVideoCodecValid(_codec: VideoCodec, _chroma: u8, _bitDepth: u8, _codedWidth: u16, _codedHeight: u16, _maxDpbSlots: u8, _maxActiveReferences: u8) bool {
+    return bgfx_is_video_codec_valid(_codec, _chroma, _bitDepth, _codedWidth, _codedHeight, _maxDpbSlots, _maxActiveReferences);
+}
+extern fn bgfx_is_video_codec_valid(_codec: VideoCodec, _chroma: u8, _bitDepth: u8, _codedWidth: u16, _codedHeight: u16, _maxDpbSlots: u8, _maxActiveReferences: u8) bool;
+
 /// Validate frame buffer parameters.
 /// <param name="_num">Number of attachments.</param>
 /// <param name="_attachment">Attachment texture info. See: `bgfx::Attachment`.</param>
@@ -2879,18 +3075,33 @@ pub inline fn updateTextureCube(_handle: TextureHandle, _layer: u16, _side: u8, 
 }
 extern fn bgfx_update_texture_cube(_handle: TextureHandle, _layer: u16, _side: u8, _mip: u8, _x: u16, _y: u16, _width: u16, _height: u16, _mem: [*c]const Memory, _pitch: u16) void;
 
+/// Clear a texture subresource range to zero.
+/// 
+/// <param name="_handle">Texture handle.</param>
+/// <param name="_mip">First mip level.</param>
+/// <param name="_numMips">Number of mip levels.</param>
+/// <param name="_layer">First array layer (or 3D depth slice base).</param>
+/// <param name="_numLayers">Number of layers.</param>
+pub inline fn clearTexture(_handle: TextureHandle, _mip: u8, _numMips: u8, _layer: u16, _numLayers: u16) void {
+    return bgfx_clear_texture(_handle, _mip, _numMips, _layer, _numLayers);
+}
+extern fn bgfx_clear_texture(_handle: TextureHandle, _mip: u8, _numMips: u8, _layer: u16, _numLayers: u16) void;
+
 /// Read back texture content.
 /// 
 /// @attention Texture must be created with `BGFX_TEXTURE_READ_BACK` flag.
+///            It's a texture for CPU readback, and can't be a GPU resource
+///            at the same time. See `examples/30-picking`.
 /// @attention Availability depends on: `BGFX_CAPS_TEXTURE_READ_BACK`.
 /// 
 /// <param name="_handle">Texture handle.</param>
 /// <param name="_data">Destination buffer.</param>
+/// <param name="_layer">Texture layer.</param>
 /// <param name="_mip">Mip level.</param>
-pub inline fn readTexture(_handle: TextureHandle, _data: ?*anyopaque, _mip: u8) u32 {
-    return bgfx_read_texture(_handle, _data, _mip);
+pub inline fn readTexture(_handle: TextureHandle, _data: ?*anyopaque, _layer: u16, _mip: u8) u32 {
+    return bgfx_read_texture(_handle, _data, _layer, _mip);
 }
-extern fn bgfx_read_texture(_handle: TextureHandle, _data: ?*anyopaque, _mip: u8) u32;
+extern fn bgfx_read_texture(_handle: TextureHandle, _data: ?*anyopaque, _layer: u16, _mip: u8) u32;
 
 /// Set texture debug name.
 /// <param name="_handle">Texture handle.</param>
@@ -3155,24 +3366,24 @@ extern fn bgfx_set_view_name(_id: ViewId, _name: [*c]const u8, _len: i32) void;
 
 /// Set view rectangle. Draw primitive outside view will be clipped.
 /// <param name="_id">View id.</param>
-/// <param name="_x">Position x from the left corner of the window.</param>
-/// <param name="_y">Position y from the top corner of the window.</param>
+/// <param name="_x">Position x from the left corner of the window. Can be negative to place view origin outside of the window.</param>
+/// <param name="_y">Position y from the top corner of the window. Can be negative to place view origin outside of the window.</param>
 /// <param name="_width">Width of view port region.</param>
 /// <param name="_height">Height of view port region.</param>
-pub inline fn setViewRect(_id: ViewId, _x: u16, _y: u16, _width: u16, _height: u16) void {
+pub inline fn setViewRect(_id: ViewId, _x: i16, _y: i16, _width: u16, _height: u16) void {
     return bgfx_set_view_rect(_id, _x, _y, _width, _height);
 }
-extern fn bgfx_set_view_rect(_id: ViewId, _x: u16, _y: u16, _width: u16, _height: u16) void;
+extern fn bgfx_set_view_rect(_id: ViewId, _x: i16, _y: i16, _width: u16, _height: u16) void;
 
 /// Set view rectangle. Draw primitive outside view will be clipped.
 /// <param name="_id">View id.</param>
-/// <param name="_x">Position x from the left corner of the window.</param>
-/// <param name="_y">Position y from the top corner of the window.</param>
+/// <param name="_x">Position x from the left corner of the window. Can be negative to place view origin outside of the window.</param>
+/// <param name="_y">Position y from the top corner of the window. Can be negative to place view origin outside of the window.</param>
 /// <param name="_ratio">Width and height will be set in respect to back-buffer size. See: `BackbufferRatio::Enum`.</param>
-pub inline fn setViewRectRatio(_id: ViewId, _x: u16, _y: u16, _ratio: BackbufferRatio) void {
+pub inline fn setViewRectRatio(_id: ViewId, _x: i16, _y: i16, _ratio: BackbufferRatio) void {
     return bgfx_set_view_rect_ratio(_id, _x, _y, _ratio);
 }
-extern fn bgfx_set_view_rect_ratio(_id: ViewId, _x: u16, _y: u16, _ratio: BackbufferRatio) void;
+extern fn bgfx_set_view_rect_ratio(_id: ViewId, _x: i16, _y: i16, _ratio: BackbufferRatio) void;
 
 /// Set view scissor. Draw primitive outside view will be clipped. When
 /// _x, _y, _width and _height are set to 0, scissor will be disabled.
@@ -3535,6 +3746,18 @@ extern fn bgfx_encoder_set_instance_count(self: ?*Encoder, _numInstances: u32) v
 /// <param name="_flags">Texture sampling mode. Default value UINT32_MAX uses   texture sampling settings from the texture.   - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap     mode.   - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic     sampling.</param>
 extern fn bgfx_encoder_set_texture(self: ?*Encoder, _stage: u8, _sampler: UniformHandle, _handle: TextureHandle, _flags: u32) void;
 
+/// Set texture stage for draw primitive, selecting a sub-range of the
+/// texture's array layers and mip levels.
+/// <param name="_stage">Texture unit.</param>
+/// <param name="_sampler">Program sampler.</param>
+/// <param name="_handle">Texture handle.</param>
+/// <param name="_firstLayer">First array layer.</param>
+/// <param name="_numLayers">Number of array layers.</param>
+/// <param name="_firstMip">First (most detailed) mip level.</param>
+/// <param name="_numMips">Number of mip levels.</param>
+/// <param name="_flags">Texture sampling mode. Default value UINT32_MAX uses   texture sampling settings from the texture.   - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap     mode.   - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic     sampling.</param>
+extern fn bgfx_encoder_set_texture_view(self: ?*Encoder, _stage: u8, _sampler: UniformHandle, _handle: TextureHandle, _firstLayer: u16, _numLayers: u16, _firstMip: u8, _numMips: u8, _flags: u32) void;
+
 /// Submit an empty primitive for rendering. Uniforms and draw state
 /// will be applied but no geometry will be submitted. Useful in cases
 /// when no other draw/compute primitive is submitted to view, but it's
@@ -3628,6 +3851,17 @@ extern fn bgfx_encoder_set_compute_indirect_buffer(self: ?*Encoder, _stage: u8, 
 /// <param name="_access">Image access. See `Access::Enum`.</param>
 /// <param name="_format">Texture format. See: `TextureFormat::Enum`.</param>
 extern fn bgfx_encoder_set_image(self: ?*Encoder, _stage: u8, _handle: TextureHandle, _mip: u8, _access: Access, _format: TextureFormat) void;
+
+/// Set compute image stage for draw primitive, selecting a sub-range of the
+/// texture's array layers and mip levels.
+/// <param name="_stage">Compute stage.</param>
+/// <param name="_handle">Texture handle.</param>
+/// <param name="_firstLayer">First array layer.</param>
+/// <param name="_numLayers">Number of array layers.</param>
+/// <param name="_mip">Mip level.</param>
+/// <param name="_access">Image access. See `Access::Enum`.</param>
+/// <param name="_format">Texture format. See: `TextureFormat::Enum`.</param>
+extern fn bgfx_encoder_set_image_view(self: ?*Encoder, _stage: u8, _handle: TextureHandle, _firstLayer: u16, _numLayers: u16, _mip: u8, _access: Access, _format: TextureFormat) void;
 
 /// Dispatch compute.
 /// <param name="_id">View id.</param>
@@ -4045,6 +4279,21 @@ pub inline fn setTexture(_stage: u8, _sampler: UniformHandle, _handle: TextureHa
 }
 extern fn bgfx_set_texture(_stage: u8, _sampler: UniformHandle, _handle: TextureHandle, _flags: u32) void;
 
+/// Set texture stage for draw primitive, selecting a sub-range of the
+/// texture's array layers and mip levels.
+/// <param name="_stage">Texture unit.</param>
+/// <param name="_sampler">Program sampler.</param>
+/// <param name="_handle">Texture handle.</param>
+/// <param name="_firstLayer">First array layer.</param>
+/// <param name="_numLayers">Number of array layers.</param>
+/// <param name="_firstMip">First (most detailed) mip level.</param>
+/// <param name="_numMips">Number of mip levels.</param>
+/// <param name="_flags">Texture sampling mode. Default value UINT32_MAX uses   texture sampling settings from the texture.   - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap     mode.   - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic     sampling.</param>
+pub inline fn setTextureView(_stage: u8, _sampler: UniformHandle, _handle: TextureHandle, _firstLayer: u16, _numLayers: u16, _firstMip: u8, _numMips: u8, _flags: u32) void {
+    return bgfx_set_texture_view(_stage, _sampler, _handle, _firstLayer, _numLayers, _firstMip, _numMips, _flags);
+}
+extern fn bgfx_set_texture_view(_stage: u8, _sampler: UniformHandle, _handle: TextureHandle, _firstLayer: u16, _numLayers: u16, _firstMip: u8, _numMips: u8, _flags: u32) void;
+
 /// Submit an empty primitive for rendering. Uniforms and draw state
 /// will be applied but no geometry will be submitted.
 /// 
@@ -4169,6 +4418,20 @@ pub inline fn setImage(_stage: u8, _handle: TextureHandle, _mip: u8, _access: Ac
     return bgfx_set_image(_stage, _handle, _mip, _access, _format);
 }
 extern fn bgfx_set_image(_stage: u8, _handle: TextureHandle, _mip: u8, _access: Access, _format: TextureFormat) void;
+
+/// Set compute image stage for draw primitive, selecting a sub-range of the
+/// texture's array layers and mip levels.
+/// <param name="_stage">Compute stage.</param>
+/// <param name="_handle">Texture handle.</param>
+/// <param name="_firstLayer">First array layer.</param>
+/// <param name="_numLayers">Number of array layers.</param>
+/// <param name="_mip">Mip level.</param>
+/// <param name="_access">Image access. See `Access::Enum`.</param>
+/// <param name="_format">Texture format. See: `TextureFormat::Enum`.</param>
+pub inline fn setImageView(_stage: u8, _handle: TextureHandle, _firstLayer: u16, _numLayers: u16, _mip: u8, _access: Access, _format: TextureFormat) void {
+    return bgfx_set_image_view(_stage, _handle, _firstLayer, _numLayers, _mip, _access, _format);
+}
+extern fn bgfx_set_image_view(_stage: u8, _handle: TextureHandle, _firstLayer: u16, _numLayers: u16, _mip: u8, _access: Access, _format: TextureFormat) void;
 
 /// Dispatch compute.
 /// <param name="_id">View id.</param>

@@ -259,9 +259,11 @@ WL_EGL_IMPORT
 			EGLNativeWindowType  nwh = (EGLNativeWindowType )g_platformData.nwh;
 
 #	if BX_PLATFORM_WINDOWS
-			if (NULL == g_platformData.ndt)
+			if (NULL == g_platformData.ndt
+			&&  NULL != nwh)
 			{
-				ndt = GetDC( (HWND)g_platformData.nwh);
+				m_hdc = GetDC( (HWND)nwh);
+				ndt   = m_hdc;
 			}
 #	endif // BX_PLATFORM_WINDOWS
 
@@ -617,7 +619,8 @@ WL_EGL_IMPORT
 			BGFX_FATAL(success, Fatal::UnableToInitialize, "Failed to set context.");
 			m_current = NULL;
 
-			eglSwapInterval(m_display, 0);
+			m_swapInterval = !!(_resolution.reset & BGFX_RESET_VSYNC) ? 1 : 0;
+			eglSwapInterval(m_display, m_swapInterval);
 		}
 
 		import();
@@ -650,6 +653,14 @@ WL_EGL_IMPORT
 		EGL_CHECK(eglReleaseThread() );
 		eglClose(m_eglDll);
 		m_eglDll = NULL;
+
+#	if BX_PLATFORM_WINDOWS
+		if (NULL != m_hdc)
+		{
+			ReleaseDC( (HWND)g_platformData.nwh, m_hdc);
+			m_hdc = NULL;
+		}
+#	endif // BX_PLATFORM_WINDOWS
 
 #	if BX_PLATFORM_RPI
 		bcm_host_deinit();
@@ -703,7 +714,11 @@ WL_EGL_IMPORT
 		if (NULL != m_display)
 		{
 			const bool vsync = !!(_resolution.reset & BGFX_RESET_VSYNC);
-			EGL_CHECK(eglSwapInterval(m_display, vsync ? 1 : 0) );
+			m_swapInterval = vsync ? 1 : 0;
+			// Apply to the currently-bound (main) surface. Secondary SwapChainGL surfaces
+			// get the value applied lazily in makeCurrent() when they become current, since
+			// eglSwapInterval is per-surface.
+			EGL_CHECK(eglSwapInterval(m_display, m_swapInterval) );
 		}
 	}
 
@@ -762,6 +777,14 @@ WL_EGL_IMPORT
 			else
 			{
 				_swapChain->makeCurrent();
+			}
+
+			// eglSwapInterval is per-surface, so re-apply the cached interval every time a
+			// different surface becomes current. Without this, secondary swap chains keep
+			// their driver default (typically vsync ON) even after resize().
+			if (NULL != m_display)
+			{
+				EGL_CHECK(eglSwapInterval(m_display, m_swapInterval) );
 			}
 		}
 	}

@@ -134,6 +134,14 @@ typedef enum bgfx_attrib
     BGFX_ATTRIB_TEXCOORD5,                    /** (15) a_texcoord5                    */
     BGFX_ATTRIB_TEXCOORD6,                    /** (16) a_texcoord6                    */
     BGFX_ATTRIB_TEXCOORD7,                    /** (17) a_texcoord7                    */
+    BGFX_ATTRIB_TEXCOORD8,                    /** (18) a_texcoord8                    */
+    BGFX_ATTRIB_TEXCOORD9,                    /** (19) a_texcoord9                    */
+    BGFX_ATTRIB_TEXCOORD10,                   /** (20) a_texcoord10                   */
+    BGFX_ATTRIB_TEXCOORD11,                   /** (21) a_texcoord11                   */
+    BGFX_ATTRIB_TEXCOORD12,                   /** (22) a_texcoord12                   */
+    BGFX_ATTRIB_TEXCOORD13,                   /** (23) a_texcoord13                   */
+    BGFX_ATTRIB_TEXCOORD14,                   /** (24) a_texcoord14                   */
+    BGFX_ATTRIB_TEXCOORD15,                   /** (25) a_texcoord15                   */
 
     BGFX_ATTRIB_COUNT
 
@@ -152,6 +160,8 @@ typedef enum bgfx_attrib_type
     BGFX_ATTRIB_TYPE_UINT16,                  /** ( 4) Uint16                         */
     BGFX_ATTRIB_TYPE_HALF,                    /** ( 5) Half, availability depends on: `BGFX_CAPS_VERTEX_ATTRIB_HALF`. */
     BGFX_ATTRIB_TYPE_FLOAT,                   /** ( 6) Float                          */
+    BGFX_ATTRIB_TYPE_INT32,                   /** ( 7) Int32                          */
+    BGFX_ATTRIB_TYPE_UINT32,                  /** ( 8) Uint32                         */
 
     BGFX_ATTRIB_TYPE_COUNT
 
@@ -181,102 +191,107 @@ typedef enum bgfx_texture_format
     BGFX_TEXTURE_FORMAT_BC2,                  /** ( 1) Block Compression 2. 5-bit R, 6-bit G, 5-bit B, 4-bit explicit A. 8 BPP. */
     BGFX_TEXTURE_FORMAT_BC3,                  /** ( 2) Block Compression 3. 5-bit R, 6-bit G, 5-bit B, 8-bit interpolated A. 8 BPP. */
     BGFX_TEXTURE_FORMAT_BC4,                  /** ( 3) Block Compression 4. Single 8-bit red channel, unsigned normalized. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_BC5,                  /** ( 4) Block Compression 5. Two 8-bit channels (RG), unsigned normalized. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_BC6H,                 /** ( 5) Block Compression 6H. Three 16-bit floating-point channels (RGB), HDR. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_BC7,                  /** ( 6) RGB 4-7 bits per color channel, 0-8 bits alpha. Block Compression 7. High-quality RGBA, 4-7 bits per color, 0-8 bits alpha. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_ETC1,                 /** ( 7) Ericsson Texture Compression 1. 8-bit per channel RGB. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_ETC2,                 /** ( 8) Ericsson Texture Compression 2. 8-bit per channel RGB. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_ETC2A,                /** ( 9) Ericsson Texture Compression 2 with full alpha. 8-bit per channel RGBA. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_ETC2A1,               /** (10) Ericsson Texture Compression 2 with 1-bit punch-through alpha. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_EACR11,               /** (11) ETC2 Alpha Compression, single 11-bit red channel, unsigned normalized. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_EACR11S,              /** (12) ETC2 Alpha Compression, single 11-bit red channel, signed normalized. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_EACRG11,              /** (13) ETC2 Alpha Compression, two 11-bit channels (RG), unsigned normalized. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_EACRG11S,             /** (14) ETC2 Alpha Compression, two 11-bit channels (RG), signed normalized. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_PTC12,                /** (15) PowerVR Texture Compression v1. 3-channel RGB. 2 BPP. */
-    BGFX_TEXTURE_FORMAT_PTC14,                /** (16) PowerVR Texture Compression v1. 3-channel RGB. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_PTC12A,               /** (17) PowerVR Texture Compression v1. 4-channel RGBA. 2 BPP. */
-    BGFX_TEXTURE_FORMAT_PTC14A,               /** (18) PowerVR Texture Compression v1. 4-channel RGBA. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_PTC22,                /** (19) PowerVR Texture Compression v2. 4-channel RGBA. 2 BPP. */
-    BGFX_TEXTURE_FORMAT_PTC24,                /** (20) PowerVR Texture Compression v2. 4-channel RGBA. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_ATC,                  /** (21) AMD Texture Compression. 3-channel RGB. 4 BPP. */
-    BGFX_TEXTURE_FORMAT_ATCE,                 /** (22) AMD Texture Compression with explicit alpha. 4-channel RGBA. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_ATCI,                 /** (23) AMD Texture Compression with interpolated alpha. 4-channel RGBA. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC4X4,              /** (24) Adaptive Scalable Texture Compression, 4x4 block, RGBA. 8.00 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC5X4,              /** (25) Adaptive Scalable Texture Compression, 5x4 block, RGBA. 6.40 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC5X5,              /** (26) Adaptive Scalable Texture Compression, 5x5 block, RGBA. 5.12 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC6X5,              /** (27) Adaptive Scalable Texture Compression, 6x5 block, RGBA. 4.27 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC6X6,              /** (28) Adaptive Scalable Texture Compression, 6x6 block, RGBA. 3.56 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC8X5,              /** (29) Adaptive Scalable Texture Compression, 8x5 block, RGBA. 3.20 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC8X6,              /** (30) Adaptive Scalable Texture Compression, 8x6 block, RGBA. 2.67 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC8X8,              /** (31) Adaptive Scalable Texture Compression, 8x8 block, RGBA. 2.00 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC10X5,             /** (32) Adaptive Scalable Texture Compression, 10x5 block, RGBA. 2.56 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC10X6,             /** (33) Adaptive Scalable Texture Compression, 10x6 block, RGBA. 2.13 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC10X8,             /** (34) Adaptive Scalable Texture Compression, 10x8 block, RGBA. 1.60 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC10X10,            /** (35) Adaptive Scalable Texture Compression, 10x10 block, RGBA. 1.28 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC12X10,            /** (36) Adaptive Scalable Texture Compression, 12x10 block, RGBA. 1.07 BPP. */
-    BGFX_TEXTURE_FORMAT_ASTC12X12,            /** (37) Adaptive Scalable Texture Compression, 12x12 block, RGBA. 0.89 BPP. */
-    BGFX_TEXTURE_FORMAT_UNKNOWN,              /** (38) Compressed formats above.      */
-    BGFX_TEXTURE_FORMAT_R1,                   /** (39) 1-bit single-channel red. Monochrome, 1-bit per pixel. 1 BPP. */
-    BGFX_TEXTURE_FORMAT_A8,                   /** (40) 8-bit single-channel alpha, unsigned normalized. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_R8,                   /** (41) 8-bit single-channel red, unsigned normalized. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_R8I,                  /** (42) 8-bit single-channel red, signed integer. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_R8U,                  /** (43) 8-bit single-channel red, unsigned integer. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_R8S,                  /** (44) 8-bit single-channel red, signed normalized. 8 BPP. */
-    BGFX_TEXTURE_FORMAT_R16,                  /** (45) 16-bit single-channel red, unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_R16I,                 /** (46) 16-bit single-channel red, signed integer. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_R16U,                 /** (47) 16-bit single-channel red, unsigned integer. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_R16F,                 /** (48) 16-bit single-channel red, half-precision floating point. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_R16S,                 /** (49) 16-bit single-channel red, signed normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_R32I,                 /** (50) 32-bit single-channel red, signed integer. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_R32U,                 /** (51) 32-bit single-channel red, unsigned integer. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_R32F,                 /** (52) 32-bit single-channel red, full-precision floating point. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RG8,                  /** (53) Two 8-bit channels (red, green), unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_RG8I,                 /** (54) Two 8-bit channels (red, green), signed integer. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_RG8U,                 /** (55) Two 8-bit channels (red, green), unsigned integer. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_RG8S,                 /** (56) Two 8-bit channels (red, green), signed normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_RG16,                 /** (57) Two 16-bit channels (red, green), unsigned normalized. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RG16I,                /** (58) Two 16-bit channels (red, green), signed integer. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RG16U,                /** (59) Two 16-bit channels (red, green), unsigned integer. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RG16F,                /** (60) Two 16-bit channels (red, green), half-precision floating point. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RG16S,                /** (61) Two 16-bit channels (red, green), signed normalized. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RG32I,                /** (62) Two 32-bit channels (red, green), signed integer. 64 BPP. */
-    BGFX_TEXTURE_FORMAT_RG32U,                /** (63) Two 32-bit channels (red, green), unsigned integer. 64 BPP. */
-    BGFX_TEXTURE_FORMAT_RG32F,                /** (64) Two 32-bit channels (red, green), full-precision floating point. 64 BPP. */
-    BGFX_TEXTURE_FORMAT_RGB8,                 /** (65) Three 8-bit channels (red, green, blue), unsigned normalized. 24 BPP. */
-    BGFX_TEXTURE_FORMAT_RGB8I,                /** (66) Three 8-bit channels (red, green, blue), signed integer. 24 BPP. */
-    BGFX_TEXTURE_FORMAT_RGB8U,                /** (67) Three 8-bit channels (red, green, blue), unsigned integer. 24 BPP. */
-    BGFX_TEXTURE_FORMAT_RGB8S,                /** (68) Three 8-bit channels (red, green, blue), signed normalized. 24 BPP. */
-    BGFX_TEXTURE_FORMAT_RGB9E5F,              /** (69) Shared-exponent RGB. 9 bits per RGB channel with a shared 5-bit exponent, floating point. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_BGRA8,                /** (70) Four 8-bit channels (blue, green, red, alpha), unsigned normalized. BGRA byte order. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA8,                /** (71) Four 8-bit channels (red, green, blue, alpha), unsigned normalized. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA8I,               /** (72) Four 8-bit channels (red, green, blue, alpha), signed integer. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA8U,               /** (73) Four 8-bit channels (red, green, blue, alpha), unsigned integer. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA8S,               /** (74) Four 8-bit channels (red, green, blue, alpha), signed normalized. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA16,               /** (75) Four 16-bit channels (red, green, blue, alpha), unsigned normalized. 64 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA16I,              /** (76) Four 16-bit channels (red, green, blue, alpha), signed integer. 64 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA16U,              /** (77) Four 16-bit channels (red, green, blue, alpha), unsigned integer. 64 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA16F,              /** (78) Four 16-bit channels (red, green, blue, alpha), half-precision floating point. 64 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA16S,              /** (79) Four 16-bit channels (red, green, blue, alpha), signed normalized. 64 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA32I,              /** (80) Four 32-bit channels (red, green, blue, alpha), signed integer. 128 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA32U,              /** (81) Four 32-bit channels (red, green, blue, alpha), unsigned integer. 128 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA32F,              /** (82) Four 32-bit channels (red, green, blue, alpha), full-precision floating point. 128 BPP. */
-    BGFX_TEXTURE_FORMAT_B5G6R5,               /** (83) Packed 16-bit, 5-bit blue, 6-bit green, 5-bit red. BGR byte order, unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_R5G6B5,               /** (84) Packed 16-bit, 5-bit red, 6-bit green, 5-bit blue. RGB byte order, unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_BGRA4,                /** (85) Packed 16-bit, 4-bit per channel (blue, green, red, alpha). BGRA byte order, unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_RGBA4,                /** (86) Packed 16-bit, 4-bit per channel (red, green, blue, alpha), unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_BGR5A1,               /** (87) Packed 16-bit, 5-bit blue, 5-bit green, 5-bit red, 1-bit alpha. BGRA byte order, unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_RGB5A1,               /** (88) Packed 16-bit, 5-bit red, 5-bit green, 5-bit blue, 1-bit alpha, unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_RGB10A2,              /** (89) Packed 32-bit, 10-bit red, 10-bit green, 10-bit blue, 2-bit alpha, unsigned normalized. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_RG11B10F,             /** (90) Packed 32-bit, 11-bit red, 11-bit green, 10-bit blue, unsigned floating point. No alpha. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_UNKNOWNDEPTH,         /** (91) Depth formats below.           */
-    BGFX_TEXTURE_FORMAT_D16,                  /** (92) 16-bit depth, unsigned normalized. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_D24,                  /** (93) 24-bit depth, unsigned normalized (stored as 32-bit with 8 bits unused). 32 BPP. */
-    BGFX_TEXTURE_FORMAT_D24S8,                /** (94) 24-bit depth, unsigned normalized, with 8-bit stencil. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_D32,                  /** (95) 32-bit depth, unsigned normalized. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_D16F,                 /** (96) 16-bit depth, floating point. 16 BPP. */
-    BGFX_TEXTURE_FORMAT_D24F,                 /** (97) 24-bit depth, floating point (stored as 32-bit). 32 BPP. */
-    BGFX_TEXTURE_FORMAT_D32F,                 /** (98) 32-bit depth, floating point. 32 BPP. */
-    BGFX_TEXTURE_FORMAT_D0S8,                 /** (99) 8-bit stencil only, no depth. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_BC4S,                 /** ( 4) Block Compression 4. Single 8-bit red channel, signed normalized. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_BC5,                  /** ( 5) Block Compression 5. Two 8-bit channels (RG), unsigned normalized. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_BC5S,                 /** ( 6) Block Compression 5. Two 8-bit channels (RG), signed normalized. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_BC6H,                 /** ( 7) Block Compression 6H. Three 16-bit floating-point channels (RGB), HDR. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_BC6HU,                /** ( 8) Block Compression 6H. Three 16-bit unsigned floating-point channels (RGB), HDR. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_BC7,                  /** ( 9) RGB 4-7 bits per color channel, 0-8 bits alpha. Block Compression 7. High-quality RGBA, 4-7 bits per color, 0-8 bits alpha. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_ETC1,                 /** (10) Ericsson Texture Compression 1. 8-bit per channel RGB. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_ETC2,                 /** (11) Ericsson Texture Compression 2. 8-bit per channel RGB. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_ETC2A,                /** (12) Ericsson Texture Compression 2 with full alpha. 8-bit per channel RGBA. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_ETC2A1,               /** (13) Ericsson Texture Compression 2 with 1-bit punch-through alpha. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_EACR11,               /** (14) ETC2 Alpha Compression, single 11-bit red channel, unsigned normalized. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_EACR11S,              /** (15) ETC2 Alpha Compression, single 11-bit red channel, signed normalized. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_EACRG11,              /** (16) ETC2 Alpha Compression, two 11-bit channels (RG), unsigned normalized. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_EACRG11S,             /** (17) ETC2 Alpha Compression, two 11-bit channels (RG), signed normalized. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_PTC12,                /** (18) PowerVR Texture Compression v1. 3-channel RGB. 2 BPP. */
+    BGFX_TEXTURE_FORMAT_PTC14,                /** (19) PowerVR Texture Compression v1. 3-channel RGB. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_PTC12A,               /** (20) PowerVR Texture Compression v1. 4-channel RGBA. 2 BPP. */
+    BGFX_TEXTURE_FORMAT_PTC14A,               /** (21) PowerVR Texture Compression v1. 4-channel RGBA. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_PTC22,                /** (22) PowerVR Texture Compression v2. 4-channel RGBA. 2 BPP. */
+    BGFX_TEXTURE_FORMAT_PTC24,                /** (23) PowerVR Texture Compression v2. 4-channel RGBA. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_ATC,                  /** (24) AMD Texture Compression. 3-channel RGB. 4 BPP. */
+    BGFX_TEXTURE_FORMAT_ATCE,                 /** (25) AMD Texture Compression with explicit alpha. 4-channel RGBA. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_ATCI,                 /** (26) AMD Texture Compression with interpolated alpha. 4-channel RGBA. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC4X4,              /** (27) Adaptive Scalable Texture Compression, 4x4 block, RGBA. 8.00 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC5X4,              /** (28) Adaptive Scalable Texture Compression, 5x4 block, RGBA. 6.40 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC5X5,              /** (29) Adaptive Scalable Texture Compression, 5x5 block, RGBA. 5.12 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC6X5,              /** (30) Adaptive Scalable Texture Compression, 6x5 block, RGBA. 4.27 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC6X6,              /** (31) Adaptive Scalable Texture Compression, 6x6 block, RGBA. 3.56 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC8X5,              /** (32) Adaptive Scalable Texture Compression, 8x5 block, RGBA. 3.20 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC8X6,              /** (33) Adaptive Scalable Texture Compression, 8x6 block, RGBA. 2.67 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC8X8,              /** (34) Adaptive Scalable Texture Compression, 8x8 block, RGBA. 2.00 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC10X5,             /** (35) Adaptive Scalable Texture Compression, 10x5 block, RGBA. 2.56 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC10X6,             /** (36) Adaptive Scalable Texture Compression, 10x6 block, RGBA. 2.13 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC10X8,             /** (37) Adaptive Scalable Texture Compression, 10x8 block, RGBA. 1.60 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC10X10,            /** (38) Adaptive Scalable Texture Compression, 10x10 block, RGBA. 1.28 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC12X10,            /** (39) Adaptive Scalable Texture Compression, 12x10 block, RGBA. 1.07 BPP. */
+    BGFX_TEXTURE_FORMAT_ASTC12X12,            /** (40) Adaptive Scalable Texture Compression, 12x12 block, RGBA. 0.89 BPP. */
+    BGFX_TEXTURE_FORMAT_UNKNOWN,              /** (41) Compressed formats above.      */
+    BGFX_TEXTURE_FORMAT_R1,                   /** (42) 1-bit single-channel red. Monochrome, 1-bit per pixel. 1 BPP. */
+    BGFX_TEXTURE_FORMAT_A8,                   /** (43) 8-bit single-channel alpha, unsigned normalized. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_R8,                   /** (44) 8-bit single-channel red, unsigned normalized. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_R8I,                  /** (45) 8-bit single-channel red, signed integer. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_R8U,                  /** (46) 8-bit single-channel red, unsigned integer. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_R8S,                  /** (47) 8-bit single-channel red, signed normalized. 8 BPP. */
+    BGFX_TEXTURE_FORMAT_R16,                  /** (48) 16-bit single-channel red, unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_R16I,                 /** (49) 16-bit single-channel red, signed integer. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_R16U,                 /** (50) 16-bit single-channel red, unsigned integer. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_R16F,                 /** (51) 16-bit single-channel red, half-precision floating point. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_R16S,                 /** (52) 16-bit single-channel red, signed normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_R32I,                 /** (53) 32-bit single-channel red, signed integer. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_R32U,                 /** (54) 32-bit single-channel red, unsigned integer. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_R32F,                 /** (55) 32-bit single-channel red, full-precision floating point. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RG8,                  /** (56) Two 8-bit channels (red, green), unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_RG8I,                 /** (57) Two 8-bit channels (red, green), signed integer. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_RG8U,                 /** (58) Two 8-bit channels (red, green), unsigned integer. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_RG8S,                 /** (59) Two 8-bit channels (red, green), signed normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_RG16,                 /** (60) Two 16-bit channels (red, green), unsigned normalized. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RG16I,                /** (61) Two 16-bit channels (red, green), signed integer. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RG16U,                /** (62) Two 16-bit channels (red, green), unsigned integer. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RG16F,                /** (63) Two 16-bit channels (red, green), half-precision floating point. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RG16S,                /** (64) Two 16-bit channels (red, green), signed normalized. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RG32I,                /** (65) Two 32-bit channels (red, green), signed integer. 64 BPP. */
+    BGFX_TEXTURE_FORMAT_RG32U,                /** (66) Two 32-bit channels (red, green), unsigned integer. 64 BPP. */
+    BGFX_TEXTURE_FORMAT_RG32F,                /** (67) Two 32-bit channels (red, green), full-precision floating point. 64 BPP. */
+    BGFX_TEXTURE_FORMAT_RGB8,                 /** (68) Three 8-bit channels (red, green, blue), unsigned normalized. 24 BPP. */
+    BGFX_TEXTURE_FORMAT_RGB8I,                /** (69) Three 8-bit channels (red, green, blue), signed integer. 24 BPP. */
+    BGFX_TEXTURE_FORMAT_RGB8U,                /** (70) Three 8-bit channels (red, green, blue), unsigned integer. 24 BPP. */
+    BGFX_TEXTURE_FORMAT_RGB8S,                /** (71) Three 8-bit channels (red, green, blue), signed normalized. 24 BPP. */
+    BGFX_TEXTURE_FORMAT_RGB9E5F,              /** (72) Shared-exponent RGB. 9 bits per RGB channel with a shared 5-bit exponent, floating point. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_BGRA8,                /** (73) Four 8-bit channels (blue, green, red, alpha), unsigned normalized. BGRA byte order. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA8,                /** (74) Four 8-bit channels (red, green, blue, alpha), unsigned normalized. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA8I,               /** (75) Four 8-bit channels (red, green, blue, alpha), signed integer. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA8U,               /** (76) Four 8-bit channels (red, green, blue, alpha), unsigned integer. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA8S,               /** (77) Four 8-bit channels (red, green, blue, alpha), signed normalized. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA16,               /** (78) Four 16-bit channels (red, green, blue, alpha), unsigned normalized. 64 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA16I,              /** (79) Four 16-bit channels (red, green, blue, alpha), signed integer. 64 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA16U,              /** (80) Four 16-bit channels (red, green, blue, alpha), unsigned integer. 64 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA16F,              /** (81) Four 16-bit channels (red, green, blue, alpha), half-precision floating point. 64 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA16S,              /** (82) Four 16-bit channels (red, green, blue, alpha), signed normalized. 64 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA32I,              /** (83) Four 32-bit channels (red, green, blue, alpha), signed integer. 128 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA32U,              /** (84) Four 32-bit channels (red, green, blue, alpha), unsigned integer. 128 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA32F,              /** (85) Four 32-bit channels (red, green, blue, alpha), full-precision floating point. 128 BPP. */
+    BGFX_TEXTURE_FORMAT_B5G6R5,               /** (86) Packed 16-bit, 5-bit blue, 6-bit green, 5-bit red. BGR byte order, unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_R5G6B5,               /** (87) Packed 16-bit, 5-bit red, 6-bit green, 5-bit blue. RGB byte order, unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_BGRA4,                /** (88) Packed 16-bit, 4-bit per channel (blue, green, red, alpha). BGRA byte order, unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_RGBA4,                /** (89) Packed 16-bit, 4-bit per channel (red, green, blue, alpha), unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_BGR5A1,               /** (90) Packed 16-bit, 5-bit blue, 5-bit green, 5-bit red, 1-bit alpha. BGRA byte order, unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_RGB5A1,               /** (91) Packed 16-bit, 5-bit red, 5-bit green, 5-bit blue, 1-bit alpha, unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_RGB10A2,              /** (92) Packed 32-bit, 10-bit red, 10-bit green, 10-bit blue, 2-bit alpha, unsigned normalized. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RGB10A2U,             /** (93) Packed 32-bit, 10-bit red, 10-bit green, 10-bit blue, 2-bit alpha, unsigned integer. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_RG11B10F,             /** (94) Packed 32-bit, 11-bit red, 11-bit green, 10-bit blue, unsigned floating point. No alpha. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_UNKNOWNDEPTH,         /** (95) Depth formats below.           */
+    BGFX_TEXTURE_FORMAT_D16,                  /** (96) 16-bit depth, unsigned normalized. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_D24,                  /** (97) 24-bit depth, unsigned normalized (stored as 32-bit with 8 bits unused). 32 BPP. */
+    BGFX_TEXTURE_FORMAT_D24S8,                /** (98) 24-bit depth, unsigned normalized, with 8-bit stencil. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_D32,                  /** (99) 32-bit depth, unsigned normalized. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_D16F,                 /** (100) 16-bit depth, floating point. 16 BPP. */
+    BGFX_TEXTURE_FORMAT_D24F,                 /** (101) 24-bit depth, floating point (stored as 32-bit). 32 BPP. */
+    BGFX_TEXTURE_FORMAT_D32F,                 /** (102) 32-bit depth, floating point. 32 BPP. */
+    BGFX_TEXTURE_FORMAT_D32FS8,               /** (103) 32-bit depth, floating point, with 8-bit stencil (stored as 64-bit). 64 BPP. */
+    BGFX_TEXTURE_FORMAT_D0S8,                 /** (104) 8-bit stencil only, no depth. 8 BPP. */
 
     BGFX_TEXTURE_FORMAT_COUNT
 
@@ -342,6 +357,20 @@ typedef enum bgfx_occlusion_query_result
     BGFX_OCCLUSION_QUERY_RESULT_COUNT
 
 } bgfx_occlusion_query_result_t;
+
+/**
+ * Video codec enum.
+ *
+ */
+typedef enum bgfx_video_codec
+{
+    BGFX_VIDEO_CODEC_H264,                    /** ( 0) H.264 / AVC.                   */
+    BGFX_VIDEO_CODEC_H265,                    /** ( 1) H.265 / HEVC.                  */
+    BGFX_VIDEO_CODEC_AV1,                     /** ( 2) AV1.                           */
+
+    BGFX_VIDEO_CODEC_COUNT
+
+} bgfx_video_codec_t;
 
 /**
  * Primitive topology.
@@ -572,6 +601,8 @@ typedef struct bgfx_caps_limits_s
     uint32_t             maxComputeBindings; /** Maximum number of compute bindings.      */
     uint32_t             maxVertexLayouts;   /** Maximum number of vertex format layouts. */
     uint32_t             maxVertexStreams;   /** Maximum number of vertex streams.        */
+    uint32_t             maxVertexAttributes; /** Maximum number of vertex attributes.     */
+    uint32_t             maxInstanceData;    /** Maximum number of instance data slots.   */
     uint32_t             maxIndexBuffers;    /** Maximum number of index buffer handles.  */
     uint32_t             maxVertexBuffers;   /** Maximum number of vertex buffer handles. */
     uint32_t             maxDynamicIndexBuffers; /** Maximum number of dynamic index buffer handles. */
@@ -632,8 +663,24 @@ typedef struct bgfx_caps_s
      *   - `BGFX_CAPS_FORMAT_TEXTURE_MIP_AUTOGEN` - Texture format supports auto-generated
      *     mips.
      *   - `BGFX_CAPS_FORMAT_TEXTURE_BACKBUFFER` - Texture format can be used as back buffer format.
+     *   - `BGFX_CAPS_FORMAT_TEXTURE_VIDEO_DECODE_DST` - Texture format can be used as video
+     *     decode destination.
      */
     uint32_t             formats[BGFX_TEXTURE_FORMAT_COUNT];
+    
+    /**
+     * Supported video codec capabilities flags. A non-zero entry means the codec is
+     * supported for hardware decode; bits describe sample depths and chroma
+     * subsamplings:
+     *   - `BGFX_CAPS_VIDEO_CODEC_NONE` - Video codec is not supported.
+     *   - `BGFX_CAPS_VIDEO_CODEC_BIT_8` - 8-bit sample depth is supported.
+     *   - `BGFX_CAPS_VIDEO_CODEC_BIT_10` - 10-bit sample depth is supported.
+     *   - `BGFX_CAPS_VIDEO_CODEC_BIT_12` - 12-bit sample depth is supported.
+     *   - `BGFX_CAPS_VIDEO_CODEC_CHROMA_420` - 4:2:0 chroma subsampling is supported.
+     *   - `BGFX_CAPS_VIDEO_CODEC_CHROMA_422` - 4:2:2 chroma subsampling is supported.
+     *   - `BGFX_CAPS_VIDEO_CODEC_CHROMA_444` - 4:4:4 chroma subsampling is supported.
+     */
+    uint32_t             codecs[BGFX_VIDEO_CODEC_COUNT];
 
 } bgfx_caps_t;
 
@@ -708,6 +755,28 @@ typedef struct bgfx_resolution_s
 typedef struct bgfx_init_limits_s
 {
     uint16_t             maxEncoders;        /** Maximum number of encoder threads.       */
+    
+    /**
+     * Number of draw calls per frame to reserve storage for. Rounded
+     * up to a multiple of `BGFX_CONFIG_DRAW_CALL_BLOCK`, which is also
+     * the minimum. This is a reservation, not a limit: submitting more
+     * than this grows the storage during the frame, up to
+     * `BGFX_CONFIG_MAX_DRAW_CALLS`. With
+     * `BGFX_CONFIG_DYNAMIC_FRAME_STORAGE` disabled nothing grows, and
+     * this is a hard limit that `Caps::Limits::maxDrawCalls` reports
+     * back; submissions past it are dropped. See
+     * `Stats::numDrawCallsPeak` to size it.
+     */
+    uint32_t             numDrawCalls;
+    
+    /**
+     * Number of frames the draw-call peak (high-water mark) is observed
+     * before unused storage is released. Set to 0 to keep whatever has
+     * been allocated for the lifetime of the context. With
+     * `BGFX_CONFIG_DYNAMIC_FRAME_STORAGE` disabled nothing per frame is
+     * resized at all, and this only releases unused uniform buffer space.
+     */
+    uint32_t             numDrawCallPeakFrames;
     uint32_t             minResourceCbSize;  /** Minimum resource command buffer size.    */
     uint32_t             maxTransientVbSize; /** Maximum transient vertex buffer size.    */
     uint32_t             maxTransientIbSize; /** Maximum transient index buffer size.     */
@@ -751,6 +820,7 @@ typedef struct bgfx_init_s
     bool                 debug;              /** Enable device for debugging.             */
     bool                 profile;            /** Enable device for profiling.             */
     bool                 fallback;           /** Enable fallback to next available renderer. */
+    bool                 videoDecode;        /** Enable video decoding.                   */
     bgfx_platform_data_t platformData;       /** Platform data.                           */
     bgfx_resolution_t    resolution;         /** Backbuffer resolution and reset parameters. See: `bgfx::Resolution`. */
     bgfx_init_limits_t   limits;             /** Configurable runtime limits parameters.  */
@@ -846,6 +916,81 @@ typedef struct bgfx_texture_info_s
 } bgfx_texture_info_t;
 
 /**
+ * Video decoder initialization. Serialized into the Memory passed to
+ * `createTexture2D`. When the memory blob begins with `magic`, bgfx
+ * infers the texture is a video decode destination (the caller need not set
+ * any extra texture flag). Everything else the renderer needs about the
+ * stream (chroma format, bit depth, profile, level, coded dimensions, DPB
+ * layout, color metadata) is parsed out of the codec parameter sets at
+ * create time.
+ *
+ */
+typedef struct bgfx_video_decoder_init_s
+{
+    uint32_t             magic;              /** Structure magic. Must be `BX_MAKEFOURCC('V', 'D', 'I', 0x0)`. */
+    bgfx_video_codec_t   codec;              /** Video codec. See: `VideoCodec::Enum`.    */
+    const uint8_t*       parameterSets;      /** Codec parameter sets (Annex B for H.264/H.265, OBUs for AV1). */
+    uint32_t             parameterSetsSize;  /** Parameter sets size in bytes.            */
+    
+    /**
+     * Soft cap (in bytes) on the streaming access-unit FIFO (when
+     * `BGFX_VIDEO_DECODER_INIT_RETAIN` is NOT set). 0 selects the
+     * default. Ignored in RETAIN mode (the retain cache is unbounded).
+     */
+    uint32_t             cachedAuBytes;
+    uint8_t              flags;              /** Decoder lifetime flags. See: `BGFX_VIDEO_DECODER_INIT_*`. */
+
+} bgfx_video_decoder_init_t;
+
+/**
+ * One access unit entry inside a `VideoDecoderFrame` batch. The bitstream
+ * for the AU lives at offset `Σ aus[0..ii].size` inside the frame's
+ * `bitstream` buffer (access units are stored back-to-back in decode /
+ * submission order).
+ *
+ */
+typedef struct bgfx_video_decoder_au_s
+{
+    uint32_t             size;               /** Access unit size in bytes.               */
+    int64_t              ptsUs;              /** Presentation timestamp in microseconds for this access unit (container-provided). */
+
+} bgfx_video_decoder_au_t;
+
+/**
+ * Video decoder per-frame submission. Serialized into the Memory passed
+ * to `updateTexture2D` for a video decode destination texture. The
+ * renderer parses the slice / tile-group header out of the bitstream and
+ * translates it to the backend-specific decoder arguments.
+ *
+ * A single call may submit a batch of access units: `bitstream` is the
+ * back-to-back concatenation of `numAus` access units, and `aus[ii]`
+ * holds the size and PTS of each. AUs are enqueued in array order
+ * (which is the codec's decode order). Set `numAus == 0` (and
+ * `bitstream == NULL`) for a presentation-only tick that only advances
+ * the playback clock.
+ *
+ * The `bitstream` and `aus` pointers must remain valid until bgfx has
+ * consumed the submission (`bgfx::copy` only deep-copies the
+ * `VideoDecoderFrame` struct itself, not the buffers it references).
+ *
+ */
+typedef struct bgfx_video_decoder_frame_s
+{
+    uint32_t             magic;              /** Structure magic. Must be `BX_MAKEFOURCC('V', 'D', 'F', 0x0)`. */
+    const uint8_t*       bitstream;          /** Concatenated access-unit bitstream (decode order). NULL for presentation-only ticks. */
+    const bgfx_video_decoder_au_t* aus;      /** Per-AU size and PTS array. NULL when `numAus == 0`. */
+    uint32_t             numAus;             /** Number of access units in this batch. 0 for presentation-only ticks. */
+    
+    /**
+     * Current playback wall-clock time. Driver dispatches the picture whose `ptsUs`
+     * best matches. Must be monotonically non-decreasing between non-`SET` calls.
+     */
+    int64_t              presentationTimeUs;
+    uint8_t              flags;              /** Per-frame submission flags. See: `BGFX_VIDEO_DECODE_FRAME_*`. */
+
+} bgfx_video_decoder_frame_t;
+
+/**
  * Uniform info.
  *
  */
@@ -931,6 +1076,13 @@ typedef struct bgfx_stats_s
     uint32_t             numDraw;            /** Number of draw calls submitted.          */
     uint32_t             numCompute;         /** Number of compute calls submitted.       */
     uint32_t             numBlit;            /** Number of blit calls submitted.          */
+    
+    /**
+     * Highest number of draw+compute calls requested in a single
+     * frame so far (peak demand, before any were dropped). Useful
+     * to tune `Init::Limits::numDrawCalls`.
+     */
+    uint32_t             numDrawCallsPeak;
     uint32_t             maxGpuLatency;      /** GPU driver latency.                      */
     uint32_t             gpuFrameNum;        /** Frame which generated gpuTimeBegin, gpuTimeEnd. */
     uint16_t             numDynamicIndexBuffers; /** Number of used dynamic index buffers.    */
@@ -1851,6 +2003,25 @@ BGFX_C_API void bgfx_destroy_program(bgfx_program_handle_t _handle);
 BGFX_C_API bool bgfx_is_texture_valid(uint16_t _depth, bool _cubeMap, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags);
 
 /**
+ * Validate video codec parameters. Use to check whether the requested
+ * combination of codec / bit depth / chroma / dimensions / DPB layout can
+ * be hardware decoded on the current device. Coarse capability discovery
+ * is `Caps::supported & BGFX_CAPS_VIDEO_DECODE` and `Caps::codecs[]`.
+ *
+ * @param[in] _codec Video codec. See: `VideoCodec::Enum`.
+ * @param[in] _chroma Chroma subsampling. 0 = 4:2:0, 2 = 4:2:2, 4 = 4:4:4.
+ * @param[in] _bitDepth Bit depth per component. 8, 10 or 12.
+ * @param[in] _codedWidth Coded picture width (macroblock / CTU / superblock aligned).
+ * @param[in] _codedHeight Coded picture height.
+ * @param[in] _maxDpbSlots Maximum decoded picture buffer slot count.
+ * @param[in] _maxActiveReferences Maximum number of reference frames active at once.
+ *
+ * @returns True if a video decoder with the same parameters can be created.
+ *
+ */
+BGFX_C_API bool bgfx_is_video_codec_valid(bgfx_video_codec_t _codec, uint8_t _chroma, uint8_t _bitDepth, uint16_t _codedWidth, uint16_t _codedHeight, uint8_t _maxDpbSlots, uint8_t _maxActiveReferences);
+
+/**
  * Validate frame buffer parameters.
  *
  * @param[in] _num Number of attachments.
@@ -2062,19 +2233,34 @@ BGFX_C_API void bgfx_update_texture_3d(bgfx_texture_handle_t _handle, uint8_t _m
 BGFX_C_API void bgfx_update_texture_cube(bgfx_texture_handle_t _handle, uint16_t _layer, uint8_t _side, uint8_t _mip, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height, const bgfx_memory_t* _mem, uint16_t _pitch);
 
 /**
+ * Clear a texture subresource range to zero.
+ *
+ * @param[in] _handle Texture handle.
+ * @param[in] _mip First mip level.
+ * @param[in] _numMips Number of mip levels.
+ * @param[in] _layer First array layer (or 3D depth slice base).
+ * @param[in] _numLayers Number of layers.
+ *
+ */
+BGFX_C_API void bgfx_clear_texture(bgfx_texture_handle_t _handle, uint8_t _mip, uint8_t _numMips, uint16_t _layer, uint16_t _numLayers);
+
+/**
  * Read back texture content.
  *
  * @attention Texture must be created with `BGFX_TEXTURE_READ_BACK` flag.
+ *            It's a texture for CPU readback, and can't be a GPU resource
+ *            at the same time. See `examples/30-picking`.
  * @attention Availability depends on: `BGFX_CAPS_TEXTURE_READ_BACK`.
  *
  * @param[in] _handle Texture handle.
  * @param[in] _data Destination buffer.
+ * @param[in] _layer Texture layer.
  * @param[in] _mip Mip level.
  *
  * @returns Frame number when the result will be available. See: `bgfx::frame`.
  *
  */
-BGFX_C_API uint32_t bgfx_read_texture(bgfx_texture_handle_t _handle, void* _data, uint8_t _mip);
+BGFX_C_API uint32_t bgfx_read_texture(bgfx_texture_handle_t _handle, void* _data, uint16_t _layer, uint8_t _mip);
 
 /**
  * Set texture debug name.
@@ -2396,25 +2582,29 @@ BGFX_C_API void bgfx_set_view_name(bgfx_view_id_t _id, const char* _name, int32_
  * Set view rectangle. Draw primitive outside view will be clipped.
  *
  * @param[in] _id View id.
- * @param[in] _x Position x from the left corner of the window.
- * @param[in] _y Position y from the top corner of the window.
+ * @param[in] _x Position x from the left corner of the window. Can be
+ *  negative to place view origin outside of the window.
+ * @param[in] _y Position y from the top corner of the window. Can be
+ *  negative to place view origin outside of the window.
  * @param[in] _width Width of view port region.
  * @param[in] _height Height of view port region.
  *
  */
-BGFX_C_API void bgfx_set_view_rect(bgfx_view_id_t _id, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height);
+BGFX_C_API void bgfx_set_view_rect(bgfx_view_id_t _id, int16_t _x, int16_t _y, uint16_t _width, uint16_t _height);
 
 /**
  * Set view rectangle. Draw primitive outside view will be clipped.
  *
  * @param[in] _id View id.
- * @param[in] _x Position x from the left corner of the window.
- * @param[in] _y Position y from the top corner of the window.
+ * @param[in] _x Position x from the left corner of the window. Can be
+ *  negative to place view origin outside of the window.
+ * @param[in] _y Position y from the top corner of the window. Can be
+ *  negative to place view origin outside of the window.
  * @param[in] _ratio Width and height will be set in respect to back-buffer size.
  *  See: `BackbufferRatio::Enum`.
  *
  */
-BGFX_C_API void bgfx_set_view_rect_ratio(bgfx_view_id_t _id, uint16_t _x, uint16_t _y, bgfx_backbuffer_ratio_t _ratio);
+BGFX_C_API void bgfx_set_view_rect_ratio(bgfx_view_id_t _id, int16_t _x, int16_t _y, bgfx_backbuffer_ratio_t _ratio);
 
 /**
  * Set view scissor. Draw primitive outside view will be clipped. When
@@ -2918,6 +3108,27 @@ BGFX_C_API void bgfx_encoder_set_instance_count(bgfx_encoder_t* _this, uint32_t 
 BGFX_C_API void bgfx_encoder_set_texture(bgfx_encoder_t* _this, uint8_t _stage, bgfx_uniform_handle_t _sampler, bgfx_texture_handle_t _handle, uint32_t _flags);
 
 /**
+ * Set texture stage for draw primitive, selecting a sub-range of the
+ * texture's array layers and mip levels.
+ *
+ * @param[in] _stage Texture unit.
+ * @param[in] _sampler Program sampler.
+ * @param[in] _handle Texture handle.
+ * @param[in] _firstLayer First array layer.
+ * @param[in] _numLayers Number of array layers.
+ * @param[in] _firstMip First (most detailed) mip level.
+ * @param[in] _numMips Number of mip levels.
+ * @param[in] _flags Texture sampling mode. Default value UINT32_MAX uses
+ *    texture sampling settings from the texture.
+ *    - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap
+ *      mode.
+ *    - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
+ *      sampling.
+ *
+ */
+BGFX_C_API void bgfx_encoder_set_texture_view(bgfx_encoder_t* _this, uint8_t _stage, bgfx_uniform_handle_t _sampler, bgfx_texture_handle_t _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _firstMip, uint8_t _numMips, uint32_t _flags);
+
+/**
  * Submit an empty primitive for rendering. Uniforms and draw state
  * will be applied but no geometry will be submitted. Useful in cases
  * when no other draw/compute primitive is submitted to view, but it's
@@ -3052,6 +3263,21 @@ BGFX_C_API void bgfx_encoder_set_compute_indirect_buffer(bgfx_encoder_t* _this, 
  *
  */
 BGFX_C_API void bgfx_encoder_set_image(bgfx_encoder_t* _this, uint8_t _stage, bgfx_texture_handle_t _handle, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
+
+/**
+ * Set compute image stage for draw primitive, selecting a sub-range of the
+ * texture's array layers and mip levels.
+ *
+ * @param[in] _stage Compute stage.
+ * @param[in] _handle Texture handle.
+ * @param[in] _firstLayer First array layer.
+ * @param[in] _numLayers Number of array layers.
+ * @param[in] _mip Mip level.
+ * @param[in] _access Image access. See `Access::Enum`.
+ * @param[in] _format Texture format. See: `TextureFormat::Enum`.
+ *
+ */
+BGFX_C_API void bgfx_encoder_set_image_view(bgfx_encoder_t* _this, uint8_t _stage, bgfx_texture_handle_t _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
 
 /**
  * Dispatch compute.
@@ -3552,6 +3778,27 @@ BGFX_C_API void bgfx_set_instance_count(uint32_t _numInstances);
 BGFX_C_API void bgfx_set_texture(uint8_t _stage, bgfx_uniform_handle_t _sampler, bgfx_texture_handle_t _handle, uint32_t _flags);
 
 /**
+ * Set texture stage for draw primitive, selecting a sub-range of the
+ * texture's array layers and mip levels.
+ *
+ * @param[in] _stage Texture unit.
+ * @param[in] _sampler Program sampler.
+ * @param[in] _handle Texture handle.
+ * @param[in] _firstLayer First array layer.
+ * @param[in] _numLayers Number of array layers.
+ * @param[in] _firstMip First (most detailed) mip level.
+ * @param[in] _numMips Number of mip levels.
+ * @param[in] _flags Texture sampling mode. Default value UINT32_MAX uses
+ *    texture sampling settings from the texture.
+ *    - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap
+ *      mode.
+ *    - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic
+ *      sampling.
+ *
+ */
+BGFX_C_API void bgfx_set_texture_view(uint8_t _stage, bgfx_uniform_handle_t _sampler, bgfx_texture_handle_t _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _firstMip, uint8_t _numMips, uint32_t _flags);
+
+/**
  * Submit an empty primitive for rendering. Uniforms and draw state
  * will be applied but no geometry will be submitted.
  *
@@ -3686,6 +3933,21 @@ BGFX_C_API void bgfx_set_compute_indirect_buffer(uint8_t _stage, bgfx_indirect_b
 BGFX_C_API void bgfx_set_image(uint8_t _stage, bgfx_texture_handle_t _handle, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
 
 /**
+ * Set compute image stage for draw primitive, selecting a sub-range of the
+ * texture's array layers and mip levels.
+ *
+ * @param[in] _stage Compute stage.
+ * @param[in] _handle Texture handle.
+ * @param[in] _firstLayer First array layer.
+ * @param[in] _numLayers Number of array layers.
+ * @param[in] _mip Mip level.
+ * @param[in] _access Image access. See `Access::Enum`.
+ * @param[in] _format Texture format. See: `TextureFormat::Enum`.
+ *
+ */
+BGFX_C_API void bgfx_set_image_view(uint8_t _stage, bgfx_texture_handle_t _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
+
+/**
  * Dispatch compute.
  *
  * @param[in] _id View id.
@@ -3818,6 +4080,7 @@ typedef enum bgfx_function_id
     BGFX_FUNCTION_ID_CREATE_COMPUTE_PROGRAM,
     BGFX_FUNCTION_ID_DESTROY_PROGRAM,
     BGFX_FUNCTION_ID_IS_TEXTURE_VALID,
+    BGFX_FUNCTION_ID_IS_VIDEO_CODEC_VALID,
     BGFX_FUNCTION_ID_IS_FRAME_BUFFER_VALID,
     BGFX_FUNCTION_ID_CALC_TEXTURE_SIZE,
     BGFX_FUNCTION_ID_CREATE_TEXTURE,
@@ -3828,6 +4091,7 @@ typedef enum bgfx_function_id
     BGFX_FUNCTION_ID_UPDATE_TEXTURE_2D,
     BGFX_FUNCTION_ID_UPDATE_TEXTURE_3D,
     BGFX_FUNCTION_ID_UPDATE_TEXTURE_CUBE,
+    BGFX_FUNCTION_ID_CLEAR_TEXTURE,
     BGFX_FUNCTION_ID_READ_TEXTURE,
     BGFX_FUNCTION_ID_SET_TEXTURE_NAME,
     BGFX_FUNCTION_ID_GET_DIRECT_ACCESS_PTR,
@@ -3891,6 +4155,7 @@ typedef enum bgfx_function_id
     BGFX_FUNCTION_ID_ENCODER_SET_INSTANCE_DATA_FROM_DYNAMIC_VERTEX_BUFFER,
     BGFX_FUNCTION_ID_ENCODER_SET_INSTANCE_COUNT,
     BGFX_FUNCTION_ID_ENCODER_SET_TEXTURE,
+    BGFX_FUNCTION_ID_ENCODER_SET_TEXTURE_VIEW,
     BGFX_FUNCTION_ID_ENCODER_TOUCH,
     BGFX_FUNCTION_ID_ENCODER_SUBMIT,
     BGFX_FUNCTION_ID_ENCODER_SUBMIT_OCCLUSION_QUERY,
@@ -3902,6 +4167,7 @@ typedef enum bgfx_function_id
     BGFX_FUNCTION_ID_ENCODER_SET_COMPUTE_DYNAMIC_VERTEX_BUFFER,
     BGFX_FUNCTION_ID_ENCODER_SET_COMPUTE_INDIRECT_BUFFER,
     BGFX_FUNCTION_ID_ENCODER_SET_IMAGE,
+    BGFX_FUNCTION_ID_ENCODER_SET_IMAGE_VIEW,
     BGFX_FUNCTION_ID_ENCODER_DISPATCH,
     BGFX_FUNCTION_ID_ENCODER_DISPATCH_INDIRECT,
     BGFX_FUNCTION_ID_ENCODER_DISCARD,
@@ -3937,6 +4203,7 @@ typedef enum bgfx_function_id
     BGFX_FUNCTION_ID_SET_INSTANCE_DATA_FROM_DYNAMIC_VERTEX_BUFFER,
     BGFX_FUNCTION_ID_SET_INSTANCE_COUNT,
     BGFX_FUNCTION_ID_SET_TEXTURE,
+    BGFX_FUNCTION_ID_SET_TEXTURE_VIEW,
     BGFX_FUNCTION_ID_TOUCH,
     BGFX_FUNCTION_ID_SUBMIT,
     BGFX_FUNCTION_ID_SUBMIT_OCCLUSION_QUERY,
@@ -3948,6 +4215,7 @@ typedef enum bgfx_function_id
     BGFX_FUNCTION_ID_SET_COMPUTE_DYNAMIC_VERTEX_BUFFER,
     BGFX_FUNCTION_ID_SET_COMPUTE_INDIRECT_BUFFER,
     BGFX_FUNCTION_ID_SET_IMAGE,
+    BGFX_FUNCTION_ID_SET_IMAGE_VIEW,
     BGFX_FUNCTION_ID_DISPATCH,
     BGFX_FUNCTION_ID_DISPATCH_INDIRECT,
     BGFX_FUNCTION_ID_DISCARD,
@@ -4027,6 +4295,7 @@ struct bgfx_interface_vtbl
     bgfx_program_handle_t (*create_compute_program)(bgfx_shader_handle_t _csh, bool _destroyShaders);
     void (*destroy_program)(bgfx_program_handle_t _handle);
     bool (*is_texture_valid)(uint16_t _depth, bool _cubeMap, uint16_t _numLayers, bgfx_texture_format_t _format, uint64_t _flags);
+    bool (*is_video_codec_valid)(bgfx_video_codec_t _codec, uint8_t _chroma, uint8_t _bitDepth, uint16_t _codedWidth, uint16_t _codedHeight, uint8_t _maxDpbSlots, uint8_t _maxActiveReferences);
     bool (*is_frame_buffer_valid)(uint8_t _num, const bgfx_attachment_t* _attachment);
     void (*calc_texture_size)(bgfx_texture_info_t * _info, uint16_t _width, uint16_t _height, uint16_t _depth, bool _cubeMap, bool _hasMips, uint16_t _numLayers, bgfx_texture_format_t _format);
     bgfx_texture_handle_t (*create_texture)(const bgfx_memory_t* _mem, uint64_t _flags, uint8_t _skip, bgfx_texture_info_t* _info);
@@ -4037,7 +4306,8 @@ struct bgfx_interface_vtbl
     void (*update_texture_2d)(bgfx_texture_handle_t _handle, uint16_t _layer, uint8_t _mip, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height, const bgfx_memory_t* _mem, uint16_t _pitch);
     void (*update_texture_3d)(bgfx_texture_handle_t _handle, uint8_t _mip, uint16_t _x, uint16_t _y, uint16_t _z, uint16_t _width, uint16_t _height, uint16_t _depth, const bgfx_memory_t* _mem);
     void (*update_texture_cube)(bgfx_texture_handle_t _handle, uint16_t _layer, uint8_t _side, uint8_t _mip, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height, const bgfx_memory_t* _mem, uint16_t _pitch);
-    uint32_t (*read_texture)(bgfx_texture_handle_t _handle, void* _data, uint8_t _mip);
+    void (*clear_texture)(bgfx_texture_handle_t _handle, uint8_t _mip, uint8_t _numMips, uint16_t _layer, uint16_t _numLayers);
+    uint32_t (*read_texture)(bgfx_texture_handle_t _handle, void* _data, uint16_t _layer, uint8_t _mip);
     void (*set_texture_name)(bgfx_texture_handle_t _handle, const char* _name, int32_t _len);
     void* (*get_direct_access_ptr)(bgfx_texture_handle_t _handle);
     void (*destroy_texture)(bgfx_texture_handle_t _handle);
@@ -4060,8 +4330,8 @@ struct bgfx_interface_vtbl
     void (*set_palette_color_rgba32f)(uint8_t _index, float _r, float _g, float _b, float _a);
     void (*set_palette_color_rgba8)(uint8_t _index, uint32_t _rgba);
     void (*set_view_name)(bgfx_view_id_t _id, const char* _name, int32_t _len);
-    void (*set_view_rect)(bgfx_view_id_t _id, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height);
-    void (*set_view_rect_ratio)(bgfx_view_id_t _id, uint16_t _x, uint16_t _y, bgfx_backbuffer_ratio_t _ratio);
+    void (*set_view_rect)(bgfx_view_id_t _id, int16_t _x, int16_t _y, uint16_t _width, uint16_t _height);
+    void (*set_view_rect_ratio)(bgfx_view_id_t _id, int16_t _x, int16_t _y, bgfx_backbuffer_ratio_t _ratio);
     void (*set_view_scissor)(bgfx_view_id_t _id, uint16_t _x, uint16_t _y, uint16_t _width, uint16_t _height);
     void (*set_view_clear)(bgfx_view_id_t _id, uint16_t _flags, uint32_t _rgba, float _depth, uint8_t _stencil);
     void (*set_view_clear_mrt)(bgfx_view_id_t _id, uint16_t _flags, float _depth, uint8_t _stencil, uint8_t _c0, uint8_t _c1, uint8_t _c2, uint8_t _c3, uint8_t _c4, uint8_t _c5, uint8_t _c6, uint8_t _c7);
@@ -4100,6 +4370,7 @@ struct bgfx_interface_vtbl
     void (*encoder_set_instance_data_from_dynamic_vertex_buffer)(bgfx_encoder_t* _this, bgfx_dynamic_vertex_buffer_handle_t _handle, uint32_t _startVertex, uint32_t _num);
     void (*encoder_set_instance_count)(bgfx_encoder_t* _this, uint32_t _numInstances);
     void (*encoder_set_texture)(bgfx_encoder_t* _this, uint8_t _stage, bgfx_uniform_handle_t _sampler, bgfx_texture_handle_t _handle, uint32_t _flags);
+    void (*encoder_set_texture_view)(bgfx_encoder_t* _this, uint8_t _stage, bgfx_uniform_handle_t _sampler, bgfx_texture_handle_t _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _firstMip, uint8_t _numMips, uint32_t _flags);
     void (*encoder_touch)(bgfx_encoder_t* _this, bgfx_view_id_t _id);
     void (*encoder_submit)(bgfx_encoder_t* _this, bgfx_view_id_t _id, bgfx_program_handle_t _program, uint32_t _depth, uint8_t _flags);
     void (*encoder_submit_occlusion_query)(bgfx_encoder_t* _this, bgfx_view_id_t _id, bgfx_program_handle_t _program, bgfx_occlusion_query_handle_t _occlusionQuery, uint32_t _depth, uint8_t _flags);
@@ -4111,6 +4382,7 @@ struct bgfx_interface_vtbl
     void (*encoder_set_compute_dynamic_vertex_buffer)(bgfx_encoder_t* _this, uint8_t _stage, bgfx_dynamic_vertex_buffer_handle_t _handle, bgfx_access_t _access);
     void (*encoder_set_compute_indirect_buffer)(bgfx_encoder_t* _this, uint8_t _stage, bgfx_indirect_buffer_handle_t _handle, bgfx_access_t _access);
     void (*encoder_set_image)(bgfx_encoder_t* _this, uint8_t _stage, bgfx_texture_handle_t _handle, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
+    void (*encoder_set_image_view)(bgfx_encoder_t* _this, uint8_t _stage, bgfx_texture_handle_t _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
     void (*encoder_dispatch)(bgfx_encoder_t* _this, bgfx_view_id_t _id, bgfx_program_handle_t _program, uint32_t _numX, uint32_t _numY, uint32_t _numZ, uint8_t _flags);
     void (*encoder_dispatch_indirect)(bgfx_encoder_t* _this, bgfx_view_id_t _id, bgfx_program_handle_t _program, bgfx_indirect_buffer_handle_t _indirectHandle, uint32_t _start, uint32_t _num, uint8_t _flags);
     void (*encoder_discard)(bgfx_encoder_t* _this, uint8_t _flags);
@@ -4146,6 +4418,7 @@ struct bgfx_interface_vtbl
     void (*set_instance_data_from_dynamic_vertex_buffer)(bgfx_dynamic_vertex_buffer_handle_t _handle, uint32_t _startVertex, uint32_t _num);
     void (*set_instance_count)(uint32_t _numInstances);
     void (*set_texture)(uint8_t _stage, bgfx_uniform_handle_t _sampler, bgfx_texture_handle_t _handle, uint32_t _flags);
+    void (*set_texture_view)(uint8_t _stage, bgfx_uniform_handle_t _sampler, bgfx_texture_handle_t _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _firstMip, uint8_t _numMips, uint32_t _flags);
     void (*touch)(bgfx_view_id_t _id);
     void (*submit)(bgfx_view_id_t _id, bgfx_program_handle_t _program, uint32_t _depth, uint8_t _flags);
     void (*submit_occlusion_query)(bgfx_view_id_t _id, bgfx_program_handle_t _program, bgfx_occlusion_query_handle_t _occlusionQuery, uint32_t _depth, uint8_t _flags);
@@ -4157,6 +4430,7 @@ struct bgfx_interface_vtbl
     void (*set_compute_dynamic_vertex_buffer)(uint8_t _stage, bgfx_dynamic_vertex_buffer_handle_t _handle, bgfx_access_t _access);
     void (*set_compute_indirect_buffer)(uint8_t _stage, bgfx_indirect_buffer_handle_t _handle, bgfx_access_t _access);
     void (*set_image)(uint8_t _stage, bgfx_texture_handle_t _handle, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
+    void (*set_image_view)(uint8_t _stage, bgfx_texture_handle_t _handle, uint16_t _firstLayer, uint16_t _numLayers, uint8_t _mip, bgfx_access_t _access, bgfx_texture_format_t _format);
     void (*dispatch)(bgfx_view_id_t _id, bgfx_program_handle_t _program, uint32_t _numX, uint32_t _numY, uint32_t _numZ, uint8_t _flags);
     void (*dispatch_indirect)(bgfx_view_id_t _id, bgfx_program_handle_t _program, bgfx_indirect_buffer_handle_t _indirectHandle, uint32_t _start, uint32_t _num, uint8_t _flags);
     void (*discard)(uint8_t _flags);

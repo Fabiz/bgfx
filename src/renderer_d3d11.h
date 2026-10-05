@@ -263,6 +263,8 @@ namespace bgfx { namespace d3d11
 		IntelDirectAccessResourceDescriptor* m_descriptor;
 	};
 
+	struct VideoDecoderD3D11;
+
 	struct TextureD3D11
 	{
 		enum Enum
@@ -277,6 +279,7 @@ namespace bgfx { namespace d3d11
 			, m_rt(NULL)
 			, m_srv(NULL)
 			, m_uav(NULL)
+			, m_videoDecoder(NULL)
 			, m_numMips(0)
 		{
 		}
@@ -285,7 +288,8 @@ namespace bgfx { namespace d3d11
 		void destroy();
 		void overrideInternal(uintptr_t _ptr, uint16_t _layerIndex);
 		void update(uint8_t _side, uint8_t _mip, const Rect& _rect, uint16_t _z, uint16_t _depth, uint16_t _pitch, const Memory* _mem);
-		void commit(uint8_t _stage, uint32_t _flags, const float _palette[][4]);
+		void clear(uint8_t _mip, uint8_t _numMips, uint16_t _layer, uint16_t _numLayers);
+		void commit(uint8_t _stage, uint32_t _flags, const float _palette[][4], uint16_t _firstLayer = 0, uint16_t _numLayers = UINT16_MAX, uint8_t _firstMip = 0, uint8_t _numMips = UINT8_MAX);
 		void resolve(uint8_t _resolve, uint32_t _layer, uint32_t _numLayers, uint32_t _mip) const;
 		TextureHandle getHandle() const;
 		DXGI_FORMAT getSrvFormat() const;
@@ -307,6 +311,7 @@ namespace bgfx { namespace d3d11
 
 		ID3D11ShaderResourceView*  m_srv;
 		ID3D11UnorderedAccessView* m_uav;
+		VideoDecoderD3D11*         m_videoDecoder;
 		uint64_t m_flags;
 		uint32_t m_width;
 		uint32_t m_height;
@@ -331,6 +336,7 @@ namespace bgfx { namespace d3d11
 			, m_numTh(0)
 			, m_numUav(0)
 			, m_needPresent(false)
+			, m_needsQuadClear(false)
 		{
 			bx::memSet(m_rtv, 0, sizeof(m_rtv) );
 			bx::memSet(m_uav, 0, sizeof(m_uav) );
@@ -345,11 +351,11 @@ namespace bgfx { namespace d3d11
 		void resolve();
 		void clear(const Clear& _clear, const float _palette[][4]);
 		void set();
-		HRESULT present(uint32_t _syncInterval);
+		HRESULT present(uint32_t _syncInterval, uint32_t _flags);
 
-		ID3D11RenderTargetView*    m_rtv[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
-		ID3D11UnorderedAccessView* m_uav[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
-		ID3D11ShaderResourceView*  m_srv[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS-1];
+		ID3D11RenderTargetView*    m_rtv[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		ID3D11UnorderedAccessView* m_uav[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
+		ID3D11ShaderResourceView*  m_srv[BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS];
 		ID3D11DepthStencilView*    m_dsv;
 		Dxgi::SwapChainI* m_swapChain;
 		void* m_nwh;
@@ -362,6 +368,7 @@ namespace bgfx { namespace d3d11
 		uint8_t m_numTh;
 		uint8_t m_numUav;
 		bool m_needPresent;
+		bool m_needsQuadClear;
 	};
 
 	struct TimerQueryD3D11

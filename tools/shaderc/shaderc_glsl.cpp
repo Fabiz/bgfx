@@ -54,7 +54,7 @@ namespace bgfx { namespace glsl
 			if (found
 			&&  0 != line)
 			{
-				start = bx::uint32_imax(1, line-10);
+				start = bx::max<int32_t>(1, line-10);
 				end   = start + 20;
 			}
 
@@ -217,6 +217,11 @@ namespace bgfx { namespace glsl
 
 					Uniform un;
 					un.type = nameToUniformTypeEnum(uniformType);
+
+					if (0 == bx::strCmp(name, "bgfx_ndc") )
+					{
+						un.type = UniformType::Count;
+					}
 
 					if (UniformType::Count != un.type)
 					{

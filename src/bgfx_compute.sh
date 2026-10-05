@@ -139,7 +139,7 @@
 #define IMAGE3D_WO( _name, _format, _reg)                                      \
 	WRITEONLY FORMAT(_format) RWTexture3D<COMP_ ## _format> _name : REGISTER(u, _reg);
 
-#define UIMAGE3D_WO(_name, _format, _reg) IMAGE3D_RW(_name, _format, _reg)
+#define UIMAGE3D_WO(_name, _format, _reg) IMAGE3D_WO(_name, _format, _reg)
 
 #define IMAGE3D_RW( _name, _format, _reg)                            \
 	FORMAT(_format) RWTexture3D<COMP_ ## _format> _name : REGISTER(u, _reg);  \
@@ -316,6 +316,8 @@ __IMAGE_IMPL_ATOMIC(uint, x, uvec4, xxxx)
 	)                 \
 	_buffer[(_offset)*2+0] = uvec4(_numVertices, _numInstances, _startVertex, _startInstance)
 
+uniform vec4 bgfx_indirectArgBase;
+
 #define drawIndexedIndirect( \
 	  _buffer                \
 	, _offset                \
@@ -325,7 +327,7 @@ __IMAGE_IMPL_ATOMIC(uint, x, uvec4, xxxx)
 	, _startVertex           \
 	, _startInstance         \
 	)                        \
-	_buffer[(_offset)*2+0] = uvec4(_numIndices, _numInstances, _startIndex, _startVertex); \
+	_buffer[(_offset)*2+0] = uvec4(_numIndices, _numInstances, floatBitsToUint(bgfx_indirectArgBase.x) + uint(_startIndex), _startVertex); \
 	_buffer[(_offset)*2+1] = uvec4(_startInstance, 0u, 0u, 0u)
 
 #endif // __cplusplus

@@ -387,6 +387,9 @@ function exampleProjectDefaults()
 			"-framework OpenGL",
 			"-framework QuartzCore",
 			"-weak_framework Metal",
+			"-weak_framework VideoToolbox",
+			"-weak_framework CoreMedia",
+			"-weak_framework CoreVideo",
 		}
 
 	configuration { "ios* or tvos*" }
@@ -399,6 +402,9 @@ function exampleProjectDefaults()
 			"-framework QuartzCore",
 			"-framework UIKit",
 			"-weak_framework Metal",
+			"-weak_framework VideoToolbox",
+			"-weak_framework CoreMedia",
+			"-weak_framework CoreVideo",
 		}
 
 	configuration { "xcode*", "ios" }
@@ -575,6 +581,8 @@ or _OPTIONS["with-combined-examples"] then
 		, "48-drawindirect"
 		, "49-hextile"
 		, "51-gpufont"
+		, "52-layered"
+		, "53-sky2"
 		)
 
 

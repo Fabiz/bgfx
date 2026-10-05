@@ -280,9 +280,16 @@ public static partial class bgfx
 		FuncRefMask            = 0x000000ff,
 		FuncRmaskShift         = 8,
 		FuncRmaskMask          = 0x0000ff00,
-		None                   = 0x00000000,
+	
+		/// <summary>
+		/// No stencil test.
+		/// </summary>
+		None                   = 0x0000ff00,
+	
+		/// <summary>
+		/// Stencil front or back mask.
+		/// </summary>
 		Mask                   = 0xffffffff,
-		Default                = 0x00000000,
 	
 		/// <summary>
 		/// Enable stencil test, less.
@@ -742,6 +749,8 @@ public static partial class bgfx
 		/// Texture is shared with other device or other process.
 		/// </summary>
 		ExternalShared         = 0x0001000000000000,
+		ReservedShift          = 60,
+		ReservedMask           = 0xf000000000000000,
 	
 		/// <summary>
 		/// Render target MSAAx2 mode.
@@ -1177,9 +1186,14 @@ public static partial class bgfx
 		VertexId               = 0x0000000100000000,
 	
 		/// <summary>
+		/// Hardware video decode is supported.
+		/// </summary>
+		VideoDecode            = 0x0000000200000000,
+	
+		/// <summary>
 		/// Viewport layer is available in vertex shader.
 		/// </summary>
-		ViewportLayerArray     = 0x0000000200000000,
+		ViewportLayerArray     = 0x0000000400000000,
 	
 		/// <summary>
 		/// All texture compare modes are supported.
@@ -1279,6 +1293,104 @@ public static partial class bgfx
 		/// Texture format can be used as back buffer format.
 		/// </summary>
 		TextureBackbuffer      = 0x00010000,
+	
+		/// <summary>
+		/// Texture format can be used as video decode destination.
+		/// </summary>
+		TextureVideoDecodeDst  = 0x00020000,
+	}
+	
+	[Flags]
+	public enum CapsVideoCodecFlags : uint
+	{
+		/// <summary>
+		/// Video codec is not supported.
+		/// </summary>
+		None                   = 0x00000000,
+	
+		/// <summary>
+		/// 8-bit sample depth is supported.
+		/// </summary>
+		Bit8                   = 0x00000001,
+	
+		/// <summary>
+		/// 10-bit sample depth is supported.
+		/// </summary>
+		Bit10                  = 0x00000002,
+	
+		/// <summary>
+		/// 12-bit sample depth is supported.
+		/// </summary>
+		Bit12                  = 0x00000004,
+	
+		/// <summary>
+		/// 4:2:0 chroma subsampling is supported.
+		/// </summary>
+		Chroma420              = 0x00000008,
+	
+		/// <summary>
+		/// 4:2:2 chroma subsampling is supported.
+		/// </summary>
+		Chroma422              = 0x00000010,
+	
+		/// <summary>
+		/// 4:4:4 chroma subsampling is supported.
+		/// </summary>
+		Chroma444              = 0x00000020,
+	}
+	
+	[Flags]
+	public enum VideoDecoderInitFlags : uint
+	{
+		/// <summary>
+		/// No flags.
+		/// </summary>
+		None                   = 0x00000000,
+	
+		/// <summary>
+		/// Cache submitted access units in driver-managed memory keyed by `ptsUs` so the
+		/// presentation clock can revisit / loop without re-streaming. The cache is
+		/// unbounded: the app picks the total cache size implicitly by choosing how
+		/// many access units to submit. Without this flag access units are decoded once
+		/// and dropped (streaming default).
+		/// </summary>
+		Retain                 = 0x00000001,
+	}
+	
+	[Flags]
+	public enum VideoDecodeFrameFlags : uint
+	{
+		/// <summary>
+		/// No flags.
+		/// </summary>
+		None                   = 0x00000000,
+	
+		/// <summary>
+		/// First batch after a position change. The first access unit must be a clean IDR.
+		/// Driver flushes its DPB, queued access units, and reorder pool before decoding;
+		/// subsequent `presentationTimeUs` values may land anywhere (monotonicity is only
+		/// required between non-`Set` ticks).
+		/// </summary>
+		Set                    = 0x00000001,
+	
+		/// <summary>
+		/// Skip the picker dispatch for this call. Useful while bulk-loading access units
+		/// so the displayed picture isn't churned mid-load.
+		/// </summary>
+		NoBlit                 = 0x00000002,
+	
+		/// <summary>
+		/// Marks the last access unit of the clip; permits eager pre-decode in idle time
+		/// and lets the picker emit the final frame without lookahead stalling.
+		/// </summary>
+		Final                  = 0x00000004,
+	
+		/// <summary>
+		/// When `presentationTimeUs` runs past the highest cached `ptsUs`, the picker
+		/// wraps modulo the cached pts range. Without this flag the picker freezes on
+		/// the last displayable picture.
+		/// </summary>
+		Loop                   = 0x00000008,
 	}
 	
 	[Flags]
@@ -1580,6 +1692,46 @@ public static partial class bgfx
 		/// </summary>
 		TexCoord7,
 	
+		/// <summary>
+		/// a_texcoord8
+		/// </summary>
+		TexCoord8,
+	
+		/// <summary>
+		/// a_texcoord9
+		/// </summary>
+		TexCoord9,
+	
+		/// <summary>
+		/// a_texcoord10
+		/// </summary>
+		TexCoord10,
+	
+		/// <summary>
+		/// a_texcoord11
+		/// </summary>
+		TexCoord11,
+	
+		/// <summary>
+		/// a_texcoord12
+		/// </summary>
+		TexCoord12,
+	
+		/// <summary>
+		/// a_texcoord13
+		/// </summary>
+		TexCoord13,
+	
+		/// <summary>
+		/// a_texcoord14
+		/// </summary>
+		TexCoord14,
+	
+		/// <summary>
+		/// a_texcoord15
+		/// </summary>
+		TexCoord15,
+	
 		Count
 	}
 	
@@ -1620,6 +1772,16 @@ public static partial class bgfx
 		/// </summary>
 		Float,
 	
+		/// <summary>
+		/// Int32
+		/// </summary>
+		Int32,
+	
+		/// <summary>
+		/// Uint32
+		/// </summary>
+		Uint32,
+	
 		Count
 	}
 	
@@ -1646,14 +1808,29 @@ public static partial class bgfx
 		BC4,
 	
 		/// <summary>
+		/// Block Compression 4. Single 8-bit red channel, signed normalized. 4 BPP.
+		/// </summary>
+		BC4S,
+	
+		/// <summary>
 		/// Block Compression 5. Two 8-bit channels (RG), unsigned normalized. 8 BPP.
 		/// </summary>
 		BC5,
 	
 		/// <summary>
+		/// Block Compression 5. Two 8-bit channels (RG), signed normalized. 8 BPP.
+		/// </summary>
+		BC5S,
+	
+		/// <summary>
 		/// Block Compression 6H. Three 16-bit floating-point channels (RGB), HDR. 8 BPP.
 		/// </summary>
 		BC6H,
+	
+		/// <summary>
+		/// Block Compression 6H. Three 16-bit unsigned floating-point channels (RGB), HDR. 8 BPP.
+		/// </summary>
+		BC6HU,
 	
 		/// <summary>
 		/// RGB 4-7 bits per color channel, 0-8 bits alpha. Block Compression 7. High-quality RGBA, 4-7 bits per color, 0-8 bits alpha. 8 BPP.
@@ -2076,6 +2253,11 @@ public static partial class bgfx
 		RGB10A2,
 	
 		/// <summary>
+		/// Packed 32-bit, 10-bit red, 10-bit green, 10-bit blue, 2-bit alpha, unsigned integer. 32 BPP.
+		/// </summary>
+		RGB10A2U,
+	
+		/// <summary>
 		/// Packed 32-bit, 11-bit red, 11-bit green, 10-bit blue, unsigned floating point. No alpha. 32 BPP.
 		/// </summary>
 		RG11B10F,
@@ -2119,6 +2301,11 @@ public static partial class bgfx
 		/// 32-bit depth, floating point. 32 BPP.
 		/// </summary>
 		D32F,
+	
+		/// <summary>
+		/// 32-bit depth, floating point, with 8-bit stencil (stored as 64-bit). 64 BPP.
+		/// </summary>
+		D32FS8,
 	
 		/// <summary>
 		/// 8-bit stencil only, no depth. 8 BPP.
@@ -2229,6 +2416,26 @@ public static partial class bgfx
 		/// Query result is not available yet.
 		/// </summary>
 		NoResult,
+	
+		Count
+	}
+	
+	public enum VideoCodec
+	{
+		/// <summary>
+		/// H.264 / AVC.
+		/// </summary>
+		H264,
+	
+		/// <summary>
+		/// H.265 / HEVC.
+		/// </summary>
+		H265,
+	
+		/// <summary>
+		/// AV1.
+		/// </summary>
+		AV1,
 	
 		Count
 	}
@@ -2440,6 +2647,8 @@ public static partial class bgfx
 			public uint maxComputeBindings;
 			public uint maxVertexLayouts;
 			public uint maxVertexStreams;
+			public uint maxVertexAttributes;
+			public uint maxInstanceData;
 			public uint maxIndexBuffers;
 			public uint maxVertexBuffers;
 			public uint maxDynamicIndexBuffers;
@@ -2462,7 +2671,8 @@ public static partial class bgfx
 		public byte numGPUs;
 		public fixed uint gpu[4];
 		public Limits limits;
-		public fixed uint formats[100];
+		public fixed uint formats[105];
+		public fixed uint codecs[3];
 	}
 	
 	public unsafe struct InternalData
@@ -2499,6 +2709,8 @@ public static partial class bgfx
 		public unsafe struct Limits
 		{
 			public ushort maxEncoders;
+			public uint numDrawCalls;
+			public uint numDrawCallPeakFrames;
 			public uint minResourceCbSize;
 			public uint maxTransientVbSize;
 			public uint maxTransientIbSize;
@@ -2512,6 +2724,7 @@ public static partial class bgfx
 		public byte debug;
 		public byte profile;
 		public byte fallback;
+		public byte videoDecode;
 		public PlatformData platformData;
 		public Resolution resolution;
 		public Limits limits;
@@ -2565,6 +2778,32 @@ public static partial class bgfx
 		public byte numMips;
 		public byte bitsPerPixel;
 		public byte cubeMap;
+	}
+	
+	public unsafe struct VideoDecoderInit
+	{
+		public uint magic;
+		public VideoCodec codec;
+		public uint8_t* parameterSets;
+		public uint parameterSetsSize;
+		public uint cachedAuBytes;
+		public byte flags;
+	}
+	
+	public unsafe struct VideoDecoderAu
+	{
+		public uint size;
+		public long ptsUs;
+	}
+	
+	public unsafe struct VideoDecoderFrame
+	{
+		public uint magic;
+		public uint8_t* bitstream;
+		public VideoDecoderAu* aus;
+		public uint numAus;
+		public long presentationTimeUs;
+		public byte flags;
 	}
 	
 	public unsafe struct UniformInfo
@@ -2621,6 +2860,7 @@ public static partial class bgfx
 		public uint numDraw;
 		public uint numCompute;
 		public uint numBlit;
+		public uint numDrawCallsPeak;
 		public uint maxGpuLatency;
 		public uint gpuFrameNum;
 		public ushort numDynamicIndexBuffers;
@@ -2655,8 +2895,8 @@ public static partial class bgfx
 	{
 		public uint hash;
 		public ushort stride;
-		public fixed ushort offset[18];
-		public fixed ushort attributes[18];
+		public fixed ushort offset[26];
+		public fixed ushort attributes[26];
 	}
 	
 	public unsafe struct Encoder
@@ -3462,6 +3702,25 @@ public static partial class bgfx
 	public static extern unsafe bool is_texture_valid(ushort _depth, bool _cubeMap, ushort _numLayers, TextureFormat _format, ulong _flags);
 	
 	/// <summary>
+	/// Validate video codec parameters. Use to check whether the requested
+	/// combination of codec / bit depth / chroma / dimensions / DPB layout can
+	/// be hardware decoded on the current device. Coarse capability discovery
+	/// is `Caps::supported & BGFX_CAPS_VIDEO_DECODE` and `Caps::codecs[]`.
+	/// </summary>
+	///
+	/// <param name="_codec">Video codec. See: `VideoCodec::Enum`.</param>
+	/// <param name="_chroma">Chroma subsampling. 0 = 4:2:0, 2 = 4:2:2, 4 = 4:4:4.</param>
+	/// <param name="_bitDepth">Bit depth per component. 8, 10 or 12.</param>
+	/// <param name="_codedWidth">Coded picture width (macroblock / CTU / superblock aligned).</param>
+	/// <param name="_codedHeight">Coded picture height.</param>
+	/// <param name="_maxDpbSlots">Maximum decoded picture buffer slot count.</param>
+	/// <param name="_maxActiveReferences">Maximum number of reference frames active at once.</param>
+	///
+	[DllImport(DllName, EntryPoint="bgfx_is_video_codec_valid", CallingConvention = CallingConvention.Cdecl)]
+	[return: MarshalAs(UnmanagedType.I1)]
+	public static extern unsafe bool is_video_codec_valid(VideoCodec _codec, byte _chroma, byte _bitDepth, ushort _codedWidth, ushort _codedHeight, byte _maxDpbSlots, byte _maxActiveReferences);
+	
+	/// <summary>
 	/// Validate frame buffer parameters.
 	/// </summary>
 	///
@@ -3623,19 +3882,36 @@ public static partial class bgfx
 	public static extern unsafe void update_texture_cube(TextureHandle _handle, ushort _layer, byte _side, byte _mip, ushort _x, ushort _y, ushort _width, ushort _height, Memory* _mem, ushort _pitch);
 	
 	/// <summary>
+	/// Clear a texture subresource range to zero.
+	/// 
+	/// </summary>
+	///
+	/// <param name="_handle">Texture handle.</param>
+	/// <param name="_mip">First mip level.</param>
+	/// <param name="_numMips">Number of mip levels.</param>
+	/// <param name="_layer">First array layer (or 3D depth slice base).</param>
+	/// <param name="_numLayers">Number of layers.</param>
+	///
+	[DllImport(DllName, EntryPoint="bgfx_clear_texture", CallingConvention = CallingConvention.Cdecl)]
+	public static extern unsafe void clear_texture(TextureHandle _handle, byte _mip, byte _numMips, ushort _layer, ushort _numLayers);
+	
+	/// <summary>
 	/// Read back texture content.
 	/// 
 	/// @attention Texture must be created with `BGFX_TEXTURE_READ_BACK` flag.
+	///            It's a texture for CPU readback, and can't be a GPU resource
+	///            at the same time. See `examples/30-picking`.
 	/// @attention Availability depends on: `BGFX_CAPS_TEXTURE_READ_BACK`.
 	/// 
 	/// </summary>
 	///
 	/// <param name="_handle">Texture handle.</param>
 	/// <param name="_data">Destination buffer.</param>
+	/// <param name="_layer">Texture layer.</param>
 	/// <param name="_mip">Mip level.</param>
 	///
 	[DllImport(DllName, EntryPoint="bgfx_read_texture", CallingConvention = CallingConvention.Cdecl)]
-	public static extern unsafe uint read_texture(TextureHandle _handle, void* _data, byte _mip);
+	public static extern unsafe uint read_texture(TextureHandle _handle, void* _data, ushort _layer, byte _mip);
 	
 	/// <summary>
 	/// Set texture debug name.
@@ -3946,25 +4222,25 @@ public static partial class bgfx
 	/// </summary>
 	///
 	/// <param name="_id">View id.</param>
-	/// <param name="_x">Position x from the left corner of the window.</param>
-	/// <param name="_y">Position y from the top corner of the window.</param>
+	/// <param name="_x">Position x from the left corner of the window. Can be negative to place view origin outside of the window.</param>
+	/// <param name="_y">Position y from the top corner of the window. Can be negative to place view origin outside of the window.</param>
 	/// <param name="_width">Width of view port region.</param>
 	/// <param name="_height">Height of view port region.</param>
 	///
 	[DllImport(DllName, EntryPoint="bgfx_set_view_rect", CallingConvention = CallingConvention.Cdecl)]
-	public static extern unsafe void set_view_rect(ushort _id, ushort _x, ushort _y, ushort _width, ushort _height);
+	public static extern unsafe void set_view_rect(ushort _id, short _x, short _y, ushort _width, ushort _height);
 	
 	/// <summary>
 	/// Set view rectangle. Draw primitive outside view will be clipped.
 	/// </summary>
 	///
 	/// <param name="_id">View id.</param>
-	/// <param name="_x">Position x from the left corner of the window.</param>
-	/// <param name="_y">Position y from the top corner of the window.</param>
+	/// <param name="_x">Position x from the left corner of the window. Can be negative to place view origin outside of the window.</param>
+	/// <param name="_y">Position y from the top corner of the window. Can be negative to place view origin outside of the window.</param>
 	/// <param name="_ratio">Width and height will be set in respect to back-buffer size. See: `BackbufferRatio::Enum`.</param>
 	///
 	[DllImport(DllName, EntryPoint="bgfx_set_view_rect_ratio", CallingConvention = CallingConvention.Cdecl)]
-	public static extern unsafe void set_view_rect_ratio(ushort _id, ushort _x, ushort _y, BackbufferRatio _ratio);
+	public static extern unsafe void set_view_rect_ratio(ushort _id, short _x, short _y, BackbufferRatio _ratio);
 	
 	/// <summary>
 	/// Set view scissor. Draw primitive outside view will be clipped. When
@@ -4479,6 +4755,23 @@ public static partial class bgfx
 	public static extern unsafe void encoder_set_texture(Encoder* _this, byte _stage, UniformHandle _sampler, TextureHandle _handle, uint _flags);
 	
 	/// <summary>
+	/// Set texture stage for draw primitive, selecting a sub-range of the
+	/// texture's array layers and mip levels.
+	/// </summary>
+	///
+	/// <param name="_stage">Texture unit.</param>
+	/// <param name="_sampler">Program sampler.</param>
+	/// <param name="_handle">Texture handle.</param>
+	/// <param name="_firstLayer">First array layer.</param>
+	/// <param name="_numLayers">Number of array layers.</param>
+	/// <param name="_firstMip">First (most detailed) mip level.</param>
+	/// <param name="_numMips">Number of mip levels.</param>
+	/// <param name="_flags">Texture sampling mode. Default value UINT32_MAX uses   texture sampling settings from the texture.   - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap     mode.   - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic     sampling.</param>
+	///
+	[DllImport(DllName, EntryPoint="bgfx_encoder_set_texture_view", CallingConvention = CallingConvention.Cdecl)]
+	public static extern unsafe void encoder_set_texture_view(Encoder* _this, byte _stage, UniformHandle _sampler, TextureHandle _handle, ushort _firstLayer, ushort _numLayers, byte _firstMip, byte _numMips, uint _flags);
+	
+	/// <summary>
 	/// Submit an empty primitive for rendering. Uniforms and draw state
 	/// will be applied but no geometry will be submitted. Useful in cases
 	/// when no other draw/compute primitive is submitted to view, but it's
@@ -4626,6 +4919,22 @@ public static partial class bgfx
 	///
 	[DllImport(DllName, EntryPoint="bgfx_encoder_set_image", CallingConvention = CallingConvention.Cdecl)]
 	public static extern unsafe void encoder_set_image(Encoder* _this, byte _stage, TextureHandle _handle, byte _mip, Access _access, TextureFormat _format);
+	
+	/// <summary>
+	/// Set compute image stage for draw primitive, selecting a sub-range of the
+	/// texture's array layers and mip levels.
+	/// </summary>
+	///
+	/// <param name="_stage">Compute stage.</param>
+	/// <param name="_handle">Texture handle.</param>
+	/// <param name="_firstLayer">First array layer.</param>
+	/// <param name="_numLayers">Number of array layers.</param>
+	/// <param name="_mip">Mip level.</param>
+	/// <param name="_access">Image access. See `Access::Enum`.</param>
+	/// <param name="_format">Texture format. See: `TextureFormat::Enum`.</param>
+	///
+	[DllImport(DllName, EntryPoint="bgfx_encoder_set_image_view", CallingConvention = CallingConvention.Cdecl)]
+	public static extern unsafe void encoder_set_image_view(Encoder* _this, byte _stage, TextureHandle _handle, ushort _firstLayer, ushort _numLayers, byte _mip, Access _access, TextureFormat _format);
 	
 	/// <summary>
 	/// Dispatch compute.
@@ -5125,6 +5434,23 @@ public static partial class bgfx
 	public static extern unsafe void set_texture(byte _stage, UniformHandle _sampler, TextureHandle _handle, uint _flags);
 	
 	/// <summary>
+	/// Set texture stage for draw primitive, selecting a sub-range of the
+	/// texture's array layers and mip levels.
+	/// </summary>
+	///
+	/// <param name="_stage">Texture unit.</param>
+	/// <param name="_sampler">Program sampler.</param>
+	/// <param name="_handle">Texture handle.</param>
+	/// <param name="_firstLayer">First array layer.</param>
+	/// <param name="_numLayers">Number of array layers.</param>
+	/// <param name="_firstMip">First (most detailed) mip level.</param>
+	/// <param name="_numMips">Number of mip levels.</param>
+	/// <param name="_flags">Texture sampling mode. Default value UINT32_MAX uses   texture sampling settings from the texture.   - `BGFX_SAMPLER_[U/V/W]_[MIRROR/CLAMP]` - Mirror or clamp to edge wrap     mode.   - `BGFX_SAMPLER_[MIN/MAG/MIP]_[POINT/ANISOTROPIC]` - Point or anisotropic     sampling.</param>
+	///
+	[DllImport(DllName, EntryPoint="bgfx_set_texture_view", CallingConvention = CallingConvention.Cdecl)]
+	public static extern unsafe void set_texture_view(byte _stage, UniformHandle _sampler, TextureHandle _handle, ushort _firstLayer, ushort _numLayers, byte _firstMip, byte _numMips, uint _flags);
+	
+	/// <summary>
 	/// Submit an empty primitive for rendering. Uniforms and draw state
 	/// will be applied but no geometry will be submitted.
 	/// 
@@ -5270,6 +5596,22 @@ public static partial class bgfx
 	///
 	[DllImport(DllName, EntryPoint="bgfx_set_image", CallingConvention = CallingConvention.Cdecl)]
 	public static extern unsafe void set_image(byte _stage, TextureHandle _handle, byte _mip, Access _access, TextureFormat _format);
+	
+	/// <summary>
+	/// Set compute image stage for draw primitive, selecting a sub-range of the
+	/// texture's array layers and mip levels.
+	/// </summary>
+	///
+	/// <param name="_stage">Compute stage.</param>
+	/// <param name="_handle">Texture handle.</param>
+	/// <param name="_firstLayer">First array layer.</param>
+	/// <param name="_numLayers">Number of array layers.</param>
+	/// <param name="_mip">Mip level.</param>
+	/// <param name="_access">Image access. See `Access::Enum`.</param>
+	/// <param name="_format">Texture format. See: `TextureFormat::Enum`.</param>
+	///
+	[DllImport(DllName, EntryPoint="bgfx_set_image_view", CallingConvention = CallingConvention.Cdecl)]
+	public static extern unsafe void set_image_view(byte _stage, TextureHandle _handle, ushort _firstLayer, ushort _numLayers, byte _mip, Access _access, TextureFormat _format);
 	
 	/// <summary>
 	/// Dispatch compute.
