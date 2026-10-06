@@ -3628,7 +3628,16 @@ namespace bgfx { namespace gl
 
 						GL_CHECK(glPixelStorei(GL_PACK_ALIGNMENT, 1) );
 
-						GLenum readFmt  = rgba8 ? m_readPixelsFmt  : texture.m_fmt;
+						// BEGIN CHANGE(fso) read an RGBA8 texture always as GL_RGBA: the one read format GLES
+						// guarantees, no driver conversion, and the bytes match the texture's format. Reading it
+						// with m_readPixelsFmt (GL_BGRA on drivers that advertise a BGRA read format) returned
+						// BGRA bytes for an RGBA8 texture. A BGRA8 texture read as GL_RGBA, in turn, is converted
+						// per pixel by some drivers: ~20 s for 10 MP on an Adreno 430.
+						GLenum readFmt  = TextureFormat::RGBA8 == texture.m_textureFormat
+							? GL_RGBA
+							: rgba8 ? m_readPixelsFmt : texture.m_fmt
+							;
+						// END CHANGE(fso)
 						GLenum readType = rgba8 ? GL_UNSIGNED_BYTE : texture.m_type;
 
 						if (!rgba8)
